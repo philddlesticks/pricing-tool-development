@@ -473,8 +473,8 @@
                     </small>
                 </div>
                 <div style="margin-top: 15px;">
-                    <button class="btn" onclick="addDiscountColumn()">➕ Add Discount % Column</button>
-                    <button class="btn" onclick="addMarkupColumn()">➕ Add Markup % Column</button>
+                    <button class="btn" onclick="addPercentageColumn()">➕ Add Column</button>
+                    <small style="color: #666; display: block; margin-top: 5px;">Adds a new column - choose Discount % or Markup % from the dropdown under the column header</small>
                 </div>
             </div>
             
@@ -669,12 +669,12 @@
         function renderSpreadsheet() {
             const table = document.getElementById('spreadsheet');
             table.innerHTML = '';
-            
-            // Check if discount or markup columns exist
-            const hasDiscount = currentData[0].includes('Discount %');
-            const hasMarkup = currentData[0].includes('Markup %');
-            
-            // Show/hide quick tools based on columns
+
+            // Check if discount or markup columns are mapped
+            const hasDiscount = columnMapping.discount !== undefined;
+            const hasMarkup = columnMapping.markup !== undefined;
+
+            // Show/hide quick tools based on mapping
             document.getElementById('discountToolsSection2').style.display = hasDiscount ? 'block' : 'none';
             document.getElementById('markupToolsSection2').style.display = hasMarkup ? 'block' : 'none';
             document.getElementById('step2Tools').style.display = (hasDiscount || hasMarkup) ? 'block' : 'none';
@@ -683,8 +683,8 @@
             const headerRow = document.createElement('tr');
             headerRow.innerHTML = '<th class="row-number" style="cursor: pointer;" onclick="toggleAllRows()">✓</th>';
             currentData[0].forEach((cell, i) => {
-                const isDiscountCol = cell === 'Discount %';
-                const isMarkupCol = cell === 'Markup %';
+                const isDiscountCol = columnMapping.discount === i;
+                const isMarkupCol = columnMapping.markup === i;
                 const isFlexCol = isDiscountCol || isMarkupCol;
                 headerRow.innerHTML += `<th class="column-header-cell" style="${isFlexCol ? 'background: #fff3cd;' : ''}">
                     <span class="column-header-text">${cell || `Column ${String.fromCharCode(65 + i)}`}</span>
@@ -712,22 +712,22 @@
             ];
             
             currentData[0].forEach((header, colIndex) => {
-                const isDiscountCol = header === 'Discount %';
-                const isMarkupCol = header === 'Markup %';
+                const isDiscountCol = columnMapping.discount === colIndex;
+                const isMarkupCol = columnMapping.markup === colIndex;
                 const isFlexCol = isDiscountCol || isMarkupCol;
                 let preSelected = '';
-                
-                // Pre-select based on column name
+
+                // Pre-select based on current mapping
                 if (isDiscountCol) {
                     preSelected = 'discount';
                 } else if (isMarkupCol) {
                     preSelected = 'markup';
                 }
-                
+
                 mappingRow.innerHTML += `<th style="${isFlexCol ? 'background: #fff3cd;' : 'background: #e3f2fd;'} padding: 8px;">
-                    <select id="colMap_${colIndex}" class="column-mapping-select" onchange="updateColumnMapping()" 
+                    <select id="colMap_${colIndex}" class="column-mapping-select" onchange="updateColumnMapping()"
                         style="${isFlexCol ? 'border-color: #ffc107;' : ''}">
-                        ${fieldOptions.map(opt => 
+                        ${fieldOptions.map(opt =>
                             `<option value="${opt.value}" ${opt.value === preSelected ? 'selected' : ''}>${opt.label}</option>`
                         ).join('')}
                     </select>
@@ -748,11 +748,11 @@
                 
                 for (let colIndex = 0; colIndex < currentData[0].length; colIndex++) {
                     const cell = row[colIndex] || '';
-                    const isDiscountCol = currentData[0][colIndex] === 'Discount %';
-                    const isMarkupCol = currentData[0][colIndex] === 'Markup %';
+                    const isDiscountCol = columnMapping.discount === colIndex;
+                    const isMarkupCol = columnMapping.markup === colIndex;
                     const isFlexCol = isDiscountCol || isMarkupCol;
-                    tr.innerHTML += `<td style="${isFlexCol ? 'background: #fff3cd;' : ''}"><input type="text" 
-                        value="${cell}" 
+                    tr.innerHTML += `<td style="${isFlexCol ? 'background: #fff3cd;' : ''}"><input type="text"
+                        value="${cell}"
                         onchange="updateCell(${rowIndex}, ${colIndex}, this.value)"
                         onkeydown="handleKeyDown(event, ${rowIndex}, ${colIndex})"
                         onfocus="handleFocus(${rowIndex}, ${colIndex})"
@@ -811,8 +811,8 @@
         }
         
         function handleKeyDown(event, row, col) {
-            // Find the Discount % column index
-            const discountColIndex = currentData[0].indexOf('Discount %');
+            // Get the mapped discount column index
+            const discountColIndex = columnMapping.discount;
             
             // Copy (Ctrl+C)
             if ((event.ctrlKey || event.metaKey) && event.key === 'c') {
@@ -830,29 +830,35 @@
                 updateCell(row, col, copiedValue);
             }
             
-            // Paste to all selected rows (Ctrl+Shift+V)
+            // Paste to all selected rows (Ctrl+Shift+V) - only works for discount/markup columns
             if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === 'v' && copiedValue !== null) {
                 event.preventDefault();
                 if (selectedRows.size === 0) {
                     alert('Please select rows first (Ctrl+click row numbers)');
                     return;
                 }
-                
-                if (discountColIndex === -1) {
-                    alert('Error: Discount % column not found');
+
+                // Determine which column to paste to based on current cell
+                let targetColIndex = discountColIndex;
+                if (columnMapping.markup === col) {
+                    targetColIndex = columnMapping.markup;
+                }
+
+                if (targetColIndex === undefined) {
+                    alert('Bulk paste only works for Discount % or Markup % columns');
                     return;
                 }
-                
+
                 selectedRows.forEach(rowIndex => {
                     if (rowIndex > 0) { // Skip header
                         // Ensure row has enough columns
-                        while (currentData[rowIndex].length <= discountColIndex) {
+                        while (currentData[rowIndex].length <= targetColIndex) {
                             currentData[rowIndex].push('');
                         }
-                        currentData[rowIndex][discountColIndex] = copiedValue;
+                        currentData[rowIndex][targetColIndex] = copiedValue;
                     }
                 });
-                
+
                 renderSpreadsheet();
                 alert(`Pasted "${copiedValue}" to ${selectedRows.size} selected rows`);
             }
@@ -883,19 +889,19 @@
         }
         
         function applyBulkDiscount() {
-            const discount = document.getElementById('bulkDiscount').value;
+            const discount = document.getElementById('bulkDiscount2').value;
             if (!discount) {
                 alert('Please enter a discount percentage');
                 return;
             }
-            
-            // Find the Discount % column index
-            const discountColIndex = currentData[0].indexOf('Discount %');
-            if (discountColIndex === -1) {
-                alert('Error: Discount % column not found');
+
+            // Get the mapped discount column index
+            const discountColIndex = columnMapping.discount;
+            if (discountColIndex === undefined) {
+                alert('Error: No column is mapped to Discount %. Please map a column first.');
                 return;
             }
-            
+
             for (let i = 1; i < currentData.length; i++) {
                 // Ensure row has enough columns
                 while (currentData[i].length <= discountColIndex) {
@@ -906,26 +912,26 @@
             renderSpreadsheet();
             alert(`Applied ${discount}% discount to all ${currentData.length - 1} rows`);
         }
-        
+
         function applyDiscountToSelected() {
-            const discount = document.getElementById('bulkDiscount').value;
+            const discount = document.getElementById('bulkDiscount2').value;
             if (!discount) {
                 alert('Please enter a discount percentage');
                 return;
             }
-            
+
             if (selectedRows.size === 0) {
                 alert('Please select rows first by clicking the row numbers (hold Ctrl to select multiple)');
                 return;
             }
-            
-            // Find the Discount % column index
-            const discountColIndex = currentData[0].indexOf('Discount %');
-            if (discountColIndex === -1) {
-                alert('Error: Discount % column not found');
+
+            // Get the mapped discount column index
+            const discountColIndex = columnMapping.discount;
+            if (discountColIndex === undefined) {
+                alert('Error: No column is mapped to Discount %. Please map a column first.');
                 return;
             }
-            
+
             selectedRows.forEach(rowIndex => {
                 // Ensure row has enough columns
                 while (currentData[rowIndex].length <= discountColIndex) {
@@ -933,9 +939,23 @@
                 }
                 currentData[rowIndex][discountColIndex] = discount;
             });
-            
+
             renderSpreadsheet();
             alert(`Applied ${discount}% discount to ${selectedRows.size} selected rows`);
+        }
+
+        function clearAllDiscounts() {
+            if (!confirm('Clear all discount values?')) return;
+
+            const discountColIndex = columnMapping.discount;
+            if (discountColIndex === undefined) return;
+
+            for (let i = 1; i < currentData.length; i++) {
+                if (currentData[i][discountColIndex] !== undefined) {
+                    currentData[i][discountColIndex] = '';
+                }
+            }
+            renderSpreadsheet();
         }
         
         function clearSelectedDiscounts() {
@@ -943,13 +963,12 @@
                 alert('Please select rows first by clicking the row numbers');
                 return;
             }
-            
+
             if (!confirm(`Clear discount values for ${selectedRows.size} selected rows?`)) return;
-            
-            // Find the Discount % column index
-            const discountColIndex = currentData[0].indexOf('Discount %');
-            if (discountColIndex === -1) return;
-            
+
+            const discountColIndex = columnMapping.discount;
+            if (discountColIndex === undefined) return;
+
             selectedRows.forEach(rowIndex => {
                 if (currentData[rowIndex][discountColIndex] !== undefined) {
                     currentData[rowIndex][discountColIndex] = '';
@@ -957,51 +976,51 @@
             });
             renderSpreadsheet();
         }
-        
+
         function applyMarkupToSelected() {
             const markup = document.getElementById('bulkMarkup2').value;
             if (!markup) {
                 alert('Please enter a markup percentage');
                 return;
             }
-            
+
             if (selectedRows.size === 0) {
                 alert('Please select rows first by clicking row numbers (hold Ctrl to select multiple)');
                 return;
             }
-            
-            const markupColIndex = currentData[0].indexOf('Markup %');
-            
-            if (markupColIndex === -1) {
-                alert('Error: Markup % column not found');
+
+            const markupColIndex = columnMapping.markup;
+
+            if (markupColIndex === undefined) {
+                alert('Error: No column is mapped to Markup %. Please map a column first.');
                 return;
             }
-            
+
             selectedRows.forEach(rowIndex => {
                 while (currentData[rowIndex].length <= markupColIndex) {
                     currentData[rowIndex].push('');
                 }
                 currentData[rowIndex][markupColIndex] = markup;
             });
-            
+
             renderSpreadsheet();
             alert(`Applied ${markup}% markup to ${selectedRows.size} selected rows`);
         }
-        
+
         function applyBulkMarkup() {
             const markup = document.getElementById('bulkMarkup2').value;
             if (!markup) {
                 alert('Please enter a markup percentage');
                 return;
             }
-            
-            const markupColIndex = currentData[0].indexOf('Markup %');
-            
-            if (markupColIndex === -1) {
-                alert('Error: Markup % column not found');
+
+            const markupColIndex = columnMapping.markup;
+
+            if (markupColIndex === undefined) {
+                alert('Error: No column is mapped to Markup %. Please map a column first.');
                 return;
             }
-            
+
             for (let i = 1; i < currentData.length; i++) {
                 while (currentData[i].length <= markupColIndex) {
                     currentData[i].push('');
@@ -1011,18 +1030,18 @@
             renderSpreadsheet();
             alert(`Applied ${markup}% markup to all ${currentData.length - 1} rows`);
         }
-        
+
         function clearSelectedMarkups() {
             if (selectedRows.size === 0) {
                 alert('Please select rows first by clicking row numbers');
                 return;
             }
-            
+
             if (!confirm(`Clear markup values for ${selectedRows.size} selected rows?`)) return;
-            
-            const markupColIndex = currentData[0].indexOf('Markup %');
-            if (markupColIndex === -1) return;
-            
+
+            const markupColIndex = columnMapping.markup;
+            if (markupColIndex === undefined) return;
+
             selectedRows.forEach(rowIndex => {
                 if (currentData[rowIndex][markupColIndex] !== undefined) {
                     currentData[rowIndex][markupColIndex] = '';
@@ -1030,13 +1049,13 @@
             });
             renderSpreadsheet();
         }
-        
+
         function clearAllMarkups() {
             if (!confirm('Clear all markup values?')) return;
-            
-            const markupColIndex = currentData[0].indexOf('Markup %');
-            if (markupColIndex === -1) return;
-            
+
+            const markupColIndex = columnMapping.markup;
+            if (markupColIndex === undefined) return;
+
             for (let i = 1; i < currentData.length; i++) {
                 if (currentData[i][markupColIndex] !== undefined) {
                     currentData[i][markupColIndex] = '';
@@ -1064,42 +1083,26 @@
             alert(`"${colName}" column deleted`);
         }
         
-        function addDiscountColumn() {
-            // Check if Discount % column already exists
-            if (currentData[0].includes('Discount %')) {
-                alert('Discount % column already exists!');
-                return;
+        function addPercentageColumn() {
+            // Find a unique column name
+            let columnName = 'Custom %';
+            let counter = 1;
+
+            while (currentData[0].includes(columnName)) {
+                counter++;
+                columnName = `Custom % ${counter}`;
             }
-            
+
             // Add header
-            currentData[0].push('Discount %');
-            
+            currentData[0].push(columnName);
+
             // Add empty values to all data rows
             for (let i = 1; i < currentData.length; i++) {
                 currentData[i].push('');
             }
-            
+
             renderSpreadsheet();
-            alert('Discount % column added! Map it in the dropdown and use Quick Tools in Step 3.');
-        }
-        
-        function addMarkupColumn() {
-            // Check if Markup % column already exists
-            if (currentData[0].includes('Markup %')) {
-                alert('Markup % column already exists!');
-                return;
-            }
-            
-            // Add header
-            currentData[0].push('Markup %');
-            
-            // Add empty values to all data rows
-            for (let i = 1; i < currentData.length; i++) {
-                currentData[i].push('');
-            }
-            
-            renderSpreadsheet();
-            alert('Markup % column added! Map it in the dropdown and use Quick Tools in Step 3.');
+            alert(`"${columnName}" column added! Use the dropdown under the column header to choose Discount % or Markup %.`);
         }
         
         function deleteRow(rowIndex) {
