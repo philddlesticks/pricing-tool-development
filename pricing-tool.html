@@ -1,0 +1,1459 @@
+<div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 2px solid #007bff;">
+                <strong>ℹ️ Column        function renderMapping() {
+            const grid = document.getElementById('mappingGrid');
+            grid.innerHTML = '';
+            
+            const fields = [
+                {id: 'code', label: 'Product Code *', required: true},
+                {id: 'description', label: 'Description'},
+                {id: 'costPrice', label: 'Cost Price (if available)', required: false},
+                {id: 'listPrice', label: 'List Price *', required: true},
+                {id: 'barcode', label: 'Barcode'},
+                {id: 'discount', label: 'Discount % Column (optional - manual column is last)', required: false}
+            ];
+            
+            const headers = currentData[0];
+            
+            fields.forEach(field => {
+                const div = document.createElement('div');
+                div.className = 'mapping-item';
+                
+                // Highlight the<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing List Processing Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .step {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+        
+        .step.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .step-header {
+            background: #007bff;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .upload-area {
+            border: 3px dashed #ccc;
+            padding: 60px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .upload-area:hover {
+            border-color: #007bff;
+            background: #f8f9fa;
+        }
+        
+        .upload-area.dragover {
+            border-color: #28a745;
+            background: #e8f5e9;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .spreadsheet-container {
+            overflow-x: auto;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        
+        .spreadsheet {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        
+        .spreadsheet th {
+            background: #f8f9fa;
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            vertical-align: top;
+        }
+        
+        .column-header-cell {
+            min-width: 150px;
+        }
+        
+        .column-header-text {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+            font-size: 13px;
+        }
+        
+        .column-mapping-select {
+            width: 100%;
+            padding: 6px;
+            border: 2px solid #007bff;
+            border-radius: 4px;
+            font-size: 12px;
+            background: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .column-mapping-select:focus {
+            outline: none;
+            border-color: #0056b3;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+        
+        .spreadsheet td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        
+        .spreadsheet td input {
+            width: 100%;
+            border: 1px solid transparent;
+            padding: 6px;
+            font-size: 14px;
+        }
+        
+        .spreadsheet td input:focus {
+            outline: none;
+            border-color: #007bff;
+            background: #f0f8ff;
+        }
+        
+        .spreadsheet tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .selected-row {
+            background: #e3f2fd !important;
+        }
+        
+        .selected-row:hover {
+            background: #bbdefb !important;
+        }
+        
+        .fill-handle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #007bff;
+            border: 1px solid white;
+            cursor: crosshair;
+            display: none;
+            z-index: 1000;
+        }
+        
+        .cell-selected {
+            background: #e3f2fd !important;
+            border: 2px solid #007bff !important;
+        }
+        
+        .discount-tools {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border: 2px solid #28a745;
+        }
+        
+        .discount-tools label {
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .discount-tools input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+            width: 100px;
+        }
+        
+        .discount-tools button {
+            margin-right: 5px;
+        }
+        
+        .mapping-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .mapping-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            border: 2px solid #dee2e6;
+        }
+        
+        .mapping-item label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .mapping-item select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .preview-table {
+            margin-top: 20px;
+            font-size: 13px;
+            overflow-x: auto;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        
+        .comparison-table th {
+            background: #343a40;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .comparison-table td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .comparison-table tr.flagged {
+            background: #fff3cd;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .comparison-table tr.flagged:hover {
+            background: #ffe8a1;
+        }
+        
+        .change-positive {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        
+        .change-negative {
+            color: #28a745;
+            font-weight: 600;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-warning {
+            background: #ffc107;
+            color: #000;
+        }
+        
+        .badge-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .badge-info {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        
+        .button-group {
+            margin: 20px 0;
+        }
+        
+        .row-number {
+            background: #e9ecef;
+            color: #666;
+            font-weight: 600;
+            text-align: center;
+            width: 50px;
+        }
+        
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .delete-btn:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Pricing List Processing Tool</h1>
+        <p class="subtitle">Upload, edit, and compare pricing data with change detection</p>
+        
+        <!-- Step 1: Upload -->
+        <div id="step1" class="step active">
+            <div class="step-header">Step 1: Upload Pricing File</div>
+            <div class="upload-area" id="uploadArea">
+                <h2>📁 Drop Excel file here or click to browse</h2>
+                <p style="color: #666; margin-top: 10px;">Supports .xlsx and .xls formats</p>
+                <input type="file" id="fileInput" accept=".xlsx,.xls">
+            </div>
+            
+            <div class="alert alert-info">
+                <strong>Optional:</strong> Upload previous pricing data for comparison
+                <input type="file" id="previousFileInput" accept=".xlsx,.xls,.json" style="display: block; margin-top: 10px;">
+            </div>
+        </div>
+        
+        <!-- Step 2: Edit Spreadsheet -->
+        <div id="step2" class="step">
+            <div class="step-header">Step 2: Edit Data & Map Columns</div>
+            <div class="alert alert-info">
+                <strong>First:</strong> Assign each column using the dropdowns directly below the column headers<br>
+                <strong>Then:</strong> Edit any data if needed. Use the buttons below to add/remove Discount% or Markup% columns.
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 2px solid #007bff;">
+                <strong>ℹ️ Column Assignment:</strong>
+                <div style="margin-top: 10px;">
+                    <small style="color: #666;">
+                        <strong>Required:</strong> Code + (List Price OR Cost Price)<br>
+                        <strong>If you have List Price:</strong> Add Discount % column to calculate Cost Price<br>
+                        <strong>If you have Cost Price:</strong> Add Markup % column to calculate List Price<br>
+                        <strong>Optional:</strong> Description, Barcode, Manufacturer, Country of Origin
+                    </small>
+                </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn" onclick="addDiscountColumn()">➕ Add Discount % Column</button>
+                    <button class="btn" onclick="addMarkupColumn()">➕ Add Markup % Column</button>
+                </div>
+            </div>
+            
+            <div class="discount-tools" id="step2Tools">
+                <strong>💡 Quick Pricing Tools:</strong><br><br>
+                
+                <div id="discountToolsSection2" style="margin-bottom: 15px; display: none;">
+                    <label>🏷️ Discount value:</label>
+                    <input type="number" id="bulkDiscount2" placeholder="e.g., 20" min="0" max="100" step="0.1">
+                    <button class="btn btn-success" onclick="applyDiscountToSelected()">Apply to Selected Rows</button>
+                    <button class="btn" onclick="applyBulkDiscount()">Apply to All Rows</button>
+                    <button class="btn btn-secondary" onclick="clearSelectedDiscounts()">Clear Selected</button>
+                    <button class="btn btn-secondary" onclick="clearAllDiscounts()">Clear All</button>
+                </div>
+                
+                <div id="markupToolsSection2" style="margin-bottom: 15px; display: none;">
+                    <label>📈 Markup value:</label>
+                    <input type="number" id="bulkMarkup2" placeholder="e.g., 25" min="0" max="1000" step="0.1">
+                    <button class="btn btn-success" onclick="applyMarkupToSelected()">Apply to Selected Rows</button>
+                    <button class="btn" onclick="applyBulkMarkup()">Apply to All Rows</button>
+                    <button class="btn btn-secondary" onclick="clearSelectedMarkups()">Clear Selected</button>
+                    <button class="btn btn-secondary" onclick="clearAllMarkups()">Clear All</button>
+                </div>
+                
+                <div style="background: white; padding: 10px; border-radius: 4px; border-left: 4px solid #007bff;">
+                    <strong>How to use:</strong><br>
+                    <small style="color: #666;">
+                        1️⃣ <strong>Select rows:</strong> Click row numbers below (hold Ctrl for multiple)<br>
+                        2️⃣ <strong>Enter value:</strong> Type percentage in box above<br>
+                        3️⃣ <strong>Apply:</strong> Click "Apply to Selected Rows" or "Apply to All Rows"<br><br>
+                        <strong>Keyboard shortcuts:</strong><br>
+                        • Click a cell with a value → <strong>Ctrl+C</strong> to copy<br>
+                        • Select destination rows (Ctrl+click row numbers)<br>
+                        • Press <strong>Ctrl+Shift+V</strong> to paste to all selected rows
+                    </small>
+                </div>
+            </div>
+            
+            <div class="spreadsheet-container">
+                <table class="spreadsheet" id="spreadsheet"></table>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
+                <button class="btn" onclick="validateAndProcess()">Next: Review & Process →</button>
+            </div>
+        </div>
+        
+        <!-- Step 3: Review & Process -->
+        <div id="step3" class="step">
+            <div class="step-header">Step 3: Review & Process</div>
+            
+            <div class="alert alert-info">
+                Review your mapped data below before processing. Make sure all columns are correctly assigned.
+            </div>
+            
+            <div class="preview-table">
+                <h3>Preview Mapped Data (first 10 rows):</h3>
+                <table class="comparison-table" id="previewTable"></table>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="goToStep(2)">← Back to Edit</button>
+                <button class="btn" onclick="processData()">Process & Compare →</button>
+            </div>
+        </div>
+        
+        <!-- Step 4: Review Results -->
+        <div id="step4" class="step">
+            <div class="step-header">Step 4: Review Changes & Flagged Items</div>
+            
+            <div class="stats-grid" id="statsGrid"></div>
+            
+            <div class="alert alert-warning" id="flaggedAlert" style="display:none;">
+                <strong>⚠️ Attention Required:</strong> Items flagged below meet criteria: ≥15% increase OR ≤-10% decrease with cost ≥£100
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <label>
+                    <input type="checkbox" id="showOnlyFlagged" onchange="toggleFlaggedFilter()">
+                    Show only flagged items
+                </label>
+            </div>
+            
+            <div class="spreadsheet-container">
+                <table class="comparison-table" id="comparisonTable"></table>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="goToStep(3)">← Back</button>
+                <button class="btn btn-success" onclick="saveData()">💾 Save to Server</button>
+                <button class="btn" onclick="exportJSON()">📥 Export JSON</button>
+                <button class="btn" onclick="exportCSV()">📥 Export CSV</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentData = [];
+        let previousData = [];
+        let processedData = [];
+        let columnMapping = {};
+        let currentStep = 1;
+        let selectedRows = new Set();
+        let copiedValue = null;
+        
+        const REQUIRED_FIELDS = ['code', 'listPrice'];
+        const OPTIONAL_FIELDS = ['description', 'barcode', 'costPrice', 'discount'];
+        
+        // File upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const previousFileInput = document.getElementById('previousFileInput');
+        
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) handleFile(file);
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        });
+        
+        previousFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handlePreviousFile(file);
+        });
+        
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1, defval: ''});
+                
+                currentData = jsonData.filter(row => row.some(cell => cell !== ''));
+                
+                if (currentData.length > 0) {
+                    renderSpreadsheet();
+                    goToStep(2);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function handlePreviousFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (file.name.endsWith('.json')) {
+                    previousData = JSON.parse(e.target.result);
+                    alert('Previous pricing data loaded successfully!');
+                } else {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1, defval: ''});
+                    
+                    // Assume first row is headers, convert to objects
+                    const headers = jsonData[0];
+                    previousData = jsonData.slice(1).map(row => {
+                        let obj = {};
+                        headers.forEach((header, i) => {
+                            obj[header.toLowerCase().replace(/\s+/g, '')] = row[i];
+                        });
+                        return obj;
+                    });
+                    alert('Previous pricing data loaded successfully!');
+                }
+            };
+            
+            if (file.name.endsWith('.json')) {
+                reader.readAsText(file);
+            } else {
+                reader.readAsArrayBuffer(file);
+            }
+        }
+        
+        function renderSpreadsheet() {
+            const table = document.getElementById('spreadsheet');
+            table.innerHTML = '';
+            
+            // Check if discount or markup columns exist
+            const hasDiscount = currentData[0].includes('Discount %');
+            const hasMarkup = currentData[0].includes('Markup %');
+            
+            // Show/hide quick tools based on columns
+            document.getElementById('discountToolsSection2').style.display = hasDiscount ? 'block' : 'none';
+            document.getElementById('markupToolsSection2').style.display = hasMarkup ? 'block' : 'none';
+            document.getElementById('step2Tools').style.display = (hasDiscount || hasMarkup) ? 'block' : 'none';
+            
+            // Header row with column names
+            const headerRow = document.createElement('tr');
+            headerRow.innerHTML = '<th class="row-number" style="cursor: pointer;" onclick="toggleAllRows()">✓</th>';
+            currentData[0].forEach((cell, i) => {
+                const isDiscountCol = cell === 'Discount %';
+                const isMarkupCol = cell === 'Markup %';
+                const isFlexCol = isDiscountCol || isMarkupCol;
+                headerRow.innerHTML += `<th class="column-header-cell" style="${isFlexCol ? 'background: #fff3cd;' : ''}">
+                    <span class="column-header-text">${cell || `Column ${String.fromCharCode(65 + i)}`}</span>
+                    ${isFlexCol ? `<button class="delete-btn" style="margin-left: 5px; font-size: 10px; padding: 2px 6px;" onclick="deleteColumn(${i}); event.stopPropagation();">✕</button>` : ''}
+                </th>`;
+            });
+            headerRow.innerHTML += '<th>Actions</th>';
+            table.appendChild(headerRow);
+            
+            // Mapping row with dropdowns
+            const mappingRow = document.createElement('tr');
+            mappingRow.innerHTML = '<th class="row-number" style="background: #e3f2fd;">Map to:</th>';
+            
+            const fieldOptions = [
+                {value: '', label: '-- Ignore Column --'},
+                {value: 'code', label: '📦 Code *'},
+                {value: 'description', label: '📝 Description'},
+                {value: 'costPrice', label: '💰 Cost Price'},
+                {value: 'listPrice', label: '💷 List Price'},
+                {value: 'barcode', label: '🔢 Barcode'},
+                {value: 'discount', label: '🏷️ Discount %'},
+                {value: 'markup', label: '📈 Markup %'},
+                {value: 'manufacturer', label: '🏭 Manufacturer'},
+                {value: 'countryOfOrigin', label: '🌍 Country of Origin'}
+            ];
+            
+            currentData[0].forEach((header, colIndex) => {
+                const isDiscountCol = header === 'Discount %';
+                const isMarkupCol = header === 'Markup %';
+                const isFlexCol = isDiscountCol || isMarkupCol;
+                let preSelected = '';
+                
+                // Pre-select based on column name
+                if (isDiscountCol) {
+                    preSelected = 'discount';
+                } else if (isMarkupCol) {
+                    preSelected = 'markup';
+                }
+                
+                mappingRow.innerHTML += `<th style="${isFlexCol ? 'background: #fff3cd;' : 'background: #e3f2fd;'} padding: 8px;">
+                    <select id="colMap_${colIndex}" class="column-mapping-select" onchange="updateColumnMapping()" 
+                        style="${isFlexCol ? 'border-color: #ffc107;' : ''}">
+                        ${fieldOptions.map(opt => 
+                            `<option value="${opt.value}" ${opt.value === preSelected ? 'selected' : ''}>${opt.label}</option>`
+                        ).join('')}
+                    </select>
+                </th>`;
+            });
+            mappingRow.innerHTML += '<th style="background: #e3f2fd;"></th>';
+            table.appendChild(mappingRow);
+            
+            // Data rows
+            for (let rowIndex = 1; rowIndex < currentData.length; rowIndex++) {
+                const row = currentData[rowIndex];
+                const tr = document.createElement('tr');
+                const isSelected = selectedRows.has(rowIndex);
+                tr.className = isSelected ? 'selected-row' : '';
+                tr.innerHTML = `<td class="row-number" style="cursor: pointer;" onclick="toggleRowSelection(${rowIndex}, event)">
+                    ${isSelected ? '✓' : rowIndex}
+                </td>`;
+                
+                for (let colIndex = 0; colIndex < currentData[0].length; colIndex++) {
+                    const cell = row[colIndex] || '';
+                    const isDiscountCol = currentData[0][colIndex] === 'Discount %';
+                    const isMarkupCol = currentData[0][colIndex] === 'Markup %';
+                    const isFlexCol = isDiscountCol || isMarkupCol;
+                    tr.innerHTML += `<td style="${isFlexCol ? 'background: #fff3cd;' : ''}"><input type="text" 
+                        value="${cell}" 
+                        onchange="updateCell(${rowIndex}, ${colIndex}, this.value)"
+                        onkeydown="handleKeyDown(event, ${rowIndex}, ${colIndex})"
+                        onfocus="handleFocus(${rowIndex}, ${colIndex})"
+                        placeholder="${isFlexCol ? '0' : ''}"></td>`;
+                }
+                
+                tr.innerHTML += `<td><button class="delete-btn" onclick="deleteRow(${rowIndex})">Delete</button></td>`;
+                table.appendChild(tr);
+            }
+            
+            // Initialize mapping
+            updateColumnMapping();
+        }
+        
+        function updateColumnMapping() {
+            columnMapping = {};
+            
+            currentData[0].forEach((header, colIndex) => {
+                const select = document.getElementById(`colMap_${colIndex}`);
+                if (select && select.value) {
+                    columnMapping[select.value] = colIndex;
+                }
+            });
+        }
+        
+        function renderColumnMapping() {
+            // This function is no longer needed - mapping is in the table
+        }
+        
+        function toggleRowSelection(rowIndex, event) {
+            if (rowIndex === 0) return; // Don't select header
+            
+            if (event.ctrlKey || event.metaKey) {
+                if (selectedRows.has(rowIndex)) {
+                    selectedRows.delete(rowIndex);
+                } else {
+                    selectedRows.add(rowIndex);
+                }
+            } else {
+                selectedRows.clear();
+                selectedRows.add(rowIndex);
+            }
+            renderSpreadsheet();
+        }
+        
+        function toggleAllRows() {
+            if (selectedRows.size === currentData.length - 1) {
+                selectedRows.clear();
+            } else {
+                selectedRows.clear();
+                for (let i = 1; i < currentData.length; i++) {
+                    selectedRows.add(i);
+                }
+            }
+            renderSpreadsheet();
+        }
+        
+        function handleKeyDown(event, row, col) {
+            // Find the Discount % column index
+            const discountColIndex = currentData[0].indexOf('Discount %');
+            
+            // Copy (Ctrl+C)
+            if ((event.ctrlKey || event.metaKey) && event.key === 'c') {
+                copiedValue = event.target.value;
+                event.target.style.background = '#ffffcc';
+                setTimeout(() => {
+                    event.target.style.background = col === discountColIndex ? '#d4edda' : '';
+                }, 200);
+            }
+            
+            // Paste to single cell (Ctrl+V)
+            if ((event.ctrlKey || event.metaKey) && event.key === 'v' && !event.shiftKey && copiedValue !== null) {
+                event.preventDefault();
+                event.target.value = copiedValue;
+                updateCell(row, col, copiedValue);
+            }
+            
+            // Paste to all selected rows (Ctrl+Shift+V)
+            if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === 'v' && copiedValue !== null) {
+                event.preventDefault();
+                if (selectedRows.size === 0) {
+                    alert('Please select rows first (Ctrl+click row numbers)');
+                    return;
+                }
+                
+                if (discountColIndex === -1) {
+                    alert('Error: Discount % column not found');
+                    return;
+                }
+                
+                selectedRows.forEach(rowIndex => {
+                    if (rowIndex > 0) { // Skip header
+                        // Ensure row has enough columns
+                        while (currentData[rowIndex].length <= discountColIndex) {
+                            currentData[rowIndex].push('');
+                        }
+                        currentData[rowIndex][discountColIndex] = copiedValue;
+                    }
+                });
+                
+                renderSpreadsheet();
+                alert(`Pasted "${copiedValue}" to ${selectedRows.size} selected rows`);
+            }
+            
+            // Arrow key navigation
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'].includes(event.key)) {
+                event.preventDefault();
+                let newRow = row;
+                let newCol = col;
+                
+                if (event.key === 'ArrowUp') newRow = Math.max(1, row - 1);
+                if (event.key === 'ArrowDown' || event.key === 'Enter') newRow = Math.min(currentData.length - 1, row + 1);
+                if (event.key === 'ArrowLeft') newCol = Math.max(0, col - 1);
+                if (event.key === 'ArrowRight') newCol = Math.min(currentData[0].length - 1, col + 1);
+                
+                const table = document.getElementById('spreadsheet');
+                const targetInput = table.rows[newRow].cells[newCol + 1].querySelector('input');
+                if (targetInput && !targetInput.readOnly) {
+                    targetInput.focus();
+                    targetInput.select();
+                }
+            }
+        }
+        
+        function handleFocus(row, col) {
+            // Auto-select text for easy overwriting
+            event.target.select();
+        }
+        
+        function applyBulkDiscount() {
+            const discount = document.getElementById('bulkDiscount').value;
+            if (!discount) {
+                alert('Please enter a discount percentage');
+                return;
+            }
+            
+            // Find the Discount % column index
+            const discountColIndex = currentData[0].indexOf('Discount %');
+            if (discountColIndex === -1) {
+                alert('Error: Discount % column not found');
+                return;
+            }
+            
+            for (let i = 1; i < currentData.length; i++) {
+                // Ensure row has enough columns
+                while (currentData[i].length <= discountColIndex) {
+                    currentData[i].push('');
+                }
+                currentData[i][discountColIndex] = discount;
+            }
+            renderSpreadsheet();
+            alert(`Applied ${discount}% discount to all ${currentData.length - 1} rows`);
+        }
+        
+        function applyDiscountToSelected() {
+            const discount = document.getElementById('bulkDiscount').value;
+            if (!discount) {
+                alert('Please enter a discount percentage');
+                return;
+            }
+            
+            if (selectedRows.size === 0) {
+                alert('Please select rows first by clicking the row numbers (hold Ctrl to select multiple)');
+                return;
+            }
+            
+            // Find the Discount % column index
+            const discountColIndex = currentData[0].indexOf('Discount %');
+            if (discountColIndex === -1) {
+                alert('Error: Discount % column not found');
+                return;
+            }
+            
+            selectedRows.forEach(rowIndex => {
+                // Ensure row has enough columns
+                while (currentData[rowIndex].length <= discountColIndex) {
+                    currentData[rowIndex].push('');
+                }
+                currentData[rowIndex][discountColIndex] = discount;
+            });
+            
+            renderSpreadsheet();
+            alert(`Applied ${discount}% discount to ${selectedRows.size} selected rows`);
+        }
+        
+        function clearSelectedDiscounts() {
+            if (selectedRows.size === 0) {
+                alert('Please select rows first by clicking the row numbers');
+                return;
+            }
+            
+            if (!confirm(`Clear discount values for ${selectedRows.size} selected rows?`)) return;
+            
+            // Find the Discount % column index
+            const discountColIndex = currentData[0].indexOf('Discount %');
+            if (discountColIndex === -1) return;
+            
+            selectedRows.forEach(rowIndex => {
+                if (currentData[rowIndex][discountColIndex] !== undefined) {
+                    currentData[rowIndex][discountColIndex] = '';
+                }
+            });
+            renderSpreadsheet();
+        }
+        
+        function applyMarkupToSelected() {
+            const markup = document.getElementById('bulkMarkup2').value;
+            if (!markup) {
+                alert('Please enter a markup percentage');
+                return;
+            }
+            
+            if (selectedRows.size === 0) {
+                alert('Please select rows first by clicking row numbers (hold Ctrl to select multiple)');
+                return;
+            }
+            
+            const markupColIndex = currentData[0].indexOf('Markup %');
+            
+            if (markupColIndex === -1) {
+                alert('Error: Markup % column not found');
+                return;
+            }
+            
+            selectedRows.forEach(rowIndex => {
+                while (currentData[rowIndex].length <= markupColIndex) {
+                    currentData[rowIndex].push('');
+                }
+                currentData[rowIndex][markupColIndex] = markup;
+            });
+            
+            renderSpreadsheet();
+            alert(`Applied ${markup}% markup to ${selectedRows.size} selected rows`);
+        }
+        
+        function applyBulkMarkup() {
+            const markup = document.getElementById('bulkMarkup2').value;
+            if (!markup) {
+                alert('Please enter a markup percentage');
+                return;
+            }
+            
+            const markupColIndex = currentData[0].indexOf('Markup %');
+            
+            if (markupColIndex === -1) {
+                alert('Error: Markup % column not found');
+                return;
+            }
+            
+            for (let i = 1; i < currentData.length; i++) {
+                while (currentData[i].length <= markupColIndex) {
+                    currentData[i].push('');
+                }
+                currentData[i][markupColIndex] = markup;
+            }
+            renderSpreadsheet();
+            alert(`Applied ${markup}% markup to all ${currentData.length - 1} rows`);
+        }
+        
+        function clearSelectedMarkups() {
+            if (selectedRows.size === 0) {
+                alert('Please select rows first by clicking row numbers');
+                return;
+            }
+            
+            if (!confirm(`Clear markup values for ${selectedRows.size} selected rows?`)) return;
+            
+            const markupColIndex = currentData[0].indexOf('Markup %');
+            if (markupColIndex === -1) return;
+            
+            selectedRows.forEach(rowIndex => {
+                if (currentData[rowIndex][markupColIndex] !== undefined) {
+                    currentData[rowIndex][markupColIndex] = '';
+                }
+            });
+            renderSpreadsheet();
+        }
+        
+        function clearAllMarkups() {
+            if (!confirm('Clear all markup values?')) return;
+            
+            const markupColIndex = currentData[0].indexOf('Markup %');
+            if (markupColIndex === -1) return;
+            
+            for (let i = 1; i < currentData.length; i++) {
+                if (currentData[i][markupColIndex] !== undefined) {
+                    currentData[i][markupColIndex] = '';
+                }
+            }
+            renderSpreadsheet();
+        }
+        
+        function updateCell(row, col, value) {
+            currentData[row][col] = value;
+        }
+        
+        function deleteColumn(colIndex) {
+            const colName = currentData[0][colIndex];
+            if (!confirm(`Delete the "${colName}" column and all its data?`)) return;
+            
+            // Remove column from all rows
+            for (let i = 0; i < currentData.length; i++) {
+                currentData[i].splice(colIndex, 1);
+            }
+            
+            // Clear the mapping for this column
+            updateColumnMapping();
+            renderSpreadsheet();
+            alert(`"${colName}" column deleted`);
+        }
+        
+        function addDiscountColumn() {
+            // Check if Discount % column already exists
+            if (currentData[0].includes('Discount %')) {
+                alert('Discount % column already exists!');
+                return;
+            }
+            
+            // Add header
+            currentData[0].push('Discount %');
+            
+            // Add empty values to all data rows
+            for (let i = 1; i < currentData.length; i++) {
+                currentData[i].push('');
+            }
+            
+            renderSpreadsheet();
+            alert('Discount % column added! Map it in the dropdown and use Quick Tools in Step 3.');
+        }
+        
+        function addMarkupColumn() {
+            // Check if Markup % column already exists
+            if (currentData[0].includes('Markup %')) {
+                alert('Markup % column already exists!');
+                return;
+            }
+            
+            // Add header
+            currentData[0].push('Markup %');
+            
+            // Add empty values to all data rows
+            for (let i = 1; i < currentData.length; i++) {
+                currentData[i].push('');
+            }
+            
+            renderSpreadsheet();
+            alert('Markup % column added! Map it in the dropdown and use Quick Tools in Step 3.');
+        }
+        
+        function deleteRow(rowIndex) {
+            if (confirm('Delete this row?')) {
+                currentData.splice(rowIndex, 1);
+                renderSpreadsheet();
+            }
+        }
+        
+        function goToStep(step) {
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+            currentStep = step;
+            
+            if (step === 3) {
+                renderPreviewOnly();
+            }
+        }
+        
+        function validateAndProcess() {
+            // Validate required mappings - need Code and either (ListPrice OR CostPrice)
+            if (columnMapping.code === undefined) {
+                alert('Please map the required field: Product Code');
+                return;
+            }
+            
+            // Need at least one price field
+            if (columnMapping.listPrice === undefined && columnMapping.costPrice === undefined) {
+                alert('Please map at least one price field: either List Price OR Cost Price');
+                return;
+            }
+            
+            // If we have list price but no cost price, we need discount
+            if (columnMapping.listPrice !== undefined && columnMapping.costPrice === undefined && columnMapping.discount === undefined) {
+                alert('You have List Price but no Cost Price. Please map Discount % column to calculate costs.');
+                return;
+            }
+            
+            // If we have cost price but no list price, we need markup
+            if (columnMapping.costPrice !== undefined && columnMapping.listPrice === undefined && columnMapping.markup === undefined) {
+                alert('You have Cost Price but no List Price. Please map Markup % column to calculate list prices.');
+                return;
+            }
+            
+            // Save current scroll position and selection state
+            window.scrollTo(0, 0);
+            
+            goToStep(3);
+        }
+        
+        function renderPreviewOnly() {
+            const table = document.getElementById('previewTable');
+            const hasDiscount = columnMapping.discount !== undefined;
+            const hasMarkup = columnMapping.markup !== undefined;
+            
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Description</th>
+                        <th>${hasDiscount ? 'List Price' : 'Cost Price'}</th>
+                        ${hasDiscount ? '<th>Discount %</th>' : ''}
+                        ${hasMarkup ? '<th>Markup %</th>' : ''}
+                        <th>Calculated ${hasDiscount ? 'Cost' : 'List Price'}</th>
+                        <th>Manufacturer</th>
+                        <th>Country</th>
+                        <th>Barcode</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+            
+            const previewRows = currentData.slice(1, 11);
+            previewRows.forEach(row => {
+                const listPrice = columnMapping.listPrice !== undefined ? parseFloat(row[columnMapping.listPrice]) || 0 : 0;
+                const discount = columnMapping.discount !== undefined ? parseFloat(row[columnMapping.discount]) || 0 : 0;
+                const markup = columnMapping.markup !== undefined ? parseFloat(row[columnMapping.markup]) || 0 : 0;
+                const costPrice = columnMapping.costPrice !== undefined ? parseFloat(row[columnMapping.costPrice]) || 0 : 0;
+                
+                let calculatedValue = 0;
+                if (hasDiscount) {
+                    calculatedValue = costPrice > 0 ? costPrice : listPrice * (1 - discount / 100);
+                } else if (hasMarkup) {
+                    calculatedValue = listPrice > 0 ? listPrice : costPrice * (1 + markup / 100);
+                }
+                
+                table.innerHTML += `
+                    <tr>
+                        <td>${columnMapping.code !== undefined ? row[columnMapping.code] : '-'}</td>
+                        <td>${columnMapping.description !== undefined ? row[columnMapping.description] : '-'}</td>
+                        <td>${hasDiscount ? 
+                            (listPrice > 0 ? '£' + listPrice.toFixed(2) : '-') : 
+                            (costPrice > 0 ? '£' + costPrice.toFixed(2) : '-')}</td>
+                        ${hasDiscount ? `<td>${discount > 0 ? discount.toFixed(1) + '%' : '-'}</td>` : ''}
+                        ${hasMarkup ? `<td>${markup > 0 ? markup.toFixed(1) + '%' : '-'}</td>` : ''}
+                        <td style="background: #e8f5e9;">${calculatedValue > 0 ? '£' + calculatedValue.toFixed(2) : '-'}</td>
+                        <td>${columnMapping.manufacturer !== undefined ? row[columnMapping.manufacturer] : '-'}</td>
+                        <td>${columnMapping.countryOfOrigin !== undefined ? row[columnMapping.countryOfOrigin] : '-'}</td>
+                        <td>${columnMapping.barcode !== undefined ? row[columnMapping.barcode] : '-'}</td>
+                    </tr>
+                `;
+            });
+            
+            table.innerHTML += '</tbody>';
+        }
+        
+        function renderSpreadsheetStep3() {
+            // This function is no longer needed - removed Step 3 spreadsheet
+        }
+        
+        function renderMapping() {
+            // This function is no longer needed since mapping is done in step 2
+        }
+        
+        function updateMapping() {
+            // This function is no longer needed since we use updateColumnMapping
+        }
+        
+        function renderPreview() {
+            // This function is no longer needed since preview is in step 3
+        }
+        
+        function processData() {
+            // Mapping is already validated in validateAndProcess
+            
+            const hasDiscount = columnMapping.discount !== undefined;
+            const hasMarkup = columnMapping.markup !== undefined;
+            
+            // Convert data to objects
+            processedData = currentData.slice(1).map(row => {
+                const listPrice = columnMapping.listPrice !== undefined ? parseFloat(row[columnMapping.listPrice]) || 0 : 0;
+                const discount = hasDiscount ? parseFloat(row[columnMapping.discount]) || 0 : 0;
+                const markup = hasMarkup ? parseFloat(row[columnMapping.markup]) || 0 : 0;
+                const directCostPrice = columnMapping.costPrice !== undefined ? parseFloat(row[columnMapping.costPrice]) || 0 : 0;
+                
+                let costPrice = directCostPrice;
+                let finalListPrice = listPrice;
+                let calculatedFrom = '';
+                
+                if (hasDiscount) {
+                    // Using discount: calculate cost from list price
+                    if (directCostPrice > 0) {
+                        costPrice = directCostPrice;
+                    } else if (listPrice > 0 && discount > 0) {
+                        costPrice = listPrice * (1 - discount / 100);
+                        calculatedFrom = 'discount';
+                    }
+                } else if (hasMarkup) {
+                    // Using markup: calculate list price from cost
+                    if (listPrice > 0) {
+                        finalListPrice = listPrice;
+                    } else if (directCostPrice > 0 && markup > 0) {
+                        finalListPrice = directCostPrice * (1 + markup / 100);
+                        calculatedFrom = 'markup';
+                    }
+                    costPrice = directCostPrice;
+                }
+                
+                const item = {
+                    code: row[columnMapping.code],
+                    description: columnMapping.description !== undefined ? row[columnMapping.description] : '',
+                    costPrice: costPrice,
+                    listPrice: finalListPrice,
+                    discount: discount,
+                    markup: markup,
+                    manufacturer: columnMapping.manufacturer !== undefined ? row[columnMapping.manufacturer] : '',
+                    countryOfOrigin: columnMapping.countryOfOrigin !== undefined ? row[columnMapping.countryOfOrigin] : '',
+                    calculatedFrom: calculatedFrom,
+                    barcode: columnMapping.barcode !== undefined ? row[columnMapping.barcode] : ''
+                };
+                
+                // Compare with previous data
+                const oldItem = previousData.find(p => p.code === item.code || p.productcode === item.code);
+                
+                if (oldItem) {
+                    const oldCost = parseFloat(oldItem.costPrice || oldItem.costprice || 0);
+                    const oldList = parseFloat(oldItem.listPrice || oldItem.listprice || 0);
+                    
+                    item.costChange = oldCost > 0 ? ((item.costPrice - oldCost) / oldCost) * 100 : 0;
+                    item.listChange = oldList > 0 ? ((item.listPrice - oldList) / oldList) * 100 : 0;
+                    item.oldCostPrice = oldCost;
+                    item.oldListPrice = oldList;
+                    item.status = 'changed';
+                    
+                    // Flag if significant change
+                    item.flagged = (
+                        (item.costChange >= 15 || item.costChange <= -10) && item.costPrice >= 100
+                    ) || (
+                        (item.listChange >= 15 || item.listChange <= -10) && item.listPrice >= 100
+                    );
+                } else {
+                    item.status = 'new';
+                    item.flagged = false;
+                }
+                
+                return item;
+            }).filter(item => item.code); // Remove empty rows
+            
+            renderResults();
+            goToStep(4);
+        }
+        
+        function renderResults() {
+            // Stats
+            const total = processedData.length;
+            const newItems = processedData.filter(i => i.status === 'new').length;
+            const changed = processedData.filter(i => i.status === 'changed').length;
+            const flagged = processedData.filter(i => i.flagged).length;
+            
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${total}</div>
+                    <div class="stat-label">Total Items</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${newItems}</div>
+                    <div class="stat-label">New Items</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${changed}</div>
+                    <div class="stat-label">Changed Items</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" style="color: #dc3545;">${flagged}</div>
+                    <div class="stat-label">Flagged Items</div>
+                </div>
+            `;
+            
+            if (flagged > 0) {
+                document.getElementById('flaggedAlert').style.display = 'block';
+            }
+            
+            // Comparison table
+            renderComparisonTable(processedData);
+        }
+        
+        function renderComparisonTable(data) {
+            const table = document.getElementById('comparisonTable');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Description</th>
+                        <th>List Price</th>
+                        <th>Discount %</th>
+                        <th>Cost Price</th>
+                        <th>Cost Change</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+            
+            data.forEach(item => {
+                const costChangeClass = item.costChange > 0 ? 'change-positive' : item.costChange < 0 ? 'change-negative' : '';
+                
+                const statusBadge = item.status === 'new' ? 
+                    '<span class="badge badge-info">NEW</span>' : 
+                    item.flagged ? '<span class="badge badge-warning">FLAGGED</span>' : 
+                    '<span class="badge badge-success">OK</span>';
+                
+                const costPriceDisplay = item.calculatedFrom === 'discount' ? 
+                    `£${item.costPrice.toFixed(2)} <small>(calc from discount)</small>` : 
+                    `£${item.costPrice.toFixed(2)}`;
+                
+                const listPriceDisplay = item.calculatedFrom === 'markup' ?
+                    `£${item.listPrice.toFixed(2)} <small>(calc from markup)</small>` :
+                    `£${item.listPrice.toFixed(2)}`;
+                
+                table.innerHTML += `
+                    <tr class="${item.flagged ? 'flagged' : ''}">
+                        <td>${item.code}</td>
+                        <td>${item.description}</td>
+                        <td style="background: #f8f9fa;">${listPriceDisplay}</td>
+                        <td>${item.discount > 0 ? item.discount.toFixed(1) + '%' : '-'}</td>
+                        <td style="background: #f8f9fa;">${costPriceDisplay}</td>
+                        <td class="${costChangeClass}">
+                            ${item.status === 'new' ? '-' : 
+                              `${item.costChange > 0 ? '+' : ''}${item.costChange.toFixed(1)}%<br>
+                               <small>(was £${item.oldCostPrice.toFixed(2)})</small>`}
+                        </td>
+                        <td>${statusBadge}</td>
+                    </tr>
+                `;
+            });
+            
+            table.innerHTML += '</tbody>';
+        }
+        
+        function toggleFlaggedFilter() {
+            const showOnlyFlagged = document.getElementById('showOnlyFlagged').checked;
+            const dataToShow = showOnlyFlagged ? processedData.filter(i => i.flagged) : processedData;
+            renderComparisonTable(dataToShow);
+        }
+        
+        function exportJSON() {
+            const json = JSON.stringify(processedData, null, 2);
+            const blob = new Blob([json], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pricing_data_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+        }
+        
+        function exportCSV() {
+            let csv = 'Code,Description,List Price,Discount %,Cost Price,Calculated,Cost Change %,Status,Flagged\n';
+            
+            processedData.forEach(item => {
+                csv += `"${item.code}","${item.description}",${item.listPrice},`;
+                csv += `${item.discount},${item.costPrice},`;
+                csv += `${item.calculatedFromDiscount ? 'YES' : 'NO'},`;
+                csv += `${item.status === 'new' ? '' : item.costChange.toFixed(2)},`;
+                csv += `${item.status},${item.flagged ? 'YES' : 'NO'}\n`;
+            });
+            
+            const blob = new Blob([csv], {type: 'text/csv'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pricing_export_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+        
+        function saveData() {
+            // This would send data to your PHP backend
+            const dataToSave = {
+                importDate: new Date().toISOString(),
+                totalItems: processedData.length,
+                flaggedItems: processedData.filter(i => i.flagged).length,
+                items: processedData
+            };
+            
+            // Mock API call - replace with your actual endpoint
+            console.log('Data to save:', dataToSave);
+            
+            alert('Save functionality would send this data to your PHP backend.\n\nEndpoint: POST /api/pricing/save\n\nCheck console for data structure.');
+            
+            /* Uncomment when you have your PHP endpoint ready:
+            fetch('/api/pricing/save', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(dataToSave)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Data saved successfully!');
+            })
+            .catch(error => {
+                alert('Error saving data: ' + error);
+            });
+            */
+        }
+    </script>
+</body>
+</html>
