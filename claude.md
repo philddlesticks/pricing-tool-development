@@ -171,7 +171,7 @@ Claude suggested a multi-stage workflow application:
 - Columns added only when needed
 - Smart duplicate prevention
 
-### Version 74: Final Refinements (Current)
+### Version 74: Final Refinements
 **User Requests:**
 1. "Add a tiny delete button on the discount % or markup % columns"
 2. "Move the step 3 discount/markup part into step 2"
@@ -180,6 +180,21 @@ Claude suggested a multi-stage workflow application:
 - ✕ delete button in Discount/Markup column headers
 - Quick Tools moved back to Step 2 (all-in-one editing)
 - Step 3 simplified to preview only (first 10 rows)
+
+### Version 75: Single Add Column Button + Fixed Apply Functions (Current)
+**User Issues:**
+1. "The markup and discount columns have dropdowns to select what they are, so there isn't a need for 2 create buttons as really it just needs a create column, then you choose the option on the dropdown"
+2. "The apply to selected and apply to all buttons don't work"
+
+**Solution:**
+- **Single "Add Column" Button**: Replaced "Add Discount % Column" and "Add Markup % Column" with one "➕ Add Column" button that creates "Custom %" columns
+- **Dropdown-Based Selection**: Users now choose whether a column is Discount % or Markup % from the dropdown under the column header
+- **Fixed Apply/Clear Functions**:
+  - Fixed input ID references (bulkDiscount2/bulkMarkup2)
+  - Added missing `clearAllDiscounts()` function
+  - Changed all column detection from name-based to mapping-based
+- **Mapping-Based Highlighting**: Columns now highlight yellow based on their dropdown mapping, not their name
+- **Flexible Column System**: Can add multiple custom columns and assign each one independently
 
 ## Final Workflow
 
@@ -298,4 +313,5 @@ pricing_changes (id, import_id, item_id, change_type, old_value, new_value, flag
 - **v51**: Smart validation & flexible column naming
 - **v60**: Full spreadsheet in Step 3
 - **v64**: On-demand column creation
-- **v74**: Delete buttons + all-in-one Step 2 (CURRENT)
+- **v74**: Delete buttons + all-in-one Step 2
+- **v75**: Single add column button + fixed apply/clear functions (CURRENT)
