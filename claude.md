@@ -315,3 +315,28 @@ pricing_changes (id, import_id, item_id, change_type, old_value, new_value, flag
 - **v64**: On-demand column creation
 - **v74**: Delete buttons + all-in-one Step 2
 - **v75**: Single add column button + fixed apply/clear functions (CURRENT)
+
+## Deployment
+
+### GitHub Pages Setup
+
+The tool is available as a single HTML file that can be deployed to GitHub Pages:
+
+**Files:**
+- `index.html` - Main entry point (GitHub Pages default)
+- `pricing-tool.html` - Same content as index.html
+
+**To deploy:**
+1. Merge this branch to `main` via Pull Request
+2. Go to repository Settings → Pages
+3. Enable Pages with source: `main` branch, `/ (root)` folder
+4. Access at: `https://philddlesticks.github.io/pricing-tool-development/`
+
+**Alternative URLs:**
+- Direct file access: `https://philddlesticks.github.io/pricing-tool-development/pricing-tool.html`
+
+**Requirements:**
+- Modern web browser with JavaScript enabled
+- No server-side components needed
+- SheetJS loaded from CDN
+- Works completely client-side
