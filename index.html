@@ -400,17 +400,29 @@
         }
         
         .delete-btn {
-            background: #dc3545;
-            color: white;
+            background: transparent;
+            color: #dc3545;
             border: none;
             padding: 4px 8px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 18px;
+            font-weight: bold;
         }
-        
+
         .delete-btn:hover {
-            background: #c82333;
+            background: #f8d7da;
+        }
+
+        .excluded-row {
+            opacity: 0.4;
+            text-decoration: line-through;
+            background: #f8f9fa !important;
+        }
+
+        .excluded-row:hover {
+            opacity: 0.5;
+            background: #e9ecef !important;
         }
     </style>
 </head>
@@ -423,9 +435,9 @@
         <div id="step1" class="step active">
             <div class="step-header">Step 1: Upload Pricing File</div>
             <div class="upload-area" id="uploadArea">
-                <h2>📁 Drop Excel file here or click to browse</h2>
-                <p style="color: #666; margin-top: 10px;">Supports .xlsx and .xls formats</p>
-                <input type="file" id="fileInput" accept=".xlsx,.xls">
+                <h2>📁 Drop file here or click to browse</h2>
+                <p style="color: #666; margin-top: 10px;">Supports .xlsx, .xls, and .csv formats</p>
+                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
             </div>
             
             <div class="alert alert-info">
@@ -572,6 +584,7 @@
         let currentStep = 1;
         let selectedRows = new Set();
         let copiedValue = null;
+        let excludedRows = new Set();
         
         const REQUIRED_FIELDS = ['code', 'listPrice'];
         const OPTIONAL_FIELDS = ['description', 'barcode', 'costPrice', 'discount'];
@@ -611,12 +624,43 @@
         
         function handleFile(file) {
             const reader = new FileReader();
+            const isCSV = file.name.toLowerCase().endsWith('.csv');
+
             reader.onload = (e) => {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1, defval: ''});
-                
+                let jsonData;
+
+                if (isCSV) {
+                    // Handle CSV files
+                    const text = e.target.result;
+                    const lines = text.split('\n').filter(line => line.trim());
+                    jsonData = lines.map(line => {
+                        // Simple CSV parsing - handles quoted fields
+                        const result = [];
+                        let current = '';
+                        let inQuotes = false;
+
+                        for (let i = 0; i < line.length; i++) {
+                            const char = line[i];
+                            if (char === '"') {
+                                inQuotes = !inQuotes;
+                            } else if (char === ',' && !inQuotes) {
+                                result.push(current.trim());
+                                current = '';
+                            } else {
+                                current += char;
+                            }
+                        }
+                        result.push(current.trim());
+                        return result;
+                    });
+                } else {
+                    // Handle Excel files
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1, defval: ''});
+                }
+
                 currentData = jsonData.filter(row => row.some(cell => cell !== ''));
 
                 if (currentData.length > 0) {
@@ -624,7 +668,12 @@
                     goToStep(2);
                 }
             };
-            reader.readAsArrayBuffer(file);
+
+            if (isCSV) {
+                reader.readAsText(file);
+            } else {
+                reader.readAsArrayBuffer(file);
+            }
         }
         
         function handlePreviousFile(file) {
@@ -785,9 +834,25 @@
             document.getElementById('step3Info').innerHTML = infoMessage;
         }
 
+        function getMappedColumnIndices() {
+            // Get array of column indices that are mapped (not ignored)
+            const mappedIndices = [];
+            for (let i = 0; i < currentData[0].length; i++) {
+                // Check if this column is mapped to any field
+                const isMapped = Object.values(columnMapping).includes(i);
+                if (isMapped) {
+                    mappedIndices.push(i);
+                }
+            }
+            return mappedIndices;
+        }
+
         function renderSpreadsheet() {
             const table = document.getElementById('spreadsheet');
             table.innerHTML = '';
+
+            // Get only mapped columns (ignore columns that are not mapped)
+            const mappedIndices = getMappedColumnIndices();
 
             // Check if discount or markup columns are mapped
             const hasDiscount = columnMapping.discount !== undefined;
@@ -797,11 +862,12 @@
             document.getElementById('discountToolsSection3').style.display = hasDiscount ? 'block' : 'none';
             document.getElementById('markupToolsSection3').style.display = hasMarkup ? 'block' : 'none';
             document.getElementById('step3Tools').style.display = (hasDiscount || hasMarkup) ? 'block' : 'none';
-            
-            // Header row with column names
+
+            // Header row with column names (only mapped columns)
             const headerRow = document.createElement('tr');
-            headerRow.innerHTML = '<th class="row-number" style="cursor: pointer;" onclick="toggleAllRows()">✓</th>';
-            currentData[0].forEach((cell, i) => {
+            headerRow.innerHTML = '<th>Actions</th><th class="row-number" style="cursor: pointer;" onclick="toggleAllRows()">✓</th>';
+            mappedIndices.forEach(i => {
+                const cell = currentData[0][i];
                 const isDiscountCol = columnMapping.discount === i;
                 const isMarkupCol = columnMapping.markup === i;
                 const isFlexCol = isDiscountCol || isMarkupCol;
@@ -810,20 +876,20 @@
                     ${isFlexCol ? `<button class="delete-btn" style="margin-left: 5px; font-size: 10px; padding: 2px 6px;" onclick="deleteColumn(${i}); event.stopPropagation();">✕</button>` : ''}
                 </th>`;
             });
-            headerRow.innerHTML += '<th>Actions</th>';
             table.appendChild(headerRow);
-            
+
             // Data rows
             for (let rowIndex = 1; rowIndex < currentData.length; rowIndex++) {
                 const row = currentData[rowIndex];
                 const tr = document.createElement('tr');
                 const isSelected = selectedRows.has(rowIndex);
-                tr.className = isSelected ? 'selected-row' : '';
-                tr.innerHTML = `<td class="row-number" style="cursor: pointer;" onclick="toggleRowSelection(${rowIndex}, event)">
+                const isExcluded = excludedRows.has(rowIndex);
+                tr.className = isExcluded ? 'excluded-row' : (isSelected ? 'selected-row' : '');
+                tr.innerHTML = `<td><button class="delete-btn" onclick="toggleRowExclusion(${rowIndex})" title="${isExcluded ? 'Click to restore row' : 'Click to exclude row'}">❌</button></td><td class="row-number" style="cursor: pointer;" onclick="toggleRowSelection(${rowIndex}, event)">
                     ${isSelected ? '✓' : rowIndex}
                 </td>`;
-                
-                for (let colIndex = 0; colIndex < currentData[0].length; colIndex++) {
+
+                mappedIndices.forEach(colIndex => {
                     const cell = row[colIndex] || '';
                     const isDiscountCol = columnMapping.discount === colIndex;
                     const isMarkupCol = columnMapping.markup === colIndex;
@@ -834,9 +900,8 @@
                         onkeydown="handleKeyDown(event, ${rowIndex}, ${colIndex})"
                         onfocus="handleFocus(${rowIndex}, ${colIndex})"
                         placeholder="${isFlexCol ? '0' : ''}"></td>`;
-                }
-                
-                tr.innerHTML += `<td><button class="delete-btn" onclick="deleteRow(${rowIndex})">Delete</button></td>`;
+                });
+
                 table.appendChild(tr);
             }
         }
@@ -1157,11 +1222,18 @@
             alert(`"${colName}" column deleted`);
         }
         
-        function deleteRow(rowIndex) {
-            if (confirm('Delete this row?')) {
-                currentData.splice(rowIndex, 1);
-                renderSpreadsheet();
+        function toggleRowExclusion(rowIndex) {
+            if (excludedRows.has(rowIndex)) {
+                excludedRows.delete(rowIndex);
+            } else {
+                excludedRows.add(rowIndex);
             }
+            renderSpreadsheet();
+        }
+
+        function deleteRow(rowIndex) {
+            // Deprecated - keeping for backward compatibility
+            toggleRowExclusion(rowIndex);
         }
         
         function goToStep(step) {
@@ -1253,9 +1325,15 @@
             
             const hasDiscount = columnMapping.discount !== undefined;
             const hasMarkup = columnMapping.markup !== undefined;
-            
-            // Convert data to objects
-            processedData = currentData.slice(1).map(row => {
+
+            // Convert data to objects (skip excluded rows)
+            processedData = currentData.slice(1).map((row, index) => {
+                const rowIndex = index + 1; // Adjust for header row
+                if (excludedRows.has(rowIndex)) {
+                    return null; // Mark for filtering
+                }
+                return row;
+            }).filter(row => row !== null).map(row => {
                 const listPrice = columnMapping.listPrice !== undefined ? parseFloat(row[columnMapping.listPrice]) || 0 : 0;
                 const discount = hasDiscount ? parseFloat(row[columnMapping.discount]) || 0 : 0;
                 const markup = hasMarkup ? parseFloat(row[columnMapping.markup]) || 0 : 0;
