@@ -434,51 +434,64 @@
             </div>
         </div>
         
-        <!-- Step 2: Edit Spreadsheet -->
+        <!-- Step 2: Map Columns -->
         <div id="step2" class="step">
-            <div class="step-header">Step 2: Edit Data & Map Columns</div>
+            <div class="step-header">Step 2: Map Columns</div>
             <div class="alert alert-info">
-                <strong>First:</strong> Assign each column using the dropdowns directly below the column headers<br>
-                <strong>Then:</strong> Edit any data if needed. Use the buttons below to add/remove Discount% or Markup% columns.
+                Assign each column from your uploaded file to the appropriate field using the dropdowns below each column header.
             </div>
-            
+
             <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 2px solid #007bff;">
-                <strong>ℹ️ Column Assignment:</strong>
+                <strong>ℹ️ Column Assignment Guide:</strong>
                 <div style="margin-top: 10px;">
                     <small style="color: #666;">
                         <strong>Required:</strong> Code + (List Price OR Cost Price)<br>
-                        <strong>If you have List Price:</strong> Add Discount % column to calculate Cost Price<br>
-                        <strong>If you have Cost Price:</strong> Add Markup % column to calculate List Price<br>
-                        <strong>Optional:</strong> Description, Barcode, Manufacturer, Country of Origin
+                        <strong>Optional:</strong> Description, Barcode, Manufacturer, Country of Origin<br><br>
+                        <strong>Next Step:</strong> Based on your mapping, Step 3 will automatically provide:<br>
+                        • Discount % column (if you only have List Price)<br>
+                        • Markup % column (if you only have Cost Price)<br>
+                        • Direct editing (if you have both Cost and List Price)
                     </small>
                 </div>
-                <div style="margin-top: 15px;">
-                    <button class="btn" onclick="addPercentageColumn()">➕ Add Column</button>
-                    <small style="color: #666; display: block; margin-top: 5px;">Adds a new column - choose Discount % or Markup % from the dropdown under the column header</small>
-                </div>
             </div>
-            
-            <div class="discount-tools" id="step2Tools">
+
+            <div class="spreadsheet-container">
+                <table class="spreadsheet" id="mappingTable"></table>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
+                <button class="btn" onclick="validateMapping()">Next: Edit Data →</button>
+            </div>
+        </div>
+
+        <!-- Step 3: Edit Data -->
+        <div id="step3" class="step">
+            <div class="step-header">Step 3: Edit Data</div>
+            <div class="alert alert-info" id="step3Info">
+                Edit your data and apply discounts or markups as needed.
+            </div>
+
+            <div class="discount-tools" id="step3Tools">
                 <strong>💡 Quick Pricing Tools:</strong><br><br>
-                
-                <div id="discountToolsSection2" style="margin-bottom: 15px; display: none;">
+
+                <div id="discountToolsSection3" style="margin-bottom: 15px; display: none;">
                     <label>🏷️ Discount value:</label>
-                    <input type="number" id="bulkDiscount2" placeholder="e.g., 20" min="0" max="100" step="0.1">
+                    <input type="number" id="bulkDiscount3" placeholder="e.g., 20" min="0" max="100" step="0.1">
                     <button class="btn btn-success" onclick="applyDiscountToSelected()">Apply to Selected Rows</button>
                     <button class="btn" onclick="applyBulkDiscount()">Apply to All Rows</button>
                     <button class="btn btn-secondary" onclick="clearSelectedDiscounts()">Clear Selected</button>
                     <button class="btn btn-secondary" onclick="clearAllDiscounts()">Clear All</button>
                 </div>
-                
-                <div id="markupToolsSection2" style="margin-bottom: 15px; display: none;">
+
+                <div id="markupToolsSection3" style="margin-bottom: 15px; display: none;">
                     <label>📈 Markup value:</label>
-                    <input type="number" id="bulkMarkup2" placeholder="e.g., 25" min="0" max="1000" step="0.1">
+                    <input type="number" id="bulkMarkup3" placeholder="e.g., 25" min="0" max="1000" step="0.1">
                     <button class="btn btn-success" onclick="applyMarkupToSelected()">Apply to Selected Rows</button>
                     <button class="btn" onclick="applyBulkMarkup()">Apply to All Rows</button>
                     <button class="btn btn-secondary" onclick="clearSelectedMarkups()">Clear Selected</button>
                     <button class="btn btn-secondary" onclick="clearAllMarkups()">Clear All</button>
                 </div>
-                
+
                 <div style="background: white; padding: 10px; border-radius: 4px; border-left: 4px solid #007bff;">
                     <strong>How to use:</strong><br>
                     <small style="color: #666;">
@@ -492,38 +505,38 @@
                     </small>
                 </div>
             </div>
-            
+
             <div class="spreadsheet-container">
                 <table class="spreadsheet" id="spreadsheet"></table>
             </div>
             <div class="button-group">
-                <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
-                <button class="btn" onclick="validateAndProcess()">Next: Review & Process →</button>
+                <button class="btn btn-secondary" onclick="goToStep(2)">← Back to Mapping</button>
+                <button class="btn" onclick="goToStep(4)">Next: Review & Process →</button>
             </div>
         </div>
         
-        <!-- Step 3: Review & Process -->
-        <div id="step3" class="step">
-            <div class="step-header">Step 3: Review & Process</div>
-            
+        <!-- Step 4: Review & Process -->
+        <div id="step4" class="step">
+            <div class="step-header">Step 4: Review & Process</div>
+
             <div class="alert alert-info">
                 Review your mapped data below before processing. Make sure all columns are correctly assigned.
             </div>
-            
+
             <div class="preview-table">
                 <h3>Preview Mapped Data (first 10 rows):</h3>
                 <table class="comparison-table" id="previewTable"></table>
             </div>
-            
+
             <div class="button-group">
-                <button class="btn btn-secondary" onclick="goToStep(2)">← Back to Edit</button>
+                <button class="btn btn-secondary" onclick="goToStep(3)">← Back to Edit</button>
                 <button class="btn" onclick="processData()">Process & Compare →</button>
             </div>
         </div>
-        
-        <!-- Step 4: Review Results -->
-        <div id="step4" class="step">
-            <div class="step-header">Step 4: Review Changes & Flagged Items</div>
+
+        <!-- Step 5: Review Results -->
+        <div id="step5" class="step">
+            <div class="step-header">Step 5: Review Changes & Flagged Items</div>
             
             <div class="stats-grid" id="statsGrid"></div>
             
@@ -543,7 +556,7 @@
             </div>
             
             <div class="button-group">
-                <button class="btn btn-secondary" onclick="goToStep(3)">← Back</button>
+                <button class="btn btn-secondary" onclick="goToStep(4)">← Back</button>
                 <button class="btn btn-success" onclick="saveData()">💾 Save to Server</button>
                 <button class="btn" onclick="exportJSON()">📥 Export JSON</button>
                 <button class="btn" onclick="exportCSV()">📥 Export CSV</button>
@@ -605,9 +618,9 @@
                 const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1, defval: ''});
                 
                 currentData = jsonData.filter(row => row.some(cell => cell !== ''));
-                
+
                 if (currentData.length > 0) {
-                    renderSpreadsheet();
+                    renderMappingTable();
                     goToStep(2);
                 }
             };
@@ -646,6 +659,132 @@
             }
         }
         
+        function renderMappingTable() {
+            // Step 2: Show only column headers and mapping dropdowns (no data editing)
+            const table = document.getElementById('mappingTable');
+            table.innerHTML = '';
+
+            // Header row with column names
+            const headerRow = document.createElement('tr');
+            headerRow.innerHTML = '<th class="row-number">#</th>';
+            currentData[0].forEach((cell, i) => {
+                headerRow.innerHTML += `<th class="column-header-cell">
+                    <span class="column-header-text">${cell || `Column ${String.fromCharCode(65 + i)}`}</span>
+                </th>`;
+            });
+            table.appendChild(headerRow);
+
+            // Mapping row with dropdowns
+            const mappingRow = document.createElement('tr');
+            mappingRow.innerHTML = '<th class="row-number" style="background: #e3f2fd;">Map to:</th>';
+
+            const fieldOptions = [
+                {value: '', label: '-- Ignore Column --'},
+                {value: 'code', label: '📦 Code *'},
+                {value: 'description', label: '📝 Description'},
+                {value: 'costPrice', label: '💰 Cost Price'},
+                {value: 'listPrice', label: '💷 List Price'},
+                {value: 'barcode', label: '🔢 Barcode'},
+                {value: 'manufacturer', label: '🏭 Manufacturer'},
+                {value: 'countryOfOrigin', label: '🌍 Country of Origin'}
+            ];
+
+            currentData[0].forEach((header, colIndex) => {
+                // Try to auto-detect mapping based on column name
+                let preSelected = '';
+                const headerLower = (header || '').toLowerCase();
+                if (headerLower.includes('code') || headerLower.includes('sku')) preSelected = 'code';
+                else if (headerLower.includes('description') || headerLower.includes('name')) preSelected = 'description';
+                else if (headerLower.includes('cost')) preSelected = 'costPrice';
+                else if (headerLower.includes('list') || headerLower.includes('price')) preSelected = 'listPrice';
+                else if (headerLower.includes('barcode') || headerLower.includes('ean') || headerLower.includes('upc')) preSelected = 'barcode';
+                else if (headerLower.includes('manufacturer') || headerLower.includes('brand')) preSelected = 'manufacturer';
+                else if (headerLower.includes('country') || headerLower.includes('origin')) preSelected = 'countryOfOrigin';
+
+                mappingRow.innerHTML += `<th style="background: #e3f2fd; padding: 8px;">
+                    <select id="colMap_${colIndex}" class="column-mapping-select" onchange="updateColumnMapping()">
+                        ${fieldOptions.map(opt =>
+                            `<option value="${opt.value}" ${opt.value === preSelected ? 'selected' : ''}>${opt.label}</option>`
+                        ).join('')}
+                    </select>
+                </th>`;
+            });
+            table.appendChild(mappingRow);
+
+            // Show first 5 rows as preview
+            for (let rowIndex = 1; rowIndex <= Math.min(5, currentData.length - 1); rowIndex++) {
+                const row = currentData[rowIndex];
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td class="row-number">${rowIndex}</td>`;
+                for (let colIndex = 0; colIndex < currentData[0].length; colIndex++) {
+                    const cell = row[colIndex] || '';
+                    tr.innerHTML += `<td style="color: #666;">${cell}</td>`;
+                }
+                table.appendChild(tr);
+            }
+
+            // Initialize mapping
+            updateColumnMapping();
+        }
+
+        function validateMapping() {
+            // Validate required mappings
+            if (columnMapping.code === undefined) {
+                alert('Please map the required field: Product Code');
+                return;
+            }
+
+            // Need at least one price field
+            if (columnMapping.listPrice === undefined && columnMapping.costPrice === undefined) {
+                alert('Please map at least one price field: either List Price OR Cost Price');
+                return;
+            }
+
+            // Prepare Step 3 with appropriate discount/markup column
+            prepareStep3();
+            goToStep(3);
+        }
+
+        function prepareStep3() {
+            // Based on mapping, add discount % or markup % column if needed
+            const hasListPrice = columnMapping.listPrice !== undefined;
+            const hasCostPrice = columnMapping.costPrice !== undefined;
+
+            let infoMessage = '';
+            let addedColumn = false;
+
+            if (hasListPrice && !hasCostPrice) {
+                // Only have list price - add discount % column
+                const columnName = 'Discount %';
+                if (!currentData[0].includes(columnName)) {
+                    currentData[0].push(columnName);
+                    for (let i = 1; i < currentData.length; i++) {
+                        currentData[i].push('');
+                    }
+                    addedColumn = true;
+                }
+                columnMapping.discount = currentData[0].indexOf(columnName);
+                infoMessage = 'A <strong>Discount %</strong> column has been added. Enter discount percentages to calculate cost prices from list prices.';
+            } else if (hasCostPrice && !hasListPrice) {
+                // Only have cost price - add markup % column
+                const columnName = 'Markup %';
+                if (!currentData[0].includes(columnName)) {
+                    currentData[0].push(columnName);
+                    for (let i = 1; i < currentData.length; i++) {
+                        currentData[i].push('');
+                    }
+                    addedColumn = true;
+                }
+                columnMapping.markup = currentData[0].indexOf(columnName);
+                infoMessage = 'A <strong>Markup %</strong> column has been added. Enter markup percentages to calculate list prices from cost prices.';
+            } else {
+                // Have both prices
+                infoMessage = 'You have both Cost Price and List Price columns. Edit your data as needed below.';
+            }
+
+            document.getElementById('step3Info').innerHTML = infoMessage;
+        }
+
         function renderSpreadsheet() {
             const table = document.getElementById('spreadsheet');
             table.innerHTML = '';
@@ -655,9 +794,9 @@
             const hasMarkup = columnMapping.markup !== undefined;
 
             // Show/hide quick tools based on mapping
-            document.getElementById('discountToolsSection2').style.display = hasDiscount ? 'block' : 'none';
-            document.getElementById('markupToolsSection2').style.display = hasMarkup ? 'block' : 'none';
-            document.getElementById('step2Tools').style.display = (hasDiscount || hasMarkup) ? 'block' : 'none';
+            document.getElementById('discountToolsSection3').style.display = hasDiscount ? 'block' : 'none';
+            document.getElementById('markupToolsSection3').style.display = hasMarkup ? 'block' : 'none';
+            document.getElementById('step3Tools').style.display = (hasDiscount || hasMarkup) ? 'block' : 'none';
             
             // Header row with column names
             const headerRow = document.createElement('tr');
@@ -673,48 +812,6 @@
             });
             headerRow.innerHTML += '<th>Actions</th>';
             table.appendChild(headerRow);
-            
-            // Mapping row with dropdowns
-            const mappingRow = document.createElement('tr');
-            mappingRow.innerHTML = '<th class="row-number" style="background: #e3f2fd;">Map to:</th>';
-            
-            const fieldOptions = [
-                {value: '', label: '-- Ignore Column --'},
-                {value: 'code', label: '📦 Code *'},
-                {value: 'description', label: '📝 Description'},
-                {value: 'costPrice', label: '💰 Cost Price'},
-                {value: 'listPrice', label: '💷 List Price'},
-                {value: 'barcode', label: '🔢 Barcode'},
-                {value: 'discount', label: '🏷️ Discount %'},
-                {value: 'markup', label: '📈 Markup %'},
-                {value: 'manufacturer', label: '🏭 Manufacturer'},
-                {value: 'countryOfOrigin', label: '🌍 Country of Origin'}
-            ];
-            
-            currentData[0].forEach((header, colIndex) => {
-                const isDiscountCol = columnMapping.discount === colIndex;
-                const isMarkupCol = columnMapping.markup === colIndex;
-                const isFlexCol = isDiscountCol || isMarkupCol;
-                let preSelected = '';
-
-                // Pre-select based on current mapping
-                if (isDiscountCol) {
-                    preSelected = 'discount';
-                } else if (isMarkupCol) {
-                    preSelected = 'markup';
-                }
-
-                mappingRow.innerHTML += `<th style="${isFlexCol ? 'background: #fff3cd;' : 'background: #e3f2fd;'} padding: 8px;">
-                    <select id="colMap_${colIndex}" class="column-mapping-select" onchange="updateColumnMapping()"
-                        style="${isFlexCol ? 'border-color: #ffc107;' : ''}">
-                        ${fieldOptions.map(opt =>
-                            `<option value="${opt.value}" ${opt.value === preSelected ? 'selected' : ''}>${opt.label}</option>`
-                        ).join('')}
-                    </select>
-                </th>`;
-            });
-            mappingRow.innerHTML += '<th style="background: #e3f2fd;"></th>';
-            table.appendChild(mappingRow);
             
             // Data rows
             for (let rowIndex = 1; rowIndex < currentData.length; rowIndex++) {
@@ -742,9 +839,6 @@
                 tr.innerHTML += `<td><button class="delete-btn" onclick="deleteRow(${rowIndex})">Delete</button></td>`;
                 table.appendChild(tr);
             }
-            
-            // Initialize mapping
-            updateColumnMapping();
         }
         
         function updateColumnMapping() {
@@ -869,7 +963,7 @@
         }
         
         function applyBulkDiscount() {
-            const discount = document.getElementById('bulkDiscount2').value;
+            const discount = document.getElementById('bulkDiscount3').value;
             if (!discount) {
                 alert('Please enter a discount percentage');
                 return;
@@ -894,7 +988,7 @@
         }
 
         function applyDiscountToSelected() {
-            const discount = document.getElementById('bulkDiscount2').value;
+            const discount = document.getElementById('bulkDiscount3').value;
             if (!discount) {
                 alert('Please enter a discount percentage');
                 return;
@@ -958,7 +1052,7 @@
         }
 
         function applyMarkupToSelected() {
-            const markup = document.getElementById('bulkMarkup2').value;
+            const markup = document.getElementById('bulkMarkup3').value;
             if (!markup) {
                 alert('Please enter a markup percentage');
                 return;
@@ -988,7 +1082,7 @@
         }
 
         function applyBulkMarkup() {
-            const markup = document.getElementById('bulkMarkup2').value;
+            const markup = document.getElementById('bulkMarkup3').value;
             if (!markup) {
                 alert('Please enter a markup percentage');
                 return;
@@ -1063,28 +1157,6 @@
             alert(`"${colName}" column deleted`);
         }
         
-        function addPercentageColumn() {
-            // Find a unique column name
-            let columnName = 'Custom %';
-            let counter = 1;
-
-            while (currentData[0].includes(columnName)) {
-                counter++;
-                columnName = `Custom % ${counter}`;
-            }
-
-            // Add header
-            currentData[0].push(columnName);
-
-            // Add empty values to all data rows
-            for (let i = 1; i < currentData.length; i++) {
-                currentData[i].push('');
-            }
-
-            renderSpreadsheet();
-            alert(`"${columnName}" column added! Use the dropdown under the column header to choose Discount % or Markup %.`);
-        }
-        
         function deleteRow(rowIndex) {
             if (confirm('Delete this row?')) {
                 currentData.splice(rowIndex, 1);
@@ -1096,41 +1168,12 @@
             document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
             document.getElementById(`step${step}`).classList.add('active');
             currentStep = step;
-            
+
             if (step === 3) {
+                renderSpreadsheet();
+            } else if (step === 4) {
                 renderPreviewOnly();
             }
-        }
-        
-        function validateAndProcess() {
-            // Validate required mappings - need Code and either (ListPrice OR CostPrice)
-            if (columnMapping.code === undefined) {
-                alert('Please map the required field: Product Code');
-                return;
-            }
-            
-            // Need at least one price field
-            if (columnMapping.listPrice === undefined && columnMapping.costPrice === undefined) {
-                alert('Please map at least one price field: either List Price OR Cost Price');
-                return;
-            }
-            
-            // If we have list price but no cost price, we need discount
-            if (columnMapping.listPrice !== undefined && columnMapping.costPrice === undefined && columnMapping.discount === undefined) {
-                alert('You have List Price but no Cost Price. Please map Discount % column to calculate costs.');
-                return;
-            }
-            
-            // If we have cost price but no list price, we need markup
-            if (columnMapping.costPrice !== undefined && columnMapping.listPrice === undefined && columnMapping.markup === undefined) {
-                alert('You have Cost Price but no List Price. Please map Markup % column to calculate list prices.');
-                return;
-            }
-            
-            // Save current scroll position and selection state
-            window.scrollTo(0, 0);
-            
-            goToStep(3);
         }
         
         function renderPreviewOnly() {
@@ -1280,9 +1323,9 @@
                 
                 return item;
             }).filter(item => item.code); // Remove empty rows
-            
+
             renderResults();
-            goToStep(4);
+            goToStep(5);
         }
         
         function renderResults() {
