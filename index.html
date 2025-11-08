@@ -1120,10 +1120,10 @@
 
                 table.innerHTML += `
                     <tr>
-                        <td>${lineNumber}</td>
-                        <td>${manufacturer}</td>
-                        <td>${code}</td>
-                        <td>${description}</td>
+                        <td style="background: #00ff00;">${lineNumber}</td>
+                        <td style="background: #ffffe0;">${manufacturer}</td>
+                        <td style="background: #ffffe0;">${code}</td>
+                        <td style="background: #ffffe0;">${description}</td>
                         <td style="text-align: center; ${nameCharStyle}">${nameCharCount}</td>
                         <td style="cursor: pointer; background: #ffe0f0; ${nameTextColor}"
                             onclick="setDescriptionToUse('${code}', '${escapedNameWouldLike}')"
