@@ -58,6 +58,8 @@
                 <input type="file" id="previousFileInput" accept=".xlsx,.xls,.csv,.json" style="display: block; margin-top: 10px;">
             </div>
 
+            <div id="previousUploadMessages" style="margin: 15px 0;"></div>
+
             <div class="button-group">
                 <button class="btn btn-secondary" onclick="goToStep(1)">← Back to Settings</button>
                 <button class="btn" id="uploadNextBtn" onclick="proceedFromUpload()" disabled>Next: Map Columns →</button>
@@ -364,13 +366,13 @@
             reader.onload = (e) => {
                 if (file.name.endsWith('.json')) {
                     previousData = JSON.parse(e.target.result);
-                    showUploadMessage('✓ Previous pricing data loaded successfully!', 'success');
+                    showUploadMessage('✓ Previous pricing data loaded successfully!', 'success', 'previousUploadMessages');
                 } else {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, {type: 'array'});
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                     const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1, defval: ''});
-                    
+
                     // Assume first row is headers, convert to objects
                     const headers = jsonData[0];
                     previousData = jsonData.slice(1).map(row => {
@@ -380,7 +382,7 @@
                         });
                         return obj;
                     });
-                    showUploadMessage('✓ Previous pricing data loaded successfully!', 'success');
+                    showUploadMessage('✓ Previous pricing data loaded successfully!', 'success', 'previousUploadMessages');
                 }
             };
             
@@ -391,8 +393,8 @@
             }
         }
 
-        function showUploadMessage(message, type = 'success') {
-            const messagesDiv = document.getElementById('uploadMessages');
+        function showUploadMessage(message, type = 'success', targetDiv = 'uploadMessages') {
+            const messagesDiv = document.getElementById(targetDiv);
             const messageClass = type === 'success' ? 'alert alert-info' : 'alert alert-warning';
             messagesDiv.innerHTML = `<div class="${messageClass}" style="animation: fadeIn 0.3s;">${message}</div>`;
         }
