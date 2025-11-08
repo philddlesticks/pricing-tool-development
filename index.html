@@ -223,6 +223,7 @@
         let selectedRows = new Set();
         let copiedValue = null;
         let excludedRows = new Set();
+        let descriptionToUseMap = {}; // Store "Description to use" values by product code
 
         // Settings data
         let settings = {
@@ -1083,6 +1084,11 @@
                     descriptionToUse = nameWouldLike; // Use the formatted name
                 }
 
+                // Store the default "Description to use" value
+                if (!descriptionToUseMap[code]) {
+                    descriptionToUseMap[code] = descriptionToUse;
+                }
+
                 table.innerHTML += `
                     <tr>
                         <td>${lineNumber}</td>
@@ -1090,7 +1096,12 @@
                         <td>${description}</td>
                         <td>${nameWouldLike}</td>
                         <td>${previousDescription}</td>
-                        <td>${descriptionToUse}</td>
+                        <td style="background: #fff3cd;">
+                            <input type="text"
+                                   value="${descriptionToUseMap[code]}"
+                                   onchange="updateDescriptionToUse('${code}', this.value)"
+                                   style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 3px;">
+                        </td>
                         <td>£${costPrice.toFixed(2)}</td>
                         <td>£${finalListPrice.toFixed(2)}</td>
                         <td>${barcode || '-'}</td>
@@ -1102,6 +1113,10 @@
             });
 
             table.innerHTML += '</tbody>';
+        }
+
+        function updateDescriptionToUse(code, value) {
+            descriptionToUseMap[code] = value;
         }
 
         function renderSpreadsheetStep3() {
@@ -1162,9 +1177,10 @@
                     costPrice = directCostPrice;
                 }
                 
+                const code = row[columnMapping.code];
                 const item = {
-                    code: row[columnMapping.code],
-                    description: columnMapping.description !== undefined ? row[columnMapping.description] : '',
+                    code: code,
+                    description: descriptionToUseMap[code] || (columnMapping.description !== undefined ? row[columnMapping.description] : ''),
                     costPrice: costPrice,
                     listPrice: finalListPrice,
                     discount: discount,
