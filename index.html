@@ -228,7 +228,6 @@
         let copiedValue = null;
         let excludedRows = new Set();
         let descriptionToUseMap = {}; // Store "Description to use" values by product code
-        let variantCodeMap = {}; // Store edited variant code values by row index
 
         // Settings data
         let settings = {
@@ -956,8 +955,6 @@
             currentData[row][col] = value;
             // Re-render if code column was edited to update duplicate highlighting
             if (columnMapping.code === col) {
-                // Also update variantCodeMap so changes sync to Step 6
-                variantCodeMap[row] = value;
                 renderSpreadsheet();
             }
         }
@@ -1076,12 +1073,8 @@
                 if (excludedRows.has(rowIndex)) return;
 
                 const code = columnMapping.code !== undefined ? row[columnMapping.code] : '';
-                if (!code) return;
-
-                // Get the current (possibly edited) variant code using rowIndex
-                const currentCode = variantCodeMap[rowIndex] || code;
-                if (currentCode) {
-                    const normalizedCode = currentCode.toString().toLowerCase();
+                if (code) {
+                    const normalizedCode = code.toString().toLowerCase();
                     codeCounts[normalizedCode] = (codeCounts[normalizedCode] || 0) + 1;
                 }
             });
@@ -1138,14 +1131,6 @@
                 const barcode = columnMapping.barcode !== undefined ? row[columnMapping.barcode] : '';
                 const manufacturer = columnMapping.manufacturer !== undefined ? row[columnMapping.manufacturer] : settings.manufacturerName;
 
-                // Store the default variant code value using rowIndex
-                if (!variantCodeMap[rowIndex]) {
-                    variantCodeMap[rowIndex] = code;
-                }
-
-                // Get the current (possibly edited) variant code using rowIndex
-                const currentCode = variantCodeMap[rowIndex];
-
                 // Calculate prices
                 const listPrice = columnMapping.listPrice !== undefined ? parseFloat(row[columnMapping.listPrice]) || 0 : 0;
                 const discount = hasDiscount ? parseFloat(row[columnMapping.discount]) || 0 : 0;
@@ -1170,13 +1155,13 @@
                     costPrice = directCostPrice;
                 }
 
-                // Name would like to use: MANUFACTURER ( CODE ) DESCRIPTION - use current (possibly edited) code
-                const nameWouldLike = `${manufacturer} ( ${currentCode} ) ${description}`;
+                // Name would like to use: MANUFACTURER ( CODE ) DESCRIPTION
+                const nameWouldLike = `${manufacturer} ( ${code} ) ${description}`;
 
-                // Check if this item exists in previous data - use current (possibly edited) code (case-insensitive)
+                // Check if this item exists in previous data (case-insensitive)
                 const oldItem = previousData.find(p =>
-                    (p.code && p.code.toLowerCase() === currentCode.toLowerCase()) ||
-                    (p.productcode && p.productcode.toLowerCase() === currentCode.toLowerCase())
+                    (p.code && p.code.toLowerCase() === code.toLowerCase()) ||
+                    (p.productcode && p.productcode.toLowerCase() === code.toLowerCase())
                 );
 
                 let previousDescription = '';
@@ -1232,7 +1217,7 @@
                 const redBg = '#ffcccc';
 
                 // Check if this variant code is a duplicate
-                const isDuplicateCode = duplicateVariantCodes.has(currentCode.toLowerCase());
+                const isDuplicateCode = duplicateVariantCodes.has(code.toLowerCase());
 
                 // Set backgrounds based on whether it's a new product or duplicate
                 const manufacturerBg = isNewProduct ? yellowBg : '#ffffe0';
@@ -1252,7 +1237,7 @@
                         <td style="background: ${codeBg}; padding: 0;">
                             <input type="text"
                                    id="codeInput_${rowIndex}"
-                                   value="${variantCodeMap[rowIndex]}"
+                                   value="${code}"
                                    onchange="updateVariantCode(${rowIndex}, this.value)"
                                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 0; background: ${codeInputBg}; box-sizing: border-box;">
                         </td>
@@ -1299,10 +1284,7 @@
                 delete descriptionToUseMap[originalCode];
             }
 
-            // Update the variantCodeMap
-            variantCodeMap[rowIndex] = value;
-
-            // Also update the currentData array so changes persist when going back to Step 4
+            // Update the currentData array directly
             if (columnMapping.code !== undefined) {
                 currentData[rowIndex][columnMapping.code] = value;
             }
@@ -1399,7 +1381,7 @@
                 
                 const code = row[columnMapping.code];
                 const item = {
-                    code: variantCodeMap[rowIndex] || code,
+                    code: code,
                     description: descriptionToUseMap[code] || (columnMapping.description !== undefined ? row[columnMapping.description] : ''),
                     costPrice: costPrice,
                     listPrice: finalListPrice,
