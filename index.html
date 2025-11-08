@@ -632,18 +632,22 @@
                     const isCodeCol = columnMapping.code === colIndex;
                     const isDuplicate = isCodeCol && cell && duplicateCodes.has(cell.toString().toLowerCase());
 
-                    let bgStyle = '';
+                    let bgColor = '';
                     if (isDuplicate) {
-                        bgStyle = 'background: #ffcccc;'; // Red for duplicates
+                        bgColor = '#ffcccc'; // Red for duplicates
                     } else if (isFlexCol) {
-                        bgStyle = 'background: #fff3cd;';
+                        bgColor = '#fff3cd';
                     }
 
-                    tr.innerHTML += `<td style="${bgStyle}"><input type="text"
+                    const cellStyle = bgColor ? `background: ${bgColor};` : '';
+                    const inputStyle = bgColor ? `background: ${bgColor};` : '';
+
+                    tr.innerHTML += `<td style="${cellStyle}"><input type="text"
                         value="${cell}"
                         onchange="updateCell(${rowIndex}, ${colIndex}, this.value)"
                         onkeydown="handleKeyDown(event, ${rowIndex}, ${colIndex})"
                         onfocus="handleFocus(${rowIndex}, ${colIndex})"
+                        style="${inputStyle}"
                         placeholder="${isFlexCol ? '0' : ''}"></td>`;
                 });
 
@@ -1060,10 +1064,43 @@
             table.innerHTML += '</tbody>';
         }
 
+        function findDuplicateVariantCodes() {
+            const duplicates = new Set();
+            const codeCounts = {};
+
+            // Count occurrences of each variant code (case-insensitive, skip excluded rows)
+            currentData.slice(1).forEach((row, index) => {
+                const rowIndex = index + 1;
+                if (excludedRows.has(rowIndex)) return;
+
+                const code = columnMapping.code !== undefined ? row[columnMapping.code] : '';
+                if (!code) return;
+
+                // Get the current (possibly edited) variant code
+                const currentCode = variantCodeMap[code] || code;
+                if (currentCode) {
+                    const normalizedCode = currentCode.toString().toLowerCase();
+                    codeCounts[normalizedCode] = (codeCounts[normalizedCode] || 0) + 1;
+                }
+            });
+
+            // Find codes that appear more than once
+            for (const [code, count] of Object.entries(codeCounts)) {
+                if (count > 1) {
+                    duplicates.add(code);
+                }
+            }
+
+            return duplicates;
+        }
+
         function renderOriginalPriceList() {
             const table = document.getElementById('originalPriceTable');
             const hasDiscount = columnMapping.discount !== undefined;
             const hasMarkup = columnMapping.markup !== undefined;
+
+            // Find duplicate variant codes
+            const duplicateVariantCodes = findDuplicateVariantCodes();
 
             table.innerHTML = `
                 <thead>
@@ -1190,10 +1227,15 @@
                 // Check if this is a new product
                 const isNewProduct = previousDescription === 'New product? Check if new';
                 const yellowBg = '#ffe082';
+                const redBg = '#ffcccc';
 
-                // Set backgrounds based on whether it's a new product
+                // Check if this variant code is a duplicate
+                const isDuplicateCode = duplicateVariantCodes.has(currentCode.toLowerCase());
+
+                // Set backgrounds based on whether it's a new product or duplicate
                 const manufacturerBg = isNewProduct ? yellowBg : '#ffffe0';
-                const codeBg = isNewProduct ? yellowBg : '#ffffe0';
+                const codeBg = isDuplicateCode ? redBg : (isNewProduct ? yellowBg : '#ffffe0');
+                const codeInputBg = isDuplicateCode ? redBg : 'transparent';
                 const descriptionBg = isNewProduct ? yellowBg : '#ffffe0';
                 const nameWouldLikeBg = isNewProduct ? yellowBg : '#ffe0f0';
                 const prevDescBg = isNewProduct ? yellowBg : '#ffe5cc';
@@ -1210,7 +1252,7 @@
                                    id="codeInput_${code}"
                                    value="${variantCodeMap[code]}"
                                    onchange="updateVariantCode('${escapedCode}', this.value)"
-                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 0; background: transparent; box-sizing: border-box;">
+                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 0; background: ${codeInputBg}; box-sizing: border-box;">
                         </td>
                         <td style="background: ${descriptionBg};">${description}</td>
                         <td style="text-align: center; ${nameCharStyle} ${isNewProduct ? 'background: ' + yellowBg + ';' : ''}">${nameCharCount}</td>
@@ -1425,8 +1467,34 @@
             renderComparisonTable(processedData);
         }
         
+        function findDuplicateCodesInProcessedData(data) {
+            const duplicates = new Set();
+            const codeCounts = {};
+
+            // Count occurrences of each code (case-insensitive)
+            data.forEach(item => {
+                if (item.code) {
+                    const normalizedCode = item.code.toString().toLowerCase();
+                    codeCounts[normalizedCode] = (codeCounts[normalizedCode] || 0) + 1;
+                }
+            });
+
+            // Find codes that appear more than once
+            for (const [code, count] of Object.entries(codeCounts)) {
+                if (count > 1) {
+                    duplicates.add(code);
+                }
+            }
+
+            return duplicates;
+        }
+
         function renderComparisonTable(data) {
             const table = document.getElementById('comparisonTable');
+
+            // Find duplicate codes in the data
+            const duplicateCodes = findDuplicateCodesInProcessedData(data);
+
             table.innerHTML = `
                 <thead>
                     <tr>
@@ -1440,7 +1508,7 @@
                 </thead>
                 <tbody>
             `;
-            
+
             data.forEach(item => {
                 const costChangeClass = item.costChange > 0 ? 'change-positive' : item.costChange < 0 ? 'change-negative' : '';
 
@@ -1458,10 +1526,12 @@
                     `£${item.listPrice.toFixed(2)}`;
 
                 const rowClass = item.status === 'new' ? 'new-product' : (item.flagged ? 'flagged' : '');
+                const isDuplicate = item.code && duplicateCodes.has(item.code.toString().toLowerCase());
+                const codeStyle = isDuplicate ? 'background: #ffcccc;' : '';
 
                 table.innerHTML += `
                     <tr class="${rowClass}">
-                        <td>${item.code}</td>
+                        <td style="${codeStyle}">${item.code}</td>
                         <td>${item.description}</td>
                         <td>${costPriceDisplay}</td>
                         <td>${listPriceDisplay}</td>
