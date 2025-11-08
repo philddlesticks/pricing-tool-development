@@ -18,8 +18,8 @@
             <button class="tab-btn" onclick="goToStep(2)">Map Columns</button>
             <button class="tab-btn" onclick="goToStep(3)">Edit Data</button>
             <button class="tab-btn" onclick="goToStep(4)">Review</button>
-            <button class="tab-btn" onclick="goToStep(5)">Original List</button>
-            <button class="tab-btn" onclick="goToStep(6)">Previous List</button>
+            <button class="tab-btn" onclick="goToStep(5)">Previous List</button>
+            <button class="tab-btn" onclick="goToStep(6)">Original List</button>
             <button class="tab-btn" onclick="goToStep(7)">Results</button>
             <button class="tab-btn" onclick="goToStep(8)">OW Import</button>
         </div>
@@ -210,22 +210,9 @@
             </div>
         </div>
 
-        <!-- Step 5: Original Price List -->
+        <!-- Step 5: Previous Price List -->
         <div id="step5" class="step">
-            <div class="step-header">Step 5: Original Price List</div>
-
-            <div class="alert alert-info">
-                Review the original price list data with variant matching. Edit the "Description to use" field if needed.
-            </div>
-
-            <div class="spreadsheet-container">
-                <table class="comparison-table" id="originalPriceTable"></table>
-            </div>
-        </div>
-
-        <!-- Step 6: Previous Price List -->
-        <div id="step6" class="step">
-            <div class="step-header">Step 6: Previous Price List</div>
+            <div class="step-header">Step 5: Previous Price List</div>
 
             <div class="alert alert-info">
                 <strong>Optional:</strong> Upload previous pricing data for comparison
@@ -245,6 +232,19 @@
 
             <div style="margin-top: 20px; text-align: center;">
                 <button class="btn" onclick="processData()">Process Data & View Results →</button>
+            </div>
+        </div>
+
+        <!-- Step 6: Original Price List -->
+        <div id="step6" class="step">
+            <div class="step-header">Step 6: Original Price List</div>
+
+            <div class="alert alert-info">
+                Review the original price list data with variant matching. Edit the "Description to use" field if needed.
+            </div>
+
+            <div class="spreadsheet-container">
+                <table class="comparison-table" id="originalPriceTable"></table>
             </div>
         </div>
 
@@ -1120,7 +1120,7 @@
                 // Re-render current view
                 if (currentStep === 3) {
                     renderSpreadsheet();
-                } else if (currentStep === 5) {
+                } else if (currentStep === 6) {
                     renderOriginalPriceList();
                 }
             }, 100); // 100ms debounce - batches rapid clicks while still feeling responsive
@@ -1203,9 +1203,9 @@
             } else if (step === 4) {
                 renderPreviewOnly();
             } else if (step === 5) {
-                renderOriginalPriceList();
-            } else if (step === 6) {
                 renderPreviousPriceList();
+            } else if (step === 6) {
+                renderOriginalPriceList();
             } else if (step === 8) {
                 renderOWImportSheet();
             }
