@@ -246,7 +246,7 @@
 
         <!-- Step 7: Forex Calc -->
         <div id="step7" class="step">
-            <div class="step-header">Step 7: Review Changes & Flagged Items</div>
+            <div class="step-header">Step 7: Forex Calc - Review Changes & Flagged Items</div>
             
             <div class="stats-grid" id="statsGrid"></div>
             
@@ -268,13 +268,6 @@
             <div class="spreadsheet-container">
                 <table class="comparison-table" id="comparisonTable"></table>
             </div>
-
-            <div class="button-group">
-                <button class="btn btn-success" onclick="saveData()">💾 Save to Server</button>
-                <button class="btn" onclick="exportJSON()">📥 Export JSON</button>
-                <button class="btn" onclick="exportCSV()">📥 Export CSV</button>
-                <button class="btn" onclick="generateOWImportSheet()">📊 Generate OW Import Sheet</button>
-            </div>
         </div>
 
         <!-- Step 8: OW Import Sheet -->
@@ -291,7 +284,7 @@
             </div>
 
             <div class="button-group">
-                <button class="btn" onclick="exportOWImportCSV()">📥 Export OW Import CSV</button>
+                <button class="btn" onclick="exportOWImportExcel()">📥 Export OW Import Front Sheet</button>
             </div>
         </div>
     </div>
@@ -1207,6 +1200,8 @@
                 renderPreviousPriceList();
             } else if (step === 6) {
                 renderOriginalPriceList();
+            } else if (step === 7) {
+                renderResults();
             } else if (step === 8) {
                 renderOWImportSheet();
             }
@@ -1901,70 +1896,6 @@
             toggleFilter();
         }
         
-        function exportJSON() {
-            const json = JSON.stringify(processedData, null, 2);
-            const blob = new Blob([json], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `pricing_data_${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-        }
-        
-        function exportCSV() {
-            let csv = 'Code,Description,List Price,Discount %,Cost Price,Calculated,Cost Change %,Status,Flagged\n';
-            
-            processedData.forEach(item => {
-                csv += `"${item.code}","${item.description}",${item.listPrice},`;
-                csv += `${item.discount},${item.costPrice},`;
-                csv += `${item.calculatedFromDiscount ? 'YES' : 'NO'},`;
-                csv += `${item.status === 'new' ? '' : item.costChange.toFixed(2)},`;
-                csv += `${item.status},${item.flagged ? 'YES' : 'NO'}\n`;
-            });
-            
-            const blob = new Blob([csv], {type: 'text/csv'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `pricing_export_${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
-        }
-        
-        function saveData() {
-            // This would send data to your PHP backend
-            const dataToSave = {
-                importDate: new Date().toISOString(),
-                totalItems: processedData.length,
-                flaggedItems: processedData.filter(i => i.flagged).length,
-                items: processedData
-            };
-            
-            // Mock API call - replace with your actual endpoint
-            console.log('Data to save:', dataToSave);
-            
-            alert('Save functionality would send this data to your PHP backend.\n\nEndpoint: POST /api/pricing/save\n\nCheck console for data structure.');
-            
-            /* Uncomment when you have your PHP endpoint ready:
-            fetch('/api/pricing/save', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(dataToSave)
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert('Data saved successfully!');
-            })
-            .catch(error => {
-                alert('Error saving data: ' + error);
-            });
-            */
-        }
-
-        function generateOWImportSheet() {
-            // Navigate to Step 8
-            goToStep(8);
-        }
-
         function renderOWImportSheet() {
             const table = document.getElementById('owImportTable');
 
@@ -2078,7 +2009,7 @@
             table.innerHTML = tableHTML;
         }
 
-        function exportOWImportCSV() {
+        function exportOWImportExcel() {
             // Define OW Import Sheet columns
             const columns = [
                 'Supplier',
@@ -2107,17 +2038,6 @@
                 'vad_comments'
             ];
 
-            // Helper function to escape CSV values
-            const escapeCSV = (value) => {
-                if (value === null || value === undefined) return '';
-                const str = String(value);
-                // If value contains comma, quote, or newline, wrap in quotes and escape quotes
-                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-                    return '"' + str.replace(/"/g, '""') + '"';
-                }
-                return str;
-            };
-
             // Format the effective date to "MMM YYYY-GBP 1.0"
             const formatPriceListName = (dateStr) => {
                 if (!dateStr) return '';
@@ -2130,10 +2050,10 @@
 
             const priceListName = formatPriceListName(settings.effectiveDate);
 
-            // Build CSV header
-            let csv = columns.join(',') + '\n';
+            // Build data array starting with headers
+            const data = [columns];
 
-            // Build CSV rows with actual data
+            // Build rows with actual data
             processedData.forEach(item => {
                 // Find previous data for barcode lookup
                 const oldItem = previousData.find(p =>
@@ -2179,16 +2099,16 @@
                     ''                                      // vad_comments (empty for now)
                 ];
 
-                csv += rowData.map(escapeCSV).join(',') + '\n';
+                data.push(rowData);
             });
 
-            // Download CSV
-            const blob = new Blob([csv], {type: 'text/csv'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `ow_import_sheet_${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
+            // Create workbook and worksheet
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            XLSX.utils.book_append_sheet(wb, ws, 'OW Import');
+
+            // Download Excel file
+            XLSX.writeFile(wb, `ow_import_sheet_${new Date().toISOString().split('T')[0]}.xlsx`);
         }
     </script>
 </body>
