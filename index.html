@@ -1142,9 +1142,9 @@
                         <td style="cursor: pointer; background: ${nameWouldLikeBg}; ${nameTextColor}"
                             onclick="setDescriptionToUse('${code}', '${escapedNameWouldLike}')"
                             title="Click to use this as Description to use">${nameWouldLike}</td>
-                        <td style="cursor: pointer; background: ${prevDescBg}; ${prevTextColor}"
-                            onclick="setDescriptionToUse('${code}', '${escapedPreviousDesc}')"
-                            title="Click to use this as Description to use">${previousDescription}</td>
+                        <td style="${isNewProduct ? '' : 'cursor: pointer;'} background: ${prevDescBg}; ${prevTextColor}"
+                            ${isNewProduct ? '' : `onclick="setDescriptionToUse('${code}', '${escapedPreviousDesc}')"`}
+                            ${isNewProduct ? '' : 'title="Click to use this as Description to use"'}>${previousDescription}</td>
                         <td id="charCount_${code}" style="text-align: center; ${descCharStyle} ${isNewProduct ? 'background: ' + yellowBg + ';' : ''}">${descCharCount}</td>
                         <td style="background: ${descToUseBg}; padding: 0;">
                             <input type="text"
