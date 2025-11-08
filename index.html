@@ -1068,9 +1068,9 @@
 
                 let calculatedValue = 0;
                 if (hasDiscount) {
-                    calculatedValue = costPrice > 0 ? costPrice : listPrice * (1 - discount / 100);
+                    calculatedValue = costPrice > 0 ? costPrice : Math.round(listPrice * (1 - discount / 100) * 100) / 100;
                 } else if (hasMarkup) {
-                    calculatedValue = listPrice > 0 ? listPrice : costPrice * (1 + markup / 100);
+                    calculatedValue = listPrice > 0 ? listPrice : Math.round(costPrice * (1 + markup / 100) * 100) / 100;
                 }
 
                 table.innerHTML += `
@@ -1173,13 +1173,13 @@
                     if (directCostPrice > 0) {
                         costPrice = directCostPrice;
                     } else if (listPrice > 0 && discount > 0) {
-                        costPrice = listPrice * (1 - discount / 100);
+                        costPrice = Math.round(listPrice * (1 - discount / 100) * 100) / 100;
                     }
                 } else if (hasMarkup) {
                     if (listPrice > 0) {
                         finalListPrice = listPrice;
                     } else if (directCostPrice > 0 && markup > 0) {
-                        finalListPrice = directCostPrice * (1 + markup / 100);
+                        finalListPrice = Math.round(directCostPrice * (1 + markup / 100) * 100) / 100;
                     }
                     costPrice = directCostPrice;
                 }
@@ -1394,7 +1394,7 @@
                     if (directCostPrice > 0) {
                         costPrice = directCostPrice;
                     } else if (listPrice > 0 && discount > 0) {
-                        costPrice = listPrice * (1 - discount / 100);
+                        costPrice = Math.round(listPrice * (1 - discount / 100) * 100) / 100;
                         calculatedFrom = 'discount';
                     }
                 } else if (hasMarkup) {
@@ -1402,7 +1402,7 @@
                     if (listPrice > 0) {
                         finalListPrice = listPrice;
                     } else if (directCostPrice > 0 && markup > 0) {
-                        finalListPrice = directCostPrice * (1 + markup / 100);
+                        finalListPrice = Math.round(directCostPrice * (1 + markup / 100) * 100) / 100;
                         calculatedFrom = 'markup';
                     }
                     costPrice = directCostPrice;
