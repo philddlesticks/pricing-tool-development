@@ -191,9 +191,13 @@
             </div>
             
             <div style="margin: 20px 0;">
-                <label>
-                    <input type="checkbox" id="showOnlyFlagged" onchange="toggleFlaggedFilter()">
+                <label style="margin-right: 20px;">
+                    <input type="checkbox" id="showOnlyFlagged" onchange="toggleFilter()">
                     Show only flagged items
+                </label>
+                <label>
+                    <input type="checkbox" id="showOnlyNew" onchange="toggleFilter()">
+                    Show only new items
                 </label>
             </div>
             
@@ -1287,10 +1291,29 @@
             table.innerHTML += '</tbody>';
         }
         
-        function toggleFlaggedFilter() {
+        function toggleFilter() {
             const showOnlyFlagged = document.getElementById('showOnlyFlagged').checked;
-            const dataToShow = showOnlyFlagged ? processedData.filter(i => i.flagged) : processedData;
+            const showOnlyNew = document.getElementById('showOnlyNew').checked;
+
+            let dataToShow = processedData;
+
+            if (showOnlyFlagged && showOnlyNew) {
+                // Show items that are either flagged OR new
+                dataToShow = processedData.filter(i => i.flagged || i.status === 'new');
+            } else if (showOnlyFlagged) {
+                // Show only flagged items
+                dataToShow = processedData.filter(i => i.flagged);
+            } else if (showOnlyNew) {
+                // Show only new items
+                dataToShow = processedData.filter(i => i.status === 'new');
+            }
+
             renderComparisonTable(dataToShow);
+        }
+
+        // Keep old function name for backwards compatibility
+        function toggleFlaggedFilter() {
+            toggleFilter();
         }
         
         function exportJSON() {
