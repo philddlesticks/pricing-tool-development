@@ -427,4 +427,9 @@ input[type="file"] {
 
 .excluded-row .row-number {
     text-decoration: none !important;
+    opacity: 1 !important;
+}
+
+.excluded-row .row-number * {
+    text-decoration: none !important;
 }
