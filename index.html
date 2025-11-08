@@ -223,7 +223,8 @@
             <div class="step-header">Step 8: OW Import Sheet</div>
 
             <div class="alert alert-info">
-                Review the data formatted for OrderWise import. All columns are currently empty and will be populated in future updates.
+                Review the data formatted for OrderWise import. The following columns have been populated:<br>
+                <strong>Supplier, Suppliers Part Code, Description, Cost Price, List Price, Retro %, Serial Tracked?, Price List Name, EAN Code, Manufacturer, Main Supplier</strong>
             </div>
 
             <div class="spreadsheet-container">
@@ -1755,6 +1756,18 @@
                 'vad_comments'
             ];
 
+            // Format the effective date to "MMM YYYY-GBP 1.0"
+            const formatPriceListName = (dateStr) => {
+                if (!dateStr) return '';
+                const date = new Date(dateStr);
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const month = months[date.getMonth()];
+                const year = date.getFullYear();
+                return `${month} ${year}-GBP 1.0`;
+            };
+
+            const priceListName = formatPriceListName(settings.effectiveDate);
+
             // Build table header
             let tableHTML = `
                 <thead>
@@ -1765,14 +1778,58 @@
                 <tbody>
             `;
 
-            // Build rows HTML in a string (empty data for now)
+            // Build rows HTML in a string
             let rowsHTML = '';
 
-            // Use processedData to determine how many rows (one per item)
+            // Use processedData to populate rows
             processedData.forEach(item => {
+                // Find previous data for barcode lookup
+                const oldItem = previousData.find(p =>
+                    (p.code && p.code.toLowerCase() === item.code.toLowerCase()) ||
+                    (p.productcode && p.productcode.toLowerCase() === item.code.toLowerCase())
+                );
+
+                // Get barcode - use previous barcode if exists, otherwise use new barcode
+                const previousBarcode = oldItem ? (oldItem.barcode || '') : '';
+                const eanCode = previousBarcode || item.barcode || '';
+
+                // Get manufacturer - use item's manufacturer or fall back to settings
+                const manufacturer = item.manufacturer || settings.manufacturerName;
+
+                // Get country of origin
+                const countryOfOrigin = item.countryOfOrigin || '';
+
+                // Build row data
+                const rowData = [
+                    settings.supplierAccountNumber,        // Supplier
+                    item.code,                              // Suppliers Part Code
+                    item.description,                       // Description
+                    '',                                     // Category (empty for now)
+                    item.costPrice.toFixed(2),              // Cost Price
+                    item.listPrice.toFixed(2),              // List Price
+                    '0',                                    // Retro % (0 for now)
+                    'TRUE',                                 // Serial Tracked? (TRUE for now)
+                    priceListName,                          // Price List Name
+                    eanCode,                                // EAN Code
+                    '',                                     // Notes (empty for now)
+                    manufacturer,                           // Manufacturer
+                    'TRUE',                                 // Main Supplier (TRUE for now)
+                    countryOfOrigin,                        // vad_country_code_of_origin
+                    '',                                     // vad_weight (empty for now)
+                    '',                                     // vad_volume (empty for now)
+                    '',                                     // vad_length (empty for now)
+                    '',                                     // vad_width (empty for now)
+                    '',                                     // vad_depth (empty for now)
+                    '',                                     // vad_commodity_description (empty for now)
+                    '',                                     // vad_commodity_code (empty for now)
+                    '',                                     // vad_import_commodity_code (empty for now)
+                    '',                                     // vad_harmonisation_code (empty for now)
+                    ''                                      // vad_comments (empty for now)
+                ];
+
                 rowsHTML += `
                     <tr>
-                        ${columns.map(() => '<td>-</td>').join('')}
+                        ${rowData.map(val => `<td>${val || '-'}</td>`).join('')}
                     </tr>
                 `;
             });
@@ -1810,13 +1867,79 @@
                 'vad_comments'
             ];
 
+            // Helper function to escape CSV values
+            const escapeCSV = (value) => {
+                if (value === null || value === undefined) return '';
+                const str = String(value);
+                // If value contains comma, quote, or newline, wrap in quotes and escape quotes
+                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    return '"' + str.replace(/"/g, '""') + '"';
+                }
+                return str;
+            };
+
+            // Format the effective date to "MMM YYYY-GBP 1.0"
+            const formatPriceListName = (dateStr) => {
+                if (!dateStr) return '';
+                const date = new Date(dateStr);
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const month = months[date.getMonth()];
+                const year = date.getFullYear();
+                return `${month} ${year}-GBP 1.0`;
+            };
+
+            const priceListName = formatPriceListName(settings.effectiveDate);
+
             // Build CSV header
             let csv = columns.join(',') + '\n';
 
-            // Build CSV rows (empty data for now)
+            // Build CSV rows with actual data
             processedData.forEach(item => {
-                const emptyRow = columns.map(() => '').join(',');
-                csv += emptyRow + '\n';
+                // Find previous data for barcode lookup
+                const oldItem = previousData.find(p =>
+                    (p.code && p.code.toLowerCase() === item.code.toLowerCase()) ||
+                    (p.productcode && p.productcode.toLowerCase() === item.code.toLowerCase())
+                );
+
+                // Get barcode - use previous barcode if exists, otherwise use new barcode
+                const previousBarcode = oldItem ? (oldItem.barcode || '') : '';
+                const eanCode = previousBarcode || item.barcode || '';
+
+                // Get manufacturer - use item's manufacturer or fall back to settings
+                const manufacturer = item.manufacturer || settings.manufacturerName;
+
+                // Get country of origin
+                const countryOfOrigin = item.countryOfOrigin || '';
+
+                // Build row data
+                const rowData = [
+                    settings.supplierAccountNumber,        // Supplier
+                    item.code,                              // Suppliers Part Code
+                    item.description,                       // Description
+                    '',                                     // Category (empty for now)
+                    item.costPrice.toFixed(2),              // Cost Price
+                    item.listPrice.toFixed(2),              // List Price
+                    '0',                                    // Retro % (0 for now)
+                    'TRUE',                                 // Serial Tracked? (TRUE for now)
+                    priceListName,                          // Price List Name
+                    eanCode,                                // EAN Code
+                    '',                                     // Notes (empty for now)
+                    manufacturer,                           // Manufacturer
+                    'TRUE',                                 // Main Supplier (TRUE for now)
+                    countryOfOrigin,                        // vad_country_code_of_origin
+                    '',                                     // vad_weight (empty for now)
+                    '',                                     // vad_volume (empty for now)
+                    '',                                     // vad_length (empty for now)
+                    '',                                     // vad_width (empty for now)
+                    '',                                     // vad_depth (empty for now)
+                    '',                                     // vad_commodity_description (empty for now)
+                    '',                                     // vad_commodity_code (empty for now)
+                    '',                                     // vad_import_commodity_code (empty for now)
+                    '',                                     // vad_harmonisation_code (empty for now)
+                    ''                                      // vad_comments (empty for now)
+                ];
+
+                csv += rowData.map(escapeCSV).join(',') + '\n';
             });
 
             // Download CSV
