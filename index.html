@@ -243,13 +243,36 @@
 
             <div class="button-group">
                 <button class="btn btn-secondary" onclick="goToStep(5)">← Back</button>
+                <button class="btn" onclick="goToStep(7)">Next: Previous Price List →</button>
+            </div>
+        </div>
+
+        <!-- Step 7: Previous Price List -->
+        <div id="step7" class="step">
+            <div class="step-header">Step 7: Previous Price List</div>
+
+            <div class="alert alert-info">
+                Review items from the previous price list. Items can be sorted to show missing items first.
+            </div>
+
+            <div style="margin: 20px 0;">
+                <button class="btn" onclick="sortPreviousPriceList('status')">Sort by Status (Missing First)</button>
+                <button class="btn btn-secondary" onclick="sortPreviousPriceList('code')">Sort by Code</button>
+            </div>
+
+            <div class="spreadsheet-container">
+                <table class="comparison-table" id="previousPriceTable"></table>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="goToStep(6)">← Back</button>
                 <button class="btn" onclick="processData()">Next: Review Changes →</button>
             </div>
         </div>
 
-        <!-- Step 7: Review Results -->
-        <div id="step7" class="step">
-            <div class="step-header">Step 7: Review Changes & Flagged Items</div>
+        <!-- Step 8: Review Results -->
+        <div id="step8" class="step">
+            <div class="step-header">Step 8: Review Changes & Flagged Items</div>
             
             <div class="stats-grid" id="statsGrid"></div>
             
@@ -273,7 +296,7 @@
             </div>
             
             <div class="button-group">
-                <button class="btn btn-secondary" onclick="goToStep(6)">← Back</button>
+                <button class="btn btn-secondary" onclick="goToStep(7)">← Back</button>
                 <button class="btn btn-success" onclick="saveData()">💾 Save to Server</button>
                 <button class="btn" onclick="exportJSON()">📥 Export JSON</button>
                 <button class="btn" onclick="exportCSV()">📥 Export CSV</button>
@@ -281,9 +304,9 @@
             </div>
         </div>
 
-        <!-- Step 8: OW Import Sheet -->
-        <div id="step8" class="step">
-            <div class="step-header">Step 8: OW Import Sheet</div>
+        <!-- Step 9: OW Import Sheet -->
+        <div id="step9" class="step">
+            <div class="step-header">Step 9: OW Import Sheet</div>
 
             <div class="alert alert-info">
                 Review the data formatted for OrderWise import. The following columns have been populated:<br>
@@ -295,7 +318,7 @@
             </div>
 
             <div class="button-group">
-                <button class="btn btn-secondary" onclick="goToStep(7)">← Back</button>
+                <button class="btn btn-secondary" onclick="goToStep(8)">← Back</button>
                 <button class="btn" onclick="exportOWImportCSV()">📥 Export OW Import CSV</button>
             </div>
         </div>
@@ -313,6 +336,7 @@
         let descriptionToUseMap = {}; // Store "Description to use" values by product code
         let renderDebounceTimer = null; // Debounce timer for renders
         let excludeDebounceTimer = null; // Debounce timer for exclude/restore operations
+        let previousPriceListData = []; // Store previous price list with status for sorting
 
         // Settings data
         let settings = {
@@ -1140,7 +1164,9 @@
                 renderPreviewOnly();
             } else if (step === 6) {
                 renderOriginalPriceList();
-            } else if (step === 8) {
+            } else if (step === 7) {
+                renderPreviousPriceList();
+            } else if (step === 9) {
                 renderOWImportSheet();
             }
         }
@@ -1490,7 +1516,105 @@
         function renderPreview() {
             // This function is no longer needed since preview is in step 3
         }
-        
+
+        function renderPreviousPriceList(sortBy = 'code') {
+            const table = document.getElementById('previousPriceTable');
+
+            if (!previousData || previousData.length === 0) {
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th colspan="6">No previous price list data available</th>
+                        </tr>
+                    </thead>
+                `;
+                return;
+            }
+
+            // Build previous price list data with status
+            previousPriceListData = previousData.map(oldItem => {
+                const code = oldItem.code || oldItem.productcode || '';
+                const description = oldItem.description || '';
+                const costPrice = parseFloat(oldItem.costPrice || oldItem.costprice || 0);
+                const listPrice = parseFloat(oldItem.listPrice || oldItem.listprice || 0);
+                const barcode = oldItem.barcode || '';
+
+                // Check if this code exists in current data (non-excluded rows only)
+                let status = 'Missing';
+                if (code) {
+                    const codeCol = columnMapping.code;
+                    if (codeCol !== undefined) {
+                        for (let i = 1; i < currentData.length; i++) {
+                            if (excludedRows.has(i)) continue;
+                            const currentCode = currentData[i][codeCol];
+                            if (currentCode && currentCode.toLowerCase() === code.toLowerCase()) {
+                                status = 'Found';
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                return {
+                    code,
+                    description,
+                    costPrice,
+                    listPrice,
+                    barcode,
+                    status
+                };
+            });
+
+            // Sort the data
+            if (sortBy === 'status') {
+                // Sort by status (Missing first), then by code
+                previousPriceListData.sort((a, b) => {
+                    if (a.status === b.status) {
+                        return a.code.localeCompare(b.code);
+                    }
+                    return a.status === 'Missing' ? -1 : 1;
+                });
+            } else if (sortBy === 'code') {
+                previousPriceListData.sort((a, b) => a.code.localeCompare(b.code));
+            }
+
+            // Build table
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Description</th>
+                        <th>Cost Price</th>
+                        <th>List Price</th>
+                        <th>Barcode</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            let rowsHTML = '';
+            previousPriceListData.forEach(item => {
+                const statusClass = item.status === 'Missing' ? 'style="background: #ffcccc; font-weight: bold;"' : 'style="background: #ccffcc;"';
+                rowsHTML += `
+                    <tr>
+                        <td>${item.code}</td>
+                        <td>${item.description}</td>
+                        <td>${item.costPrice > 0 ? '£' + item.costPrice.toFixed(2) : '-'}</td>
+                        <td>${item.listPrice > 0 ? '£' + item.listPrice.toFixed(2) : '-'}</td>
+                        <td>${item.barcode || '-'}</td>
+                        <td ${statusClass}>${item.status}</td>
+                    </tr>
+                `;
+            });
+
+            table.innerHTML += rowsHTML + '</tbody>';
+        }
+
+        function sortPreviousPriceList(sortBy) {
+            renderPreviousPriceList(sortBy);
+        }
+
         function processData() {
             // Mapping is already validated in validateAndProcess
             
@@ -1578,7 +1702,7 @@
             }).filter(item => item.code); // Remove empty rows
 
             renderResults();
-            goToStep(7);
+            goToStep(8);
         }
         
         function renderResults() {
@@ -1796,8 +1920,8 @@
         }
 
         function generateOWImportSheet() {
-            // Navigate to Step 8
-            goToStep(8);
+            // Navigate to Step 9
+            goToStep(9);
         }
 
         function renderOWImportSheet() {
