@@ -230,6 +230,30 @@ pricing_changes (
 - No server-side requirements
 - Works completely offline (except SheetJS CDN load)
 
+## Documentation Files
+
+### claude.md (this file)
+Current implementation documentation. Describes the workflow, features, and technical details.
+
+### lessonslearned.md
+**IMPORTANT:** This file must be maintained and updated whenever issues are encountered and resolved.
+
+Records all errors, bugs, and user-reported issues along with:
+- Problem description
+- User request (if applicable)
+- Solution implemented
+- Code locations
+- Key learnings
+
+**Update this file when:**
+- A bug is fixed
+- A feature is changed due to user feedback
+- An assumption proves incorrect
+- A design decision is reversed
+- A workaround is implemented
+
+This file serves as institutional knowledge for future development and helps avoid repeating past mistakes.
+
 ## Deployment
 
 ### GitHub Pages
