@@ -15,14 +15,13 @@
         <!-- Tab Navigation -->
         <div class="tab-navigation">
             <button class="tab-btn active" onclick="goToStep(1)">Settings</button>
-            <button class="tab-btn" onclick="goToStep(2)">Upload</button>
-            <button class="tab-btn" onclick="goToStep(3)">Map Columns</button>
-            <button class="tab-btn" onclick="goToStep(4)">Edit Data</button>
-            <button class="tab-btn" onclick="goToStep(5)">Review</button>
-            <button class="tab-btn" onclick="goToStep(6)">Original List</button>
-            <button class="tab-btn" onclick="goToStep(7)">Previous List</button>
-            <button class="tab-btn" onclick="goToStep(8)">Results</button>
-            <button class="tab-btn" onclick="goToStep(9)">OW Import</button>
+            <button class="tab-btn" onclick="goToStep(2)">Map Columns</button>
+            <button class="tab-btn" onclick="goToStep(3)">Edit Data</button>
+            <button class="tab-btn" onclick="goToStep(4)">Review</button>
+            <button class="tab-btn" onclick="goToStep(5)">Original List</button>
+            <button class="tab-btn" onclick="goToStep(6)">Previous List</button>
+            <button class="tab-btn" onclick="goToStep(7)">Results</button>
+            <button class="tab-btn" onclick="goToStep(8)">OW Import</button>
         </div>
 
         <!-- Step 1: Settings -->
@@ -111,31 +110,22 @@
                         <option value="TRUE">TRUE</option>
                     </select>
                 </div>
+
+                <div class="mapping-item" style="margin-top: 30px;">
+                    <h3 style="margin-bottom: 15px;">Upload Pricing File</h3>
+                    <div class="upload-area" id="uploadArea">
+                        <h2>📁 Drop file here or click to browse</h2>
+                        <p style="color: #666; margin-top: 10px;">Supports .xlsx, .xls, and .csv formats</p>
+                        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+                    </div>
+                    <div id="uploadMessages" style="margin: 15px 0;"></div>
+                </div>
             </div>
         </div>
 
-        <!-- Step 2: Upload -->
+        <!-- Step 2: Map Columns -->
         <div id="step2" class="step">
-            <div class="step-header">Step 2: Upload Pricing File</div>
-            <div class="upload-area" id="uploadArea">
-                <h2>📁 Drop file here or click to browse</h2>
-                <p style="color: #666; margin-top: 10px;">Supports .xlsx, .xls, and .csv formats</p>
-                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
-            </div>
-
-            <div id="uploadMessages" style="margin: 15px 0;"></div>
-
-            <div class="alert alert-info">
-                <strong>Optional:</strong> Upload previous pricing data for comparison
-                <input type="file" id="previousFileInput" accept=".xlsx,.xls,.csv,.json" style="display: block; margin-top: 10px;">
-            </div>
-
-            <div id="previousUploadMessages" style="margin: 15px 0;"></div>
-        </div>
-
-        <!-- Step 3: Map Columns -->
-        <div id="step3" class="step">
-            <div class="step-header">Step 3: Map Columns</div>
+            <div class="step-header">Step 2: Map Columns</div>
             <div class="alert alert-info">
                 Assign each column from your uploaded file to the appropriate field using the dropdowns below each column header.
             </div>
@@ -159,9 +149,9 @@
             </div>
         </div>
 
-        <!-- Step 4: Edit Data -->
-        <div id="step4" class="step">
-            <div class="step-header">Step 4: Edit Data</div>
+        <!-- Step 3: Edit Data -->
+        <div id="step3" class="step">
+            <div class="step-header">Step 3: Edit Data</div>
             <div class="alert alert-info" id="step3Info">
                 Edit your data and apply discounts or markups as needed.
             </div>
@@ -206,9 +196,9 @@
             </div>
         </div>
 
-        <!-- Step 5: Review & Process -->
-        <div id="step5" class="step">
-            <div class="step-header">Step 5: Review & Process</div>
+        <!-- Step 4: Review & Process -->
+        <div id="step4" class="step">
+            <div class="step-header">Step 4: Review & Process</div>
 
             <div class="alert alert-info">
                 Review your mapped data below before processing. Make sure all columns are correctly assigned.
@@ -220,9 +210,9 @@
             </div>
         </div>
 
-        <!-- Step 6: Original Price List -->
-        <div id="step6" class="step">
-            <div class="step-header">Step 6: Original Price List</div>
+        <!-- Step 5: Original Price List -->
+        <div id="step5" class="step">
+            <div class="step-header">Step 5: Original Price List</div>
 
             <div class="alert alert-info">
                 Review the original price list data with variant matching. Edit the "Description to use" field if needed.
@@ -233,13 +223,16 @@
             </div>
         </div>
 
-        <!-- Step 7: Previous Price List -->
-        <div id="step7" class="step">
-            <div class="step-header">Step 7: Previous Price List</div>
+        <!-- Step 6: Previous Price List -->
+        <div id="step6" class="step">
+            <div class="step-header">Step 6: Previous Price List</div>
 
             <div class="alert alert-info">
-                Review items from the previous price list. Items can be sorted to show missing items first.
+                <strong>Optional:</strong> Upload previous pricing data for comparison
+                <input type="file" id="previousFileInput" accept=".xlsx,.xls,.csv,.json" style="display: block; margin-top: 10px;">
             </div>
+
+            <div id="previousUploadMessages" style="margin: 15px 0;"></div>
 
             <div style="margin: 20px 0;">
                 <button class="btn" onclick="sortPreviousPriceList('status')">Sort by Status (Missing First)</button>
@@ -255,9 +248,9 @@
             </div>
         </div>
 
-        <!-- Step 8: Review Results -->
-        <div id="step8" class="step">
-            <div class="step-header">Step 8: Review Changes & Flagged Items</div>
+        <!-- Step 7: Review Results -->
+        <div id="step7" class="step">
+            <div class="step-header">Step 7: Review Changes & Flagged Items</div>
             
             <div class="stats-grid" id="statsGrid"></div>
             
@@ -288,9 +281,9 @@
             </div>
         </div>
 
-        <!-- Step 9: OW Import Sheet -->
-        <div id="step9" class="step">
-            <div class="step-header">Step 9: OW Import Sheet</div>
+        <!-- Step 8: OW Import Sheet -->
+        <div id="step8" class="step">
+            <div class="step-header">Step 8: OW Import Sheet</div>
 
             <div class="alert alert-info">
                 Review the data formatted for OrderWise import. The following columns have been populated:<br>
@@ -412,9 +405,11 @@
                 currentData = jsonData.filter(row => row.some(cell => cell !== ''));
 
                 if (currentData.length > 0) {
-                    // Enable the next button instead of auto-progressing
-                    document.getElementById('uploadNextBtn').disabled = false;
-                    showUploadMessage('✓ File uploaded successfully! You can now optionally upload previous pricing data, or click Next to continue.', 'success');
+                    showUploadMessage('✓ File uploaded successfully! Automatically proceeding to Map Columns...', 'success');
+                    // Automatically proceed to mapping step after brief delay
+                    setTimeout(() => {
+                        proceedFromUpload();
+                    }, 1000);
                 }
             };
 
@@ -428,7 +423,7 @@
         function proceedFromUpload() {
             if (currentData.length > 0) {
                 renderMappingTable();
-                goToStep(3);
+                goToStep(2);
             }
         }
 
@@ -460,7 +455,7 @@
                 return;
             }
 
-            // Proceed to upload step
+            // Proceed to Map Columns step
             goToStep(2);
         }
         
@@ -578,9 +573,9 @@
                 return;
             }
 
-            // Prepare Step 4 with appropriate discount/markup column
+            // Prepare Step 3 with appropriate discount/markup column
             prepareStep3();
-            goToStep(4);
+            goToStep(3);
         }
 
         function prepareStep3() {
@@ -1137,6 +1132,57 @@
         }
         
         function goToStep(step) {
+            // Validate settings and file upload before allowing navigation past step 1
+            if (step > 1 && currentStep === 1) {
+                // Get settings values
+                const manufacturerName = document.getElementById('manufacturerName').value.trim();
+                const supplierAccountNumber = document.getElementById('supplierAccountNumber').value.trim();
+                const effectiveDate = document.getElementById('effectiveDate').value;
+
+                // Check required fields
+                if (!manufacturerName) {
+                    alert('Please enter the manufacturer or brand name before proceeding');
+                    return;
+                }
+                if (!supplierAccountNumber) {
+                    alert('Please enter the supplier account number before proceeding');
+                    return;
+                }
+                if (!effectiveDate) {
+                    alert('Please select the price list effective date before proceeding');
+                    return;
+                }
+                if (!currentData || currentData.length === 0) {
+                    alert('Please upload a pricing file before proceeding');
+                    return;
+                }
+
+                // Save settings
+                settings.manufacturerName = manufacturerName;
+                settings.supplierAccountNumber = supplierAccountNumber;
+                settings.effectiveDate = effectiveDate;
+                settings.region = document.getElementById('region').value;
+                settings.defaultCOO = document.getElementById('defaultCOO').value;
+                settings.costPriceCurrency = document.getElementById('costPriceCurrency').value;
+                settings.listPriceCurrency = document.getElementById('listPriceCurrency').value;
+                settings.exchangeRate = parseFloat(document.getElementById('exchangeRate').value) || 1.0;
+                settings.dutyFree = document.getElementById('dutyFree').value;
+            }
+
+            // Validate column mapping before allowing navigation past step 2
+            if (step > 2 && currentStep === 2) {
+                if (!columnMapping.code) {
+                    alert('Please map the required field: Supplier Part Number');
+                    return;
+                }
+                if (!columnMapping.listPrice && !columnMapping.costPrice) {
+                    alert('Please map at least one price field: either List Price OR Cost Price');
+                    return;
+                }
+                // Prepare discount/markup columns if needed
+                prepareStep3();
+            }
+
             // Update step visibility
             document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
             document.getElementById(`step${step}`).classList.add('active');
@@ -1152,15 +1198,15 @@
             currentStep = step;
 
             // Render specific step content if needed
-            if (step === 4) {
+            if (step === 3) {
                 renderSpreadsheet();
-            } else if (step === 5) {
+            } else if (step === 4) {
                 renderPreviewOnly();
-            } else if (step === 6) {
+            } else if (step === 5) {
                 renderOriginalPriceList();
-            } else if (step === 7) {
+            } else if (step === 6) {
                 renderPreviousPriceList();
-            } else if (step === 9) {
+            } else if (step === 8) {
                 renderOWImportSheet();
             }
         }
@@ -1696,7 +1742,7 @@
             }).filter(item => item.code); // Remove empty rows
 
             renderResults();
-            goToStep(8);
+            goToStep(7);
         }
         
         function renderResults() {
@@ -1914,8 +1960,8 @@
         }
 
         function generateOWImportSheet() {
-            // Navigate to Step 9
-            goToStep(9);
+            // Navigate to Step 8
+            goToStep(8);
         }
 
         function renderOWImportSheet() {
