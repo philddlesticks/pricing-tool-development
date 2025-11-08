@@ -226,6 +226,7 @@
         let copiedValue = null;
         let excludedRows = new Set();
         let descriptionToUseMap = {}; // Store "Description to use" values by product code
+        let variantCodeMap = {}; // Store edited variant code values by original product code
 
         // Settings data
         let settings = {
@@ -1101,6 +1102,11 @@
                     descriptionToUseMap[code] = descriptionToUse;
                 }
 
+                // Store the default variant code value
+                if (!variantCodeMap[code]) {
+                    variantCodeMap[code] = code;
+                }
+
                 // Calculate character counts
                 const nameCharCount = nameWouldLike.length;
                 const descCharCount = descriptionToUseMap[code].length;
@@ -1144,7 +1150,13 @@
                     <tr>
                         <td style="background: #00ff00; text-align: center;">${lineNumber}</td>
                         <td style="background: ${manufacturerBg};">${manufacturer}</td>
-                        <td style="background: ${codeBg};">${code}</td>
+                        <td style="background: ${codeBg}; padding: 0;">
+                            <input type="text"
+                                   id="codeInput_${code}"
+                                   value="${variantCodeMap[code]}"
+                                   onchange="updateVariantCode('${code}', this.value)"
+                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 0; background: transparent; box-sizing: border-box;">
+                        </td>
                         <td style="background: ${descriptionBg};">${description}</td>
                         <td style="text-align: center; ${nameCharStyle} ${isNewProduct ? 'background: ' + yellowBg + ';' : ''}">${nameCharCount}</td>
                         <td style="cursor: pointer; background: ${nameWouldLikeBg}; ${nameTextColor}"
@@ -1179,6 +1191,11 @@
             descriptionToUseMap[code] = value;
             // Re-render the table to update grey-out styling
             renderOriginalPriceList();
+        }
+
+        function updateVariantCode(code, value) {
+            variantCodeMap[code] = value;
+            // No need to re-render for variant code changes
         }
 
         function setDescriptionToUse(code, value) {
@@ -1269,7 +1286,7 @@
                 
                 const code = row[columnMapping.code];
                 const item = {
-                    code: code,
+                    code: variantCodeMap[code] || code,
                     description: descriptionToUseMap[code] || (columnMapping.description !== undefined ? row[columnMapping.description] : ''),
                     costPrice: costPrice,
                     listPrice: finalListPrice,
