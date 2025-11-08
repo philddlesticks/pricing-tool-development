@@ -1118,9 +1118,9 @@
             }
             excludeDebounceTimer = setTimeout(() => {
                 // Re-render current view
-                if (currentStep === 4) {
+                if (currentStep === 3) {
                     renderSpreadsheet();
-                } else if (currentStep === 6) {
+                } else if (currentStep === 5) {
                     renderOriginalPriceList();
                 }
             }, 100); // 100ms debounce - batches rapid clicks while still feeling responsive
