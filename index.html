@@ -1097,18 +1097,22 @@
 
                 // Style for "Name would like to use" character count
                 let nameCharStyle = '';
-                if (nameCharCount >= 250) {
+                if (nameCharCount > 250) {
                     nameCharStyle = 'color: red; font-weight: bold;';
                 } else if (nameCharCount >= descCharCount * 1.1) {
                     nameCharStyle = 'color: limegreen; font-weight: bold;';
                 }
 
                 // Style for "Description to use" character count
-                const descCharStyle = descCharCount >= 250 ? 'color: red; font-weight: bold;' : '';
+                const descCharStyle = descCharCount > 250 ? 'color: red; font-weight: bold;' : '';
 
                 // Escape values for JavaScript strings
                 const escapedNameWouldLike = nameWouldLike.replace(/'/g, "\\'").replace(/"/g, '\\"');
                 const escapedPreviousDesc = previousDescription.replace(/'/g, "\\'").replace(/"/g, '\\"');
+
+                // Check if "Name would like to use" matches "Description to use"
+                const nameMatchesDesc = nameWouldLike === descriptionToUseMap[code];
+                const nameTextColor = nameMatchesDesc ? 'color: #999;' : '';
 
                 table.innerHTML += `
                     <tr>
@@ -1116,7 +1120,7 @@
                         <td>${code}</td>
                         <td>${description}</td>
                         <td style="text-align: center; ${nameCharStyle}">${nameCharCount}</td>
-                        <td style="cursor: pointer; background: #f0f8ff;"
+                        <td style="cursor: pointer; background: #f0f8ff; ${nameTextColor}"
                             onclick="setDescriptionToUse('${code}', '${escapedNameWouldLike}')"
                             title="Click to use this as Description to use">${nameWouldLike}</td>
                         <td style="cursor: pointer; background: #fff8f0;"
@@ -1146,20 +1150,16 @@
 
         function updateDescriptionToUse(code, value) {
             descriptionToUseMap[code] = value;
+            // Re-render the table to update grey-out styling
+            renderOriginalPriceList();
         }
 
         function setDescriptionToUse(code, value) {
             // Update the map
             descriptionToUseMap[code] = value;
 
-            // Update the input field
-            const input = document.getElementById(`descInput_${code}`);
-            if (input) {
-                input.value = value;
-            }
-
-            // Update the character count
-            updateCharCount(code);
+            // Re-render the entire table to update styling
+            renderOriginalPriceList();
         }
 
         function updateCharCount(code) {
@@ -1172,7 +1172,7 @@
 
                 // Update styling based on character count (always keep text-align: center)
                 charCountCell.style.textAlign = 'center';
-                if (count >= 250) {
+                if (count > 250) {
                     charCountCell.style.color = 'red';
                     charCountCell.style.fontWeight = 'bold';
                 } else {
