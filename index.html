@@ -1201,8 +1201,10 @@
             } else if (step === 6) {
                 renderOriginalPriceList();
             } else if (step === 7) {
+                processData();
                 renderResults();
             } else if (step === 8) {
+                processData();
                 renderOWImportSheet();
             }
         }
@@ -1736,9 +1738,6 @@
                 
                 return item;
             }).filter(item => item.code); // Remove empty rows
-
-            renderResults();
-            goToStep(7);
         }
         
         function renderResults() {
