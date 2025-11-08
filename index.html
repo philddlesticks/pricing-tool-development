@@ -1118,32 +1118,46 @@
                 const nameTextColor = nameMatchesDesc ? 'color: #999;' : '';
                 const prevTextColor = prevMatchesDesc ? 'color: #999;' : '';
 
+                // Check if this is a new product
+                const isNewProduct = previousDescription === 'New product? Check if new';
+                const yellowBg = '#ffe082';
+
+                // Set backgrounds based on whether it's a new product
+                const manufacturerBg = isNewProduct ? yellowBg : '#ffffe0';
+                const codeBg = isNewProduct ? yellowBg : '#ffffe0';
+                const descriptionBg = isNewProduct ? yellowBg : '#ffffe0';
+                const nameWouldLikeBg = isNewProduct ? yellowBg : '#ffe0f0';
+                const prevDescBg = isNewProduct ? yellowBg : '#ffe5cc';
+                const descToUseBg = isNewProduct ? yellowBg : '#ccffcc';
+                const costListBg = isNewProduct ? `background: ${yellowBg};` : '';
+                const barcodeBg = isNewProduct ? `background: ${yellowBg};` : '';
+
                 table.innerHTML += `
                     <tr>
                         <td style="background: #00ff00;">${lineNumber}</td>
-                        <td style="background: #ffffe0;">${manufacturer}</td>
-                        <td style="background: #ffffe0;">${code}</td>
-                        <td style="background: #ffffe0;">${description}</td>
-                        <td style="text-align: center; ${nameCharStyle}">${nameCharCount}</td>
-                        <td style="cursor: pointer; background: #ffe0f0; ${nameTextColor}"
+                        <td style="background: ${manufacturerBg};">${manufacturer}</td>
+                        <td style="background: ${codeBg};">${code}</td>
+                        <td style="background: ${descriptionBg};">${description}</td>
+                        <td style="text-align: center; ${nameCharStyle} ${isNewProduct ? 'background: ' + yellowBg + ';' : ''}">${nameCharCount}</td>
+                        <td style="cursor: pointer; background: ${nameWouldLikeBg}; ${nameTextColor}"
                             onclick="setDescriptionToUse('${code}', '${escapedNameWouldLike}')"
                             title="Click to use this as Description to use">${nameWouldLike}</td>
-                        <td style="cursor: pointer; background: #ffe5cc; ${prevTextColor}"
+                        <td style="cursor: pointer; background: ${prevDescBg}; ${prevTextColor}"
                             onclick="setDescriptionToUse('${code}', '${escapedPreviousDesc}')"
                             title="Click to use this as Description to use">${previousDescription}</td>
-                        <td id="charCount_${code}" style="text-align: center; ${descCharStyle}">${descCharCount}</td>
+                        <td id="charCount_${code}" style="text-align: center; ${descCharStyle} ${isNewProduct ? 'background: ' + yellowBg + ';' : ''}">${descCharCount}</td>
                         <td>
                             <input type="text"
                                    id="descInput_${code}"
                                    value="${descriptionToUseMap[code]}"
                                    onchange="updateDescriptionToUse('${code}', this.value)"
                                    oninput="updateCharCount('${code}')"
-                                   style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 3px; background: #ccffcc;">
+                                   style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 3px; background: ${descToUseBg};">
                         </td>
-                        <td>£${costPrice.toFixed(2)}</td>
-                        <td>£${finalListPrice.toFixed(2)}</td>
-                        <td>${barcode || '-'}</td>
-                        <td>${previousBarcode}</td>
+                        <td style="${costListBg}">£${costPrice.toFixed(2)}</td>
+                        <td style="${costListBg}">£${finalListPrice.toFixed(2)}</td>
+                        <td style="${barcodeBg}">${barcode || '-'}</td>
+                        <td style="${barcodeBg}">${previousBarcode}</td>
                     </tr>
                 `;
 
