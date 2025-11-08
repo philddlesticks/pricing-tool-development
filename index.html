@@ -460,7 +460,7 @@
             reader.onload = (e) => {
                 if (file.name.endsWith('.json')) {
                     previousData = JSON.parse(e.target.result);
-                    showUploadMessage('✓ Previous pricing data loaded successfully! Processing and updating results...', 'success', 'previousUploadMessages');
+                    showUploadMessage('✓ Previous pricing data loaded successfully! Review the data below.', 'success', 'previousUploadMessages');
                 } else {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, {type: 'array'});
@@ -476,13 +476,12 @@
                         });
                         return obj;
                     });
-                    showUploadMessage('✓ Previous pricing data loaded successfully! Processing and updating results...', 'success', 'previousUploadMessages');
+                    showUploadMessage('✓ Previous pricing data loaded successfully! Review the data below.', 'success', 'previousUploadMessages');
                 }
 
-                // Automatically process data and update Previous Price List display
+                // Automatically update Previous Price List display
                 setTimeout(() => {
                     renderPreviousPriceList();
-                    processData();
                 }, 1000);
             };
 
