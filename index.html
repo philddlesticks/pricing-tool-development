@@ -228,6 +228,7 @@
         let copiedValue = null;
         let excludedRows = new Set();
         let descriptionToUseMap = {}; // Store "Description to use" values by product code
+        let renderDebounceTimer = null; // Debounce timer for renders
 
         // Settings data
         let settings = {
@@ -1056,6 +1057,9 @@
                 <tbody>
             `;
 
+            // Build rows HTML in a string first (more efficient than repeated innerHTML +=)
+            let rowsHTML = '';
+
             // Filter out excluded rows, then take first 10 non-excluded rows
             const previewRows = currentData.slice(1)
                 .filter((row, index) => !excludedRows.has(index + 1))
@@ -1068,12 +1072,12 @@
 
                 let calculatedValue = 0;
                 if (hasDiscount) {
-                    calculatedValue = costPrice > 0 ? costPrice : listPrice * (1 - discount / 100);
+                    calculatedValue = costPrice > 0 ? costPrice : Math.round(listPrice * (1 - discount / 100) * 100) / 100;
                 } else if (hasMarkup) {
-                    calculatedValue = listPrice > 0 ? listPrice : costPrice * (1 + markup / 100);
+                    calculatedValue = listPrice > 0 ? listPrice : Math.round(costPrice * (1 + markup / 100) * 100) / 100;
                 }
 
-                table.innerHTML += `
+                rowsHTML += `
                     <tr>
                         <td>${columnMapping.code !== undefined ? row[columnMapping.code] : '-'}</td>
                         <td>${columnMapping.description !== undefined ? row[columnMapping.description] : '-'}</td>
@@ -1092,7 +1096,7 @@
                 `;
             });
 
-            table.innerHTML += '</tbody>';
+            table.innerHTML += rowsHTML + '</tbody>';
         }
 
         function findDuplicateVariantCodes() {
@@ -1150,6 +1154,9 @@
                 <tbody>
             `;
 
+            // Build rows HTML in a string first (more efficient than repeated innerHTML +=)
+            let rowsHTML = '';
+
             // Process rows (show all rows, mark excluded ones)
             currentData.slice(1).forEach((row, index) => {
                 const rowIndex = index + 1;
@@ -1173,13 +1180,13 @@
                     if (directCostPrice > 0) {
                         costPrice = directCostPrice;
                     } else if (listPrice > 0 && discount > 0) {
-                        costPrice = listPrice * (1 - discount / 100);
+                        costPrice = Math.round(listPrice * (1 - discount / 100) * 100) / 100;
                     }
                 } else if (hasMarkup) {
                     if (listPrice > 0) {
                         finalListPrice = listPrice;
                     } else if (directCostPrice > 0 && markup > 0) {
-                        finalListPrice = directCostPrice * (1 + markup / 100);
+                        finalListPrice = Math.round(directCostPrice * (1 + markup / 100) * 100) / 100;
                     }
                     costPrice = directCostPrice;
                 }
@@ -1259,7 +1266,7 @@
                 const costListBg = isNewProduct ? `background: ${yellowBg};` : '';
                 const barcodeBg = isNewProduct ? `background: ${yellowBg};` : '';
 
-                table.innerHTML += `
+                rowsHTML += `
                     <tr class="${isExcluded ? 'excluded-row' : ''}">
                         <td class="row-number" style="cursor: pointer; background: #00ff00; text-align: center;" onclick="toggleRowExclusion(${rowIndex})" title="${isExcluded ? 'Click to restore row' : 'Click to exclude row'}">
                             ${isExcluded ? '❌' : rowIndex}
@@ -1297,7 +1304,7 @@
                 `;
             });
 
-            table.innerHTML += '</tbody>';
+            table.innerHTML += rowsHTML + '</tbody>';
         }
 
         function updateDescriptionToUse(code, value) {
@@ -1326,8 +1333,13 @@
             // Update the map
             descriptionToUseMap[code] = value;
 
-            // Re-render the entire table to update styling
-            renderOriginalPriceList();
+            // Debounce re-render to prevent browser crashes from rapid clicking
+            if (renderDebounceTimer) {
+                clearTimeout(renderDebounceTimer);
+            }
+            renderDebounceTimer = setTimeout(() => {
+                renderOriginalPriceList();
+            }, 50); // 50ms debounce - fast enough to feel instant, slow enough to batch rapid clicks
         }
 
         function updateCharCount(code) {
@@ -1394,7 +1406,7 @@
                     if (directCostPrice > 0) {
                         costPrice = directCostPrice;
                     } else if (listPrice > 0 && discount > 0) {
-                        costPrice = listPrice * (1 - discount / 100);
+                        costPrice = Math.round(listPrice * (1 - discount / 100) * 100) / 100;
                         calculatedFrom = 'discount';
                     }
                 } else if (hasMarkup) {
@@ -1402,7 +1414,7 @@
                     if (listPrice > 0) {
                         finalListPrice = listPrice;
                     } else if (directCostPrice > 0 && markup > 0) {
-                        finalListPrice = directCostPrice * (1 + markup / 100);
+                        finalListPrice = Math.round(directCostPrice * (1 + markup / 100) * 100) / 100;
                         calculatedFrom = 'markup';
                     }
                     costPrice = directCostPrice;
@@ -1533,6 +1545,9 @@
                 <tbody>
             `;
 
+            // Build rows HTML in a string first (more efficient than repeated innerHTML +=)
+            let rowsHTML = '';
+
             data.forEach(item => {
                 const costChangeClass = item.costChange > 0 ? 'change-positive' : item.costChange < 0 ? 'change-negative' : '';
 
@@ -1553,7 +1568,7 @@
                 const isDuplicate = item.code && duplicateCodes.has(item.code.toString().toLowerCase());
                 const codeStyle = isDuplicate ? 'background: #ffcccc;' : '';
 
-                table.innerHTML += `
+                rowsHTML += `
                     <tr class="${rowClass}">
                         <td style="${codeStyle}">${item.code}</td>
                         <td>${item.description}</td>
@@ -1569,7 +1584,7 @@
                 `;
             });
 
-            table.innerHTML += '</tbody>';
+            table.innerHTML += rowsHTML + '</tbody>';
         }
         
         function toggleFilter() {
