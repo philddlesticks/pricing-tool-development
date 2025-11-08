@@ -51,6 +51,8 @@
                 <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
             </div>
 
+            <div id="uploadMessages" style="margin: 15px 0;"></div>
+
             <div class="alert alert-info">
                 <strong>Optional:</strong> Upload previous pricing data for comparison
                 <input type="file" id="previousFileInput" accept=".xlsx,.xls,.csv,.json" style="display: block; margin-top: 10px;">
@@ -312,6 +314,7 @@
                 if (currentData.length > 0) {
                     // Enable the next button instead of auto-progressing
                     document.getElementById('uploadNextBtn').disabled = false;
+                    showUploadMessage('✓ File uploaded successfully! You can now optionally upload previous pricing data, or click Next to continue.', 'success');
                 }
             };
 
@@ -360,6 +363,7 @@
             reader.onload = (e) => {
                 if (file.name.endsWith('.json')) {
                     previousData = JSON.parse(e.target.result);
+                    showUploadMessage('✓ Previous pricing data loaded successfully!', 'success');
                 } else {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, {type: 'array'});
@@ -375,6 +379,7 @@
                         });
                         return obj;
                     });
+                    showUploadMessage('✓ Previous pricing data loaded successfully!', 'success');
                 }
             };
             
@@ -384,7 +389,13 @@
                 reader.readAsArrayBuffer(file);
             }
         }
-        
+
+        function showUploadMessage(message, type = 'success') {
+            const messagesDiv = document.getElementById('uploadMessages');
+            const messageClass = type === 'success' ? 'alert alert-info' : 'alert alert-warning';
+            messagesDiv.innerHTML = `<div class="${messageClass}" style="animation: fadeIn 0.3s;">${message}</div>`;
+        }
+
         function renderMappingTable() {
             // Step 2: Show only column headers and mapping dropdowns (no data editing)
             const table = document.getElementById('mappingTable');
