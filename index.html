@@ -312,7 +312,6 @@
                 if (currentData.length > 0) {
                     // Enable the next button instead of auto-progressing
                     document.getElementById('uploadNextBtn').disabled = false;
-                    alert('File uploaded successfully! You can now optionally upload previous pricing data, or click Next to continue.');
                 }
             };
 
@@ -361,7 +360,6 @@
             reader.onload = (e) => {
                 if (file.name.endsWith('.json')) {
                     previousData = JSON.parse(e.target.result);
-                    alert('Previous pricing data loaded successfully!');
                 } else {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, {type: 'array'});
@@ -377,7 +375,6 @@
                         });
                         return obj;
                     });
-                    alert('Previous pricing data loaded successfully!');
                 }
             };
             
