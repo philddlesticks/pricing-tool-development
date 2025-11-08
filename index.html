@@ -229,6 +229,7 @@
         let excludedRows = new Set();
         let descriptionToUseMap = {}; // Store "Description to use" values by product code
         let renderDebounceTimer = null; // Debounce timer for renders
+        let excludeDebounceTimer = null; // Debounce timer for exclude/restore operations
 
         // Settings data
         let settings = {
@@ -1007,17 +1008,25 @@
         }
         
         function toggleRowExclusion(rowIndex) {
+            // Update state immediately
             if (excludedRows.has(rowIndex)) {
                 excludedRows.delete(rowIndex);
             } else {
                 excludedRows.add(rowIndex);
             }
-            // Re-render current view
-            if (currentStep === 4) {
-                renderSpreadsheet();
-            } else if (currentStep === 6) {
-                renderOriginalPriceList();
+
+            // Debounce re-render to prevent browser crashes from rapid clicking
+            if (excludeDebounceTimer) {
+                clearTimeout(excludeDebounceTimer);
             }
+            excludeDebounceTimer = setTimeout(() => {
+                // Re-render current view
+                if (currentStep === 4) {
+                    renderSpreadsheet();
+                } else if (currentStep === 6) {
+                    renderOriginalPriceList();
+                }
+            }, 100); // 100ms debounce - batches rapid clicks while still feeling responsive
         }
 
         function deleteRow(rowIndex) {
