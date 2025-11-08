@@ -542,13 +542,31 @@
 
             <div class="button-group">
                 <button class="btn btn-secondary" onclick="goToStep(3)">← Back to Edit</button>
-                <button class="btn" onclick="processData()">Process & Compare →</button>
+                <button class="btn" onclick="goToStep(5)">Next: Original Price List →</button>
             </div>
         </div>
 
-        <!-- Step 5: Review Results -->
+        <!-- Step 5: Original Price List -->
         <div id="step5" class="step">
-            <div class="step-header">Step 5: Review Changes & Flagged Items</div>
+            <div class="step-header">Step 5: Original Price List</div>
+
+            <div class="alert alert-info">
+                Review the original price list data with variant matching. Edit the "Description to use" field if needed.
+            </div>
+
+            <div class="spreadsheet-container">
+                <table class="comparison-table" id="originalPriceTable"></table>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="goToStep(4)">← Back</button>
+                <button class="btn" onclick="processData()">Next: Review Changes →</button>
+            </div>
+        </div>
+
+        <!-- Step 6: Review Results -->
+        <div id="step6" class="step">
+            <div class="step-header">Step 6: Review Changes & Flagged Items</div>
             
             <div class="stats-grid" id="statsGrid"></div>
             
@@ -568,7 +586,7 @@
             </div>
             
             <div class="button-group">
-                <button class="btn btn-secondary" onclick="goToStep(4)">← Back</button>
+                <button class="btn btn-secondary" onclick="goToStep(5)">← Back</button>
                 <button class="btn btn-success" onclick="saveData()">💾 Save to Server</button>
                 <button class="btn" onclick="exportJSON()">📥 Export JSON</button>
                 <button class="btn" onclick="exportCSV()">📥 Export CSV</button>
@@ -1255,6 +1273,8 @@
                 renderSpreadsheet();
             } else if (step === 4) {
                 renderPreviewOnly();
+            } else if (step === 5) {
+                renderOriginalPriceList();
             }
         }
         
@@ -1313,7 +1333,109 @@
             
             table.innerHTML += '</tbody>';
         }
-        
+
+        function renderOriginalPriceList() {
+            const table = document.getElementById('originalPriceTable');
+            const hasDiscount = columnMapping.discount !== undefined;
+            const hasMarkup = columnMapping.markup !== undefined;
+
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Variant Code</th>
+                        <th>Description</th>
+                        <th>Name would like to use</th>
+                        <th>Previous Description</th>
+                        <th>Description to use</th>
+                        <th>Cost Price</th>
+                        <th>List Price</th>
+                        <th>Barcode</th>
+                        <th>Previous Barcode</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            // Process rows (skip excluded rows)
+            let lineNumber = 1;
+            currentData.slice(1).forEach((row, index) => {
+                const rowIndex = index + 1;
+                if (excludedRows.has(rowIndex)) {
+                    return; // Skip excluded rows
+                }
+
+                const code = columnMapping.code !== undefined ? row[columnMapping.code] : '';
+                const description = columnMapping.description !== undefined ? row[columnMapping.description] : '';
+                const barcode = columnMapping.barcode !== undefined ? row[columnMapping.barcode] : '';
+
+                // Calculate prices
+                const listPrice = columnMapping.listPrice !== undefined ? parseFloat(row[columnMapping.listPrice]) || 0 : 0;
+                const discount = hasDiscount ? parseFloat(row[columnMapping.discount]) || 0 : 0;
+                const markup = hasMarkup ? parseFloat(row[columnMapping.markup]) || 0 : 0;
+                const directCostPrice = columnMapping.costPrice !== undefined ? parseFloat(row[columnMapping.costPrice]) || 0 : 0;
+
+                let costPrice = directCostPrice;
+                let finalListPrice = listPrice;
+
+                if (hasDiscount) {
+                    if (directCostPrice > 0) {
+                        costPrice = directCostPrice;
+                    } else if (listPrice > 0 && discount > 0) {
+                        costPrice = listPrice * (1 - discount / 100);
+                    }
+                } else if (hasMarkup) {
+                    if (listPrice > 0) {
+                        finalListPrice = listPrice;
+                    } else if (directCostPrice > 0 && markup > 0) {
+                        finalListPrice = directCostPrice * (1 + markup / 100);
+                    }
+                    costPrice = directCostPrice;
+                }
+
+                // Name would like to use: (CODE) DESCRIPTION
+                const nameWouldLike = `(${code}) ${description}`;
+
+                // Check if this item exists in previous data
+                const oldItem = previousData.find(p => p.code === code || p.productcode === code);
+
+                let previousDescription = '';
+                let previousBarcode = '';
+                let descriptionToUse = '';
+
+                if (oldItem) {
+                    // Found in database
+                    previousDescription = oldItem.description || '-';
+                    previousBarcode = oldItem.barcode || '-';
+                    descriptionToUse = previousDescription; // Default to previous description
+                } else {
+                    // New product
+                    previousDescription = 'New product? Check if new';
+                    previousBarcode = '-';
+                    descriptionToUse = nameWouldLike; // Use the formatted name
+                }
+
+                table.innerHTML += `
+                    <tr>
+                        <td>${lineNumber}</td>
+                        <td>${code}</td>
+                        <td>${description}</td>
+                        <td>${nameWouldLike}</td>
+                        <td>${previousDescription}</td>
+                        <td>${descriptionToUse}</td>
+                        <td>£${costPrice.toFixed(2)}</td>
+                        <td>£${finalListPrice.toFixed(2)}</td>
+                        <td>${barcode || '-'}</td>
+                        <td>${previousBarcode}</td>
+                    </tr>
+                `;
+
+                lineNumber++;
+            });
+
+            table.innerHTML += '</tbody>';
+        }
+
         function renderSpreadsheetStep3() {
             // This function is no longer needed - removed Step 3 spreadsheet
         }
@@ -1413,7 +1535,7 @@
             }).filter(item => item.code); // Remove empty rows
 
             renderResults();
-            goToStep(5);
+            goToStep(6);
         }
         
         function renderResults() {
