@@ -956,6 +956,8 @@
             currentData[row][col] = value;
             // Re-render if code column was edited to update duplicate highlighting
             if (columnMapping.code === col) {
+                // Also update variantCodeMap so changes sync to Step 6
+                variantCodeMap[row] = value;
                 renderSpreadsheet();
             }
         }
@@ -1291,12 +1293,20 @@
         }
 
         function updateVariantCode(rowIndex, value) {
-            variantCodeMap[rowIndex] = value;
             // Get the original code for this row to clear its description
             const originalCode = columnMapping.code !== undefined ? currentData[rowIndex][columnMapping.code] : '';
             if (originalCode) {
                 delete descriptionToUseMap[originalCode];
             }
+
+            // Update the variantCodeMap
+            variantCodeMap[rowIndex] = value;
+
+            // Also update the currentData array so changes persist when going back to Step 4
+            if (columnMapping.code !== undefined) {
+                currentData[rowIndex][columnMapping.code] = value;
+            }
+
             // Re-render the table to update Name, Previous Description, and Description to use
             renderOriginalPriceList();
         }
