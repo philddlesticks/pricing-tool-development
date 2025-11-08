@@ -22,7 +22,7 @@
 
             <div style="max-width: 600px; margin: 0 auto;">
                 <div class="mapping-item" style="margin-bottom: 20px;">
-                    <label>Manufacturer Name (or Brand Name if multiple brands on price list):</label>
+                    <label>Manufacturer Name (or "Multiple Manufacturers"):</label>
                     <input type="text" id="manufacturerName" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" placeholder="Enter manufacturer or brand name">
                 </div>
 
@@ -582,7 +582,7 @@
 
             // Header row with column names (only mapped columns)
             const headerRow = document.createElement('tr');
-            headerRow.innerHTML = '<th class="row-number" style="cursor: pointer; text-align: center;" onclick="toggleAllRows()">✓</th><th>Manufacturer pricing list - Supplier code</th><th>Actions</th>';
+            headerRow.innerHTML = `<th class="row-number" style="cursor: pointer; text-align: center;" onclick="toggleAllRows()">✓</th><th>${settings.manufacturerName} - SupplierCode</th><th>Actions</th>`;
 
             // Map field names to display names
             const fieldDisplayNames = {
