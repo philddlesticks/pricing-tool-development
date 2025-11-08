@@ -53,7 +53,7 @@
 
             <div class="alert alert-info">
                 <strong>Optional:</strong> Upload previous pricing data for comparison
-                <input type="file" id="previousFileInput" accept=".xlsx,.xls,.json" style="display: block; margin-top: 10px;">
+                <input type="file" id="previousFileInput" accept=".xlsx,.xls,.csv,.json" style="display: block; margin-top: 10px;">
             </div>
 
             <div class="button-group">
@@ -950,7 +950,7 @@
                         <th>${hasDiscount ? 'List Price' : 'Cost Price'}</th>
                         ${hasDiscount ? '<th>Discount %</th>' : ''}
                         ${hasMarkup ? '<th>Markup %</th>' : ''}
-                        <th>Calculated ${hasDiscount ? 'Cost' : 'List Price'}</th>
+                        <th>Calculated ${hasDiscount ? 'Cost Price' : 'List Price'}</th>
                         <th>Manufacturer</th>
                         <th>Country</th>
                         <th>Barcode</th>
