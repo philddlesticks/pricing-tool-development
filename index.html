@@ -1014,10 +1014,10 @@
                         <th>#</th>
                         <th>Variant Code</th>
                         <th>Description</th>
-                        <th>Char Count</th>
+                        <th style="text-align: center;">🔢</th>
                         <th>Name would like to use</th>
                         <th>Previous Description</th>
-                        <th>Char Count</th>
+                        <th style="text-align: center;">🔢</th>
                         <th>Description to use</th>
                         <th>Cost Price</th>
                         <th>List Price</th>
@@ -1111,11 +1111,11 @@
                         <td>${lineNumber}</td>
                         <td>${code}</td>
                         <td>${description}</td>
-                        <td style="${nameCharStyle}">${nameCharCount}</td>
+                        <td style="text-align: center; ${nameCharStyle}">${nameCharCount}</td>
                         <td>${nameWouldLike}</td>
                         <td>${previousDescription}</td>
-                        <td id="charCount_${code}" style="${descCharStyle}">${descCharCount}</td>
-                        <td style="background: #fff3cd;">
+                        <td id="charCount_${code}" style="text-align: center; ${descCharStyle}">${descCharCount}</td>
+                        <td>
                             <input type="text"
                                    id="descInput_${code}"
                                    value="${descriptionToUseMap[code]}"
@@ -1148,7 +1148,8 @@
                 const count = input.value.length;
                 charCountCell.textContent = count;
 
-                // Update styling based on character count
+                // Update styling based on character count (always keep text-align: center)
+                charCountCell.style.textAlign = 'center';
                 if (count >= 250) {
                     charCountCell.style.color = 'red';
                     charCountCell.style.fontWeight = 'bold';
