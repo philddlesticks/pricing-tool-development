@@ -945,16 +945,19 @@
             const table = document.getElementById('previewTable');
             const hasDiscount = columnMapping.discount !== undefined;
             const hasMarkup = columnMapping.markup !== undefined;
-            
+            const hasBothPrices = columnMapping.listPrice !== undefined && columnMapping.costPrice !== undefined;
+
             table.innerHTML = `
                 <thead>
                     <tr>
                         <th>Code</th>
                         <th>Description</th>
-                        <th>${hasDiscount ? 'List Price' : 'Cost Price'}</th>
+                        ${hasBothPrices ? '<th>Cost Price</th>' : ''}
+                        ${hasBothPrices ? '<th>List Price</th>' : ''}
+                        ${!hasBothPrices ? `<th>${hasDiscount ? 'List Price' : 'Cost Price'}</th>` : ''}
                         ${hasDiscount ? '<th>Discount %</th>' : ''}
                         ${hasMarkup ? '<th>Markup %</th>' : ''}
-                        <th>Calculated ${hasDiscount ? 'Cost Price' : 'List Price'}</th>
+                        ${!hasBothPrices ? `<th>Calculated ${hasDiscount ? 'Cost Price' : 'List Price'}</th>` : ''}
                         <th>Manufacturer</th>
                         <th>Country</th>
                         <th>Barcode</th>
@@ -969,31 +972,33 @@
                 const discount = columnMapping.discount !== undefined ? parseFloat(row[columnMapping.discount]) || 0 : 0;
                 const markup = columnMapping.markup !== undefined ? parseFloat(row[columnMapping.markup]) || 0 : 0;
                 const costPrice = columnMapping.costPrice !== undefined ? parseFloat(row[columnMapping.costPrice]) || 0 : 0;
-                
+
                 let calculatedValue = 0;
                 if (hasDiscount) {
                     calculatedValue = costPrice > 0 ? costPrice : listPrice * (1 - discount / 100);
                 } else if (hasMarkup) {
                     calculatedValue = listPrice > 0 ? listPrice : costPrice * (1 + markup / 100);
                 }
-                
+
                 table.innerHTML += `
                     <tr>
                         <td>${columnMapping.code !== undefined ? row[columnMapping.code] : '-'}</td>
                         <td>${columnMapping.description !== undefined ? row[columnMapping.description] : '-'}</td>
-                        <td>${hasDiscount ? 
-                            (listPrice > 0 ? '£' + listPrice.toFixed(2) : '-') : 
-                            (costPrice > 0 ? '£' + costPrice.toFixed(2) : '-')}</td>
+                        ${hasBothPrices ? `<td>${costPrice > 0 ? '£' + costPrice.toFixed(2) : '-'}</td>` : ''}
+                        ${hasBothPrices ? `<td>${listPrice > 0 ? '£' + listPrice.toFixed(2) : '-'}</td>` : ''}
+                        ${!hasBothPrices ? `<td>${hasDiscount ?
+                            (listPrice > 0 ? '£' + listPrice.toFixed(2) : '-') :
+                            (costPrice > 0 ? '£' + costPrice.toFixed(2) : '-')}</td>` : ''}
                         ${hasDiscount ? `<td>${discount > 0 ? discount.toFixed(1) + '%' : '-'}</td>` : ''}
                         ${hasMarkup ? `<td>${markup > 0 ? markup.toFixed(1) + '%' : '-'}</td>` : ''}
-                        <td style="background: #e8f5e9;">${calculatedValue > 0 ? '£' + calculatedValue.toFixed(2) : '-'}</td>
+                        ${!hasBothPrices ? `<td style="background: #e8f5e9;">${calculatedValue > 0 ? '£' + calculatedValue.toFixed(2) : '-'}</td>` : ''}
                         <td>${columnMapping.manufacturer !== undefined ? row[columnMapping.manufacturer] : '-'}</td>
                         <td>${columnMapping.countryOfOrigin !== undefined ? row[columnMapping.countryOfOrigin] : '-'}</td>
                         <td>${columnMapping.barcode !== undefined ? row[columnMapping.barcode] : '-'}</td>
                     </tr>
                 `;
             });
-            
+
             table.innerHTML += '</tbody>';
         }
 
@@ -1243,9 +1248,8 @@
                     <tr>
                         <th>Code</th>
                         <th>Description</th>
-                        <th>List Price</th>
-                        <th>Discount %</th>
                         <th>Cost Price</th>
+                        <th>List Price</th>
                         <th>Cost Change</th>
                         <th>Status</th>
                     </tr>
@@ -1255,29 +1259,28 @@
             
             data.forEach(item => {
                 const costChangeClass = item.costChange > 0 ? 'change-positive' : item.costChange < 0 ? 'change-negative' : '';
-                
-                const statusBadge = item.status === 'new' ? 
-                    '<span class="badge badge-info">NEW</span>' : 
-                    item.flagged ? '<span class="badge badge-warning">FLAGGED</span>' : 
+
+                const statusBadge = item.status === 'new' ?
+                    '<span class="badge badge-info">NEW</span>' :
+                    item.flagged ? '<span class="badge badge-warning">FLAGGED</span>' :
                     '<span class="badge badge-success">OK</span>';
-                
-                const costPriceDisplay = item.calculatedFrom === 'discount' ? 
-                    `£${item.costPrice.toFixed(2)} <small>(calc from discount)</small>` : 
+
+                const costPriceDisplay = item.calculatedFrom === 'discount' ?
+                    `£${item.costPrice.toFixed(2)} <small>(calc from discount)</small>` :
                     `£${item.costPrice.toFixed(2)}`;
-                
+
                 const listPriceDisplay = item.calculatedFrom === 'markup' ?
                     `£${item.listPrice.toFixed(2)} <small>(calc from markup)</small>` :
                     `£${item.listPrice.toFixed(2)}`;
-                
+
                 const rowClass = item.status === 'new' ? 'new-product' : (item.flagged ? 'flagged' : '');
 
                 table.innerHTML += `
                     <tr class="${rowClass}">
                         <td>${item.code}</td>
                         <td>${item.description}</td>
-                        <td style="background: #f8f9fa;">${listPriceDisplay}</td>
-                        <td>${item.discount > 0 ? item.discount.toFixed(1) + '%' : '-'}</td>
                         <td style="background: #f8f9fa;">${costPriceDisplay}</td>
+                        <td style="background: #f8f9fa;">${listPriceDisplay}</td>
                         <td class="${costChangeClass}">
                             ${item.status === 'new' ? '-' :
                               `${item.costChange > 0 ? '+' : ''}${item.costChange.toFixed(1)}%<br>
@@ -1287,7 +1290,7 @@
                     </tr>
                 `;
             });
-            
+
             table.innerHTML += '</tbody>';
         }
         
