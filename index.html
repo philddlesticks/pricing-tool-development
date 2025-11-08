@@ -533,6 +533,35 @@
             return mappedIndices;
         }
 
+        function findDuplicateCodes() {
+            const duplicates = new Set();
+            const codeCol = columnMapping.code;
+
+            if (codeCol === undefined) return duplicates;
+
+            const codeCounts = {};
+
+            // Count occurrences of each code (case-insensitive, skip excluded rows)
+            for (let rowIndex = 1; rowIndex < currentData.length; rowIndex++) {
+                if (excludedRows.has(rowIndex)) continue;
+
+                const code = currentData[rowIndex][codeCol];
+                if (code) {
+                    const normalizedCode = code.toString().toLowerCase();
+                    codeCounts[normalizedCode] = (codeCounts[normalizedCode] || 0) + 1;
+                }
+            }
+
+            // Find codes that appear more than once
+            for (const [code, count] of Object.entries(codeCounts)) {
+                if (count > 1) {
+                    duplicates.add(code);
+                }
+            }
+
+            return duplicates;
+        }
+
         function renderSpreadsheet() {
             const table = document.getElementById('spreadsheet');
             table.innerHTML = '';
@@ -548,6 +577,9 @@
             document.getElementById('discountToolsSection3').style.display = hasDiscount ? 'block' : 'none';
             document.getElementById('markupToolsSection3').style.display = hasMarkup ? 'block' : 'none';
             document.getElementById('step3Tools').style.display = (hasDiscount || hasMarkup) ? 'block' : 'none';
+
+            // Find duplicate codes
+            const duplicateCodes = findDuplicateCodes();
 
             // Header row with column names (only mapped columns)
             const headerRow = document.createElement('tr');
@@ -597,7 +629,17 @@
                     const isDiscountCol = columnMapping.discount === colIndex;
                     const isMarkupCol = columnMapping.markup === colIndex;
                     const isFlexCol = isDiscountCol || isMarkupCol;
-                    tr.innerHTML += `<td style="${isFlexCol ? 'background: #fff3cd;' : ''}"><input type="text"
+                    const isCodeCol = columnMapping.code === colIndex;
+                    const isDuplicate = isCodeCol && cell && duplicateCodes.has(cell.toString().toLowerCase());
+
+                    let bgStyle = '';
+                    if (isDuplicate) {
+                        bgStyle = 'background: #ffcccc;'; // Red for duplicates
+                    } else if (isFlexCol) {
+                        bgStyle = 'background: #fff3cd;';
+                    }
+
+                    tr.innerHTML += `<td style="${bgStyle}"><input type="text"
                         value="${cell}"
                         onchange="updateCell(${rowIndex}, ${colIndex}, this.value)"
                         onkeydown="handleKeyDown(event, ${rowIndex}, ${colIndex})"
@@ -908,6 +950,10 @@
         
         function updateCell(row, col, value) {
             currentData[row][col] = value;
+            // Re-render if code column was edited to update duplicate highlighting
+            if (columnMapping.code === col) {
+                renderSpreadsheet();
+            }
         }
         
         function deleteColumn(colIndex) {
