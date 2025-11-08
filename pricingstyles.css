@@ -425,7 +425,11 @@ input[type="file"] {
 }
 
 .excluded-row td:not(.row-number) {
-    text-decoration: line-through;
+    text-decoration: line-through !important;
+}
+
+.excluded-row td:not(.row-number) input {
+    text-decoration: line-through !important;
 }
 
 .excluded-row .row-number {
