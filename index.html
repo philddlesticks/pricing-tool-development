@@ -1012,6 +1012,7 @@
                 <thead>
                     <tr>
                         <th>#</th>
+                        <th>Manufacturer</th>
                         <th>Variant Code</th>
                         <th>Description</th>
                         <th style="text-align: center;">🔢</th>
@@ -1039,6 +1040,7 @@
                 const code = columnMapping.code !== undefined ? row[columnMapping.code] : '';
                 const description = columnMapping.description !== undefined ? row[columnMapping.description] : '';
                 const barcode = columnMapping.barcode !== undefined ? row[columnMapping.barcode] : '';
+                const manufacturer = columnMapping.manufacturer !== undefined ? row[columnMapping.manufacturer] : settings.manufacturerName;
 
                 // Calculate prices
                 const listPrice = columnMapping.listPrice !== undefined ? parseFloat(row[columnMapping.listPrice]) || 0 : 0;
@@ -1065,7 +1067,7 @@
                 }
 
                 // Name would like to use: MANUFACTURER ( CODE ) DESCRIPTION
-                const nameWouldLike = `${settings.manufacturerName} ( ${code} ) ${description}`;
+                const nameWouldLike = `${manufacturer} ( ${code} ) ${description}`;
 
                 // Check if this item exists in previous data
                 const oldItem = previousData.find(p => p.code === code || p.productcode === code);
@@ -1119,6 +1121,7 @@
                 table.innerHTML += `
                     <tr>
                         <td>${lineNumber}</td>
+                        <td>${manufacturer}</td>
                         <td>${code}</td>
                         <td>${description}</td>
                         <td style="text-align: center; ${nameCharStyle}">${nameCharCount}</td>
