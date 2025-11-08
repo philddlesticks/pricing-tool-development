@@ -107,7 +107,7 @@
                     <label>Duty-free?:</label>
                     <select id="dutyFree" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
                         <option value="FALSE">FALSE</option>
-                        <option value="TRUE">TRUE</option>
+                        <option value="TRUE" selected>TRUE</option>
                     </select>
                 </div>
 
@@ -324,7 +324,7 @@
             costPriceCurrency: 'GBP',
             listPriceCurrency: 'GBP',
             exchangeRate: 1.0,
-            dutyFree: 'FALSE'
+            dutyFree: 'TRUE'
         };
         
         const REQUIRED_FIELDS = ['code', 'listPrice'];
