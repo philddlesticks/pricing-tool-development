@@ -158,7 +158,8 @@ const flagged = (
 - **Blue background**: Selected rows
 - **Yellow background**: Discount/Markup columns
 - **Gray with strikethrough**: Excluded rows
-- **Yellow highlight**: Flagged items in Step 7
+- **Light blue highlight**: Flagged items in Step 7
+- **Yellow highlight**: New products in Step 7
 - **Light blue**: Column mapping dropdowns
 
 ## Data Processing
