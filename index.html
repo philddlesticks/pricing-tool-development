@@ -1097,14 +1097,14 @@
 
                 // Style for "Name would like to use" character count
                 let nameCharStyle = '';
-                if (nameCharCount >= 250) {
+                if (nameCharCount > 250) {
                     nameCharStyle = 'color: red; font-weight: bold;';
                 } else if (nameCharCount >= descCharCount * 1.1) {
                     nameCharStyle = 'color: limegreen; font-weight: bold;';
                 }
 
                 // Style for "Description to use" character count
-                const descCharStyle = descCharCount >= 250 ? 'color: red; font-weight: bold;' : '';
+                const descCharStyle = descCharCount > 250 ? 'color: red; font-weight: bold;' : '';
 
                 // Escape values for JavaScript strings
                 const escapedNameWouldLike = nameWouldLike.replace(/'/g, "\\'").replace(/"/g, '\\"');
@@ -1172,7 +1172,7 @@
 
                 // Update styling based on character count (always keep text-align: center)
                 charCountCell.style.textAlign = 'center';
-                if (count >= 250) {
+                if (count > 250) {
                     charCountCell.style.color = 'red';
                     charCountCell.style.fontWeight = 'bold';
                 } else {
