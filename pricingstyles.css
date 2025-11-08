@@ -416,7 +416,6 @@ input[type="file"] {
 
 .excluded-row {
     opacity: 0.4;
-    text-decoration: line-through;
     background: #f8f9fa !important;
 }
 
@@ -425,11 +424,10 @@ input[type="file"] {
     background: #e9ecef !important;
 }
 
-.excluded-row .row-number {
-    text-decoration: none !important;
-    opacity: 1 !important;
+.excluded-row td:not(.row-number) {
+    text-decoration: line-through;
 }
 
-.excluded-row .row-number * {
-    text-decoration: none !important;
+.excluded-row .row-number {
+    opacity: 1 !important;
 }
