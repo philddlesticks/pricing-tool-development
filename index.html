@@ -632,18 +632,22 @@
                     const isCodeCol = columnMapping.code === colIndex;
                     const isDuplicate = isCodeCol && cell && duplicateCodes.has(cell.toString().toLowerCase());
 
-                    let bgStyle = '';
+                    let bgColor = '';
                     if (isDuplicate) {
-                        bgStyle = 'background: #ffcccc;'; // Red for duplicates
+                        bgColor = '#ffcccc'; // Red for duplicates
                     } else if (isFlexCol) {
-                        bgStyle = 'background: #fff3cd;';
+                        bgColor = '#fff3cd';
                     }
 
-                    tr.innerHTML += `<td style="${bgStyle}"><input type="text"
+                    const cellStyle = bgColor ? `background: ${bgColor};` : '';
+                    const inputStyle = bgColor ? `background: ${bgColor};` : '';
+
+                    tr.innerHTML += `<td style="${cellStyle}"><input type="text"
                         value="${cell}"
                         onchange="updateCell(${rowIndex}, ${colIndex}, this.value)"
                         onkeydown="handleKeyDown(event, ${rowIndex}, ${colIndex})"
                         onfocus="handleFocus(${rowIndex}, ${colIndex})"
+                        style="${inputStyle}"
                         placeholder="${isFlexCol ? '0' : ''}"></td>`;
                 });
 
