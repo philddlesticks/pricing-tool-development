@@ -273,7 +273,6 @@
                 <button class="btn btn-success" onclick="saveData()">💾 Save to Server</button>
                 <button class="btn" onclick="exportJSON()">📥 Export JSON</button>
                 <button class="btn" onclick="exportCSV()">📥 Export CSV</button>
-                <button class="btn" onclick="generateOWImportSheet()">📊 Generate OW Import Sheet</button>
             </div>
         </div>
 
@@ -291,7 +290,7 @@
             </div>
 
             <div class="button-group">
-                <button class="btn" onclick="exportOWImportCSV()">📥 Export OW Import CSV</button>
+                <button class="btn" onclick="exportOWImportExcel()">📥 Export OW Import Excel</button>
             </div>
         </div>
     </div>
@@ -1962,11 +1961,6 @@
             */
         }
 
-        function generateOWImportSheet() {
-            // Navigate to Step 8
-            goToStep(8);
-        }
-
         function renderOWImportSheet() {
             const table = document.getElementById('owImportTable');
 
@@ -2080,7 +2074,7 @@
             table.innerHTML = tableHTML;
         }
 
-        function exportOWImportCSV() {
+        function exportOWImportExcel() {
             // Define OW Import Sheet columns
             const columns = [
                 'Supplier',
@@ -2109,17 +2103,6 @@
                 'vad_comments'
             ];
 
-            // Helper function to escape CSV values
-            const escapeCSV = (value) => {
-                if (value === null || value === undefined) return '';
-                const str = String(value);
-                // If value contains comma, quote, or newline, wrap in quotes and escape quotes
-                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-                    return '"' + str.replace(/"/g, '""') + '"';
-                }
-                return str;
-            };
-
             // Format the effective date to "MMM YYYY-GBP 1.0"
             const formatPriceListName = (dateStr) => {
                 if (!dateStr) return '';
@@ -2132,10 +2115,10 @@
 
             const priceListName = formatPriceListName(settings.effectiveDate);
 
-            // Build CSV header
-            let csv = columns.join(',') + '\n';
+            // Build data array starting with headers
+            const data = [columns];
 
-            // Build CSV rows with actual data
+            // Build rows with actual data
             processedData.forEach(item => {
                 // Find previous data for barcode lookup
                 const oldItem = previousData.find(p =>
@@ -2181,16 +2164,16 @@
                     ''                                      // vad_comments (empty for now)
                 ];
 
-                csv += rowData.map(escapeCSV).join(',') + '\n';
+                data.push(rowData);
             });
 
-            // Download CSV
-            const blob = new Blob([csv], {type: 'text/csv'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `ow_import_sheet_${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
+            // Create workbook and worksheet
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            XLSX.utils.book_append_sheet(wb, ws, 'OW Import');
+
+            // Download Excel file
+            XLSX.writeFile(wb, `ow_import_sheet_${new Date().toISOString().split('T')[0]}.xlsx`);
         }
     </script>
 </body>
