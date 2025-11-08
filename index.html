@@ -430,25 +430,59 @@
     <div class="container">
         <h1>📊 Pricing List Processing Tool</h1>
         <p class="subtitle">Upload, edit, and compare pricing data with change detection</p>
-        
-        <!-- Step 1: Upload -->
+
+        <!-- Step 1: Settings -->
         <div id="step1" class="step active">
-            <div class="step-header">Step 1: Upload Pricing File</div>
+            <div class="step-header">Step 1: Settings</div>
+
+            <div class="alert alert-info">
+                Enter the pricing list details below before uploading your file.
+            </div>
+
+            <div style="max-width: 600px; margin: 0 auto;">
+                <div class="mapping-item" style="margin-bottom: 20px;">
+                    <label>Manufacturer Name (or Brand Name if multiple brands on price list):</label>
+                    <input type="text" id="manufacturerName" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" placeholder="Enter manufacturer or brand name">
+                </div>
+
+                <div class="mapping-item" style="margin-bottom: 20px;">
+                    <label>Supplier Account Number:</label>
+                    <input type="text" id="supplierAccountNumber" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" placeholder="Enter supplier account number">
+                </div>
+
+                <div class="mapping-item" style="margin-bottom: 20px;">
+                    <label>Price List Effective Date:</label>
+                    <input type="date" id="effectiveDate" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn" onclick="validateSettings()">Next: Upload File →</button>
+            </div>
+        </div>
+
+        <!-- Step 2: Upload -->
+        <div id="step2" class="step">
+            <div class="step-header">Step 2: Upload Pricing File</div>
             <div class="upload-area" id="uploadArea">
                 <h2>📁 Drop file here or click to browse</h2>
                 <p style="color: #666; margin-top: 10px;">Supports .xlsx, .xls, and .csv formats</p>
                 <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
             </div>
-            
+
             <div class="alert alert-info">
                 <strong>Optional:</strong> Upload previous pricing data for comparison
                 <input type="file" id="previousFileInput" accept=".xlsx,.xls,.json" style="display: block; margin-top: 10px;">
             </div>
+
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="goToStep(1)">← Back to Settings</button>
+            </div>
         </div>
         
-        <!-- Step 2: Map Columns -->
-        <div id="step2" class="step">
-            <div class="step-header">Step 2: Map Columns</div>
+        <!-- Step 3: Map Columns -->
+        <div id="step3" class="step">
+            <div class="step-header">Step 3: Map Columns</div>
             <div class="alert alert-info">
                 Assign each column from your uploaded file to the appropriate field using the dropdowns below each column header.
             </div>
@@ -471,14 +505,14 @@
                 <table class="spreadsheet" id="mappingTable"></table>
             </div>
             <div class="button-group">
-                <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
+                <button class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
                 <button class="btn" onclick="validateMapping()">Next: Edit Data →</button>
             </div>
         </div>
 
-        <!-- Step 3: Edit Data -->
-        <div id="step3" class="step">
-            <div class="step-header">Step 3: Edit Data</div>
+        <!-- Step 4: Edit Data -->
+        <div id="step4" class="step">
+            <div class="step-header">Step 4: Edit Data</div>
             <div class="alert alert-info" id="step3Info">
                 Edit your data and apply discounts or markups as needed.
             </div>
@@ -522,14 +556,14 @@
                 <table class="spreadsheet" id="spreadsheet"></table>
             </div>
             <div class="button-group">
-                <button class="btn btn-secondary" onclick="goToStep(2)">← Back to Mapping</button>
-                <button class="btn" onclick="goToStep(4)">Next: Review & Process →</button>
+                <button class="btn btn-secondary" onclick="goToStep(3)">← Back to Mapping</button>
+                <button class="btn" onclick="goToStep(5)">Next: Review & Process →</button>
             </div>
         </div>
-        
-        <!-- Step 4: Review & Process -->
-        <div id="step4" class="step">
-            <div class="step-header">Step 4: Review & Process</div>
+
+        <!-- Step 5: Review & Process -->
+        <div id="step5" class="step">
+            <div class="step-header">Step 5: Review & Process</div>
 
             <div class="alert alert-info">
                 Review your mapped data below before processing. Make sure all columns are correctly assigned.
@@ -541,14 +575,14 @@
             </div>
 
             <div class="button-group">
-                <button class="btn btn-secondary" onclick="goToStep(3)">← Back to Edit</button>
-                <button class="btn" onclick="goToStep(5)">Next: Original Price List →</button>
+                <button class="btn btn-secondary" onclick="goToStep(4)">← Back to Edit</button>
+                <button class="btn" onclick="goToStep(6)">Next: Original Price List →</button>
             </div>
         </div>
 
-        <!-- Step 5: Original Price List -->
-        <div id="step5" class="step">
-            <div class="step-header">Step 5: Original Price List</div>
+        <!-- Step 6: Original Price List -->
+        <div id="step6" class="step">
+            <div class="step-header">Step 6: Original Price List</div>
 
             <div class="alert alert-info">
                 Review the original price list data with variant matching. Edit the "Description to use" field if needed.
@@ -559,14 +593,14 @@
             </div>
 
             <div class="button-group">
-                <button class="btn btn-secondary" onclick="goToStep(4)">← Back</button>
+                <button class="btn btn-secondary" onclick="goToStep(5)">← Back</button>
                 <button class="btn" onclick="processData()">Next: Review Changes →</button>
             </div>
         </div>
 
-        <!-- Step 6: Review Results -->
-        <div id="step6" class="step">
-            <div class="step-header">Step 6: Review Changes & Flagged Items</div>
+        <!-- Step 7: Review Results -->
+        <div id="step7" class="step">
+            <div class="step-header">Step 7: Review Changes & Flagged Items</div>
             
             <div class="stats-grid" id="statsGrid"></div>
             
@@ -586,7 +620,7 @@
             </div>
             
             <div class="button-group">
-                <button class="btn btn-secondary" onclick="goToStep(5)">← Back</button>
+                <button class="btn btn-secondary" onclick="goToStep(6)">← Back</button>
                 <button class="btn btn-success" onclick="saveData()">💾 Save to Server</button>
                 <button class="btn" onclick="exportJSON()">📥 Export JSON</button>
                 <button class="btn" onclick="exportCSV()">📥 Export CSV</button>
@@ -603,6 +637,13 @@
         let selectedRows = new Set();
         let copiedValue = null;
         let excludedRows = new Set();
+
+        // Settings data
+        let settings = {
+            manufacturerName: '',
+            supplierAccountNumber: '',
+            effectiveDate: ''
+        };
         
         const REQUIRED_FIELDS = ['code', 'listPrice'];
         const OPTIONAL_FIELDS = ['description', 'barcode', 'costPrice', 'discount'];
@@ -683,7 +724,7 @@
 
                 if (currentData.length > 0) {
                     renderMappingTable();
-                    goToStep(2);
+                    goToStep(3);
                 }
             };
 
@@ -692,6 +733,32 @@
             } else {
                 reader.readAsArrayBuffer(file);
             }
+        }
+
+        function validateSettings() {
+            // Get settings values
+            settings.manufacturerName = document.getElementById('manufacturerName').value.trim();
+            settings.supplierAccountNumber = document.getElementById('supplierAccountNumber').value.trim();
+            settings.effectiveDate = document.getElementById('effectiveDate').value;
+
+            // Validate required fields
+            if (!settings.manufacturerName) {
+                alert('Please enter the manufacturer or brand name');
+                return;
+            }
+
+            if (!settings.supplierAccountNumber) {
+                alert('Please enter the supplier account number');
+                return;
+            }
+
+            if (!settings.effectiveDate) {
+                alert('Please select the price list effective date');
+                return;
+            }
+
+            // Proceed to upload step
+            goToStep(2);
         }
         
         function handlePreviousFile(file) {
@@ -797,9 +864,9 @@
                 return;
             }
 
-            // Prepare Step 3 with appropriate discount/markup column
+            // Prepare Step 4 with appropriate discount/markup column
             prepareStep3();
-            goToStep(3);
+            goToStep(4);
         }
 
         function prepareStep3() {
@@ -1269,11 +1336,11 @@
             document.getElementById(`step${step}`).classList.add('active');
             currentStep = step;
 
-            if (step === 3) {
+            if (step === 4) {
                 renderSpreadsheet();
-            } else if (step === 4) {
-                renderPreviewOnly();
             } else if (step === 5) {
+                renderPreviewOnly();
+            } else if (step === 6) {
                 renderOriginalPriceList();
             }
         }
@@ -1535,7 +1602,7 @@
             }).filter(item => item.code); // Remove empty rows
 
             renderResults();
-            goToStep(6);
+            goToStep(7);
         }
         
         function renderResults() {
