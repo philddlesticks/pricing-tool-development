@@ -426,5 +426,5 @@ input[type="file"] {
 }
 
 .excluded-row .row-number {
-    text-decoration: none;
+    text-decoration: none !important;
 }
