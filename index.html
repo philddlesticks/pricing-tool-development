@@ -1265,15 +1265,17 @@
                     `£${item.listPrice.toFixed(2)} <small>(calc from markup)</small>` :
                     `£${item.listPrice.toFixed(2)}`;
                 
+                const rowClass = item.status === 'new' ? 'new-product' : (item.flagged ? 'flagged' : '');
+
                 table.innerHTML += `
-                    <tr class="${item.flagged ? 'flagged' : ''}">
+                    <tr class="${rowClass}">
                         <td>${item.code}</td>
                         <td>${item.description}</td>
                         <td style="background: #f8f9fa;">${listPriceDisplay}</td>
                         <td>${item.discount > 0 ? item.discount.toFixed(1) + '%' : '-'}</td>
                         <td style="background: #f8f9fa;">${costPriceDisplay}</td>
                         <td class="${costChangeClass}">
-                            ${item.status === 'new' ? '-' : 
+                            ${item.status === 'new' ? '-' :
                               `${item.costChange > 0 ? '+' : ''}${item.costChange.toFixed(1)}%<br>
                                <small>(was £${item.oldCostPrice.toFixed(2)})</small>`}
                         </td>

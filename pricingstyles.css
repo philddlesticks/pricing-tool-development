@@ -317,7 +317,7 @@ input[type="file"] {
 }
 
 .comparison-table tr.flagged {
-    background: #fff3cd;
+    background: #e3f2fd;
 }
 
 .comparison-table tr:hover {
@@ -325,6 +325,14 @@ input[type="file"] {
 }
 
 .comparison-table tr.flagged:hover {
+    background: #bbdefb;
+}
+
+.comparison-table tr.new-product {
+    background: #fff3cd;
+}
+
+.comparison-table tr.new-product:hover {
     background: #ffe8a1;
 }
 
