@@ -229,10 +229,6 @@
             <div class="spreadsheet-container">
                 <table class="comparison-table" id="previousPriceTable"></table>
             </div>
-
-            <div style="margin-top: 20px; text-align: center;">
-                <button class="btn" onclick="processData()">Process Data & View Results →</button>
-            </div>
         </div>
 
         <!-- Step 6: Original Price List -->
@@ -464,7 +460,7 @@
             reader.onload = (e) => {
                 if (file.name.endsWith('.json')) {
                     previousData = JSON.parse(e.target.result);
-                    showUploadMessage('✓ Previous pricing data loaded successfully!', 'success', 'previousUploadMessages');
+                    showUploadMessage('✓ Previous pricing data loaded successfully! Processing and updating results...', 'success', 'previousUploadMessages');
                 } else {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, {type: 'array'});
@@ -480,10 +476,16 @@
                         });
                         return obj;
                     });
-                    showUploadMessage('✓ Previous pricing data loaded successfully!', 'success', 'previousUploadMessages');
+                    showUploadMessage('✓ Previous pricing data loaded successfully! Processing and updating results...', 'success', 'previousUploadMessages');
                 }
+
+                // Automatically process data and update Previous Price List display
+                setTimeout(() => {
+                    renderPreviousPriceList();
+                    processData();
+                }, 1000);
             };
-            
+
             if (file.name.endsWith('.json')) {
                 reader.readAsText(file);
             } else {
