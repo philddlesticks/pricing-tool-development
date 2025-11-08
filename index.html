@@ -14,14 +14,14 @@
 
         <!-- Tab Navigation -->
         <div class="tab-navigation">
-            <button class="tab-btn active" onclick="goToStep(1)">Settings</button>
-            <button class="tab-btn" onclick="goToStep(2)">Map Columns</button>
-            <button class="tab-btn" onclick="goToStep(3)">Edit Data</button>
-            <button class="tab-btn" onclick="goToStep(4)">Review</button>
-            <button class="tab-btn" onclick="goToStep(5)">Previous List</button>
-            <button class="tab-btn" onclick="goToStep(6)">Original List</button>
-            <button class="tab-btn" onclick="goToStep(7)">Results</button>
-            <button class="tab-btn" onclick="goToStep(8)">OW Import</button>
+            <button class="tab-btn active" onclick="goToStep(1)">🛠️ Settings</button>
+            <button class="tab-btn" onclick="goToStep(2)">🗺️ Map Columns</button>
+            <button class="tab-btn" onclick="goToStep(3)">✏️ Edit Data</button>
+            <button class="tab-btn" onclick="goToStep(4)">🔍 Review</button>
+            <button class="tab-btn" onclick="goToStep(5)">📜 Previous List</button>
+            <button class="tab-btn" onclick="goToStep(6)">📋 Original List</button>
+            <button class="tab-btn" onclick="goToStep(7)">💱 Forex Calc</button>
+            <button class="tab-btn" onclick="goToStep(8)">📤 OW Import</button>
         </div>
 
         <!-- Step 1: Settings -->
@@ -244,7 +244,7 @@
             </div>
         </div>
 
-        <!-- Step 7: Review Results -->
+        <!-- Step 7: Forex Calc -->
         <div id="step7" class="step">
             <div class="step-header">Step 7: Review Changes & Flagged Items</div>
             
@@ -460,7 +460,7 @@
             reader.onload = (e) => {
                 if (file.name.endsWith('.json')) {
                     previousData = JSON.parse(e.target.result);
-                    showUploadMessage('✓ Previous pricing data loaded successfully! Processing and updating results...', 'success', 'previousUploadMessages');
+                    showUploadMessage('✓ Previous pricing data loaded successfully! Review the data below.', 'success', 'previousUploadMessages');
                 } else {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, {type: 'array'});
@@ -476,13 +476,12 @@
                         });
                         return obj;
                     });
-                    showUploadMessage('✓ Previous pricing data loaded successfully! Processing and updating results...', 'success', 'previousUploadMessages');
+                    showUploadMessage('✓ Previous pricing data loaded successfully! Review the data below.', 'success', 'previousUploadMessages');
                 }
 
-                // Automatically process data and update Previous Price List display
+                // Automatically update Previous Price List display
                 setTimeout(() => {
                     renderPreviousPriceList();
-                    processData();
                 }, 1000);
             };
 
