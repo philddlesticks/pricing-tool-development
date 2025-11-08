@@ -582,7 +582,7 @@
 
             // Header row with column names (only mapped columns)
             const headerRow = document.createElement('tr');
-            headerRow.innerHTML = `<th class="row-number" style="cursor: pointer; text-align: center;" onclick="toggleAllRows()">✓</th><th>${settings.manufacturerName} - ${settings.supplierAccountNumber}</th><th>Actions</th>`;
+            headerRow.innerHTML = `<th class="row-number" style="text-align: center;">#</th><th>${settings.manufacturerName} - ${settings.supplierAccountNumber}</th>`;
 
             // Map field names to display names
             const fieldDisplayNames = {
@@ -615,9 +615,8 @@
             for (let rowIndex = 1; rowIndex < currentData.length; rowIndex++) {
                 const row = currentData[rowIndex];
                 const tr = document.createElement('tr');
-                const isSelected = selectedRows.has(rowIndex);
                 const isExcluded = excludedRows.has(rowIndex);
-                tr.className = isExcluded ? 'excluded-row' : (isSelected ? 'selected-row' : '');
+                tr.className = isExcluded ? 'excluded-row' : '';
 
                 // Get the code to look up in previous data
                 const code = columnMapping.code !== undefined ? row[columnMapping.code] : '';
@@ -644,9 +643,9 @@
                     previousDescription = '-';
                 }
 
-                tr.innerHTML = `<td class="row-number" style="cursor: pointer; text-align: center;" onclick="toggleRowSelection(${rowIndex}, event)">
-                    ${isSelected ? '✓' : rowIndex}
-                </td><td style="background: ${prevDescBg};">${previousDescription}</td><td><button class="delete-btn" onclick="toggleRowExclusion(${rowIndex})" title="${isExcluded ? 'Click to restore row' : 'Click to exclude row'}">❌</button></td>`;
+                tr.innerHTML = `<td class="row-number" style="cursor: pointer; text-align: center;" onclick="toggleRowExclusion(${rowIndex})" title="${isExcluded ? 'Click to restore row' : 'Click to exclude row'}">
+                    ${isExcluded ? '❌' : rowIndex}
+                </td><td style="background: ${prevDescBg};">${previousDescription}</td>`;
 
                 mappedIndices.forEach(colIndex => {
                     const cell = row[colIndex] || '';
