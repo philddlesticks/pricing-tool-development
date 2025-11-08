@@ -1896,65 +1896,6 @@
             toggleFilter();
         }
         
-        function exportJSON() {
-            const json = JSON.stringify(processedData, null, 2);
-            const blob = new Blob([json], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `pricing_data_${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-        }
-        
-        function exportCSV() {
-            let csv = 'Code,Description,List Price,Discount %,Cost Price,Calculated,Cost Change %,Status,Flagged\n';
-            
-            processedData.forEach(item => {
-                csv += `"${item.code}","${item.description}",${item.listPrice},`;
-                csv += `${item.discount},${item.costPrice},`;
-                csv += `${item.calculatedFromDiscount ? 'YES' : 'NO'},`;
-                csv += `${item.status === 'new' ? '' : item.costChange.toFixed(2)},`;
-                csv += `${item.status},${item.flagged ? 'YES' : 'NO'}\n`;
-            });
-            
-            const blob = new Blob([csv], {type: 'text/csv'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `pricing_export_${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
-        }
-        
-        function saveData() {
-            // This would send data to your PHP backend
-            const dataToSave = {
-                importDate: new Date().toISOString(),
-                totalItems: processedData.length,
-                flaggedItems: processedData.filter(i => i.flagged).length,
-                items: processedData
-            };
-            
-            // Mock API call - replace with your actual endpoint
-            console.log('Data to save:', dataToSave);
-            
-            alert('Save functionality would send this data to your PHP backend.\n\nEndpoint: POST /api/pricing/save\n\nCheck console for data structure.');
-            
-            /* Uncomment when you have your PHP endpoint ready:
-            fetch('/api/pricing/save', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(dataToSave)
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert('Data saved successfully!');
-            })
-            .catch(error => {
-                alert('Error saving data: ' + error);
-            });
-            */
-        }
-
         function renderOWImportSheet() {
             const table = document.getElementById('owImportTable');
 
