@@ -739,21 +739,11 @@
             ];
 
             currentData[0].forEach((header, colIndex) => {
-                // Try to auto-detect mapping based on column name
-                let preSelected = '';
-                const headerLower = (header || '').toLowerCase();
-                if (headerLower.includes('code') || headerLower.includes('sku')) preSelected = 'code';
-                else if (headerLower.includes('description') || headerLower.includes('name')) preSelected = 'description';
-                else if (headerLower.includes('cost')) preSelected = 'costPrice';
-                else if (headerLower.includes('list') || headerLower.includes('price')) preSelected = 'listPrice';
-                else if (headerLower.includes('barcode') || headerLower.includes('ean') || headerLower.includes('upc')) preSelected = 'barcode';
-                else if (headerLower.includes('manufacturer') || headerLower.includes('brand')) preSelected = 'manufacturer';
-                else if (headerLower.includes('country') || headerLower.includes('origin')) preSelected = 'countryOfOrigin';
-
+                // No auto-detection - all columns default to "Ignore"
                 mappingRow.innerHTML += `<th style="background: #e3f2fd; padding: 8px;">
                     <select id="colMap_${colIndex}" class="column-mapping-select" onchange="updateColumnMapping()">
                         ${fieldOptions.map(opt =>
-                            `<option value="${opt.value}" ${opt.value === preSelected ? 'selected' : ''}>${opt.label}</option>`
+                            `<option value="${opt.value}">${opt.label}</option>`
                         ).join('')}
                     </select>
                 </th>`;
