@@ -1363,8 +1363,8 @@
                     <tr class="${rowClass}">
                         <td>${item.code}</td>
                         <td>${item.description}</td>
-                        <td style="background: #f8f9fa;">${costPriceDisplay}</td>
-                        <td style="background: #f8f9fa;">${listPriceDisplay}</td>
+                        <td>${costPriceDisplay}</td>
+                        <td>${listPriceDisplay}</td>
                         <td class="${costChangeClass}">
                             ${item.status === 'new' ? '-' :
                               `${item.costChange > 0 ? '+' : ''}${item.costChange.toFixed(1)}%<br>
