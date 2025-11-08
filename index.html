@@ -1050,8 +1050,8 @@
                     costPrice = directCostPrice;
                 }
 
-                // Name would like to use: MANUFACTURER (CODE) DESCRIPTION
-                const nameWouldLike = `${settings.manufacturerName} (${code}) ${description}`;
+                // Name would like to use: MANUFACTURER ( CODE ) DESCRIPTION
+                const nameWouldLike = `${settings.manufacturerName} ( ${code} ) ${description}`;
 
                 // Check if this item exists in previous data
                 const oldItem = previousData.find(p => p.code === code || p.productcode === code);
