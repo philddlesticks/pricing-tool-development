@@ -1094,7 +1094,16 @@
                 // Calculate character counts
                 const nameCharCount = nameWouldLike.length;
                 const descCharCount = descriptionToUseMap[code].length;
-                const nameCharStyle = nameCharCount >= 250 ? 'color: red; font-weight: bold;' : '';
+
+                // Style for "Name would like to use" character count
+                let nameCharStyle = '';
+                if (nameCharCount >= 250) {
+                    nameCharStyle = 'color: red; font-weight: bold;';
+                } else if (nameCharCount >= descCharCount * 1.1) {
+                    nameCharStyle = 'color: limegreen; font-weight: bold;';
+                }
+
+                // Style for "Description to use" character count
                 const descCharStyle = descCharCount >= 250 ? 'color: red; font-weight: bold;' : '';
 
                 table.innerHTML += `
