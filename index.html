@@ -214,6 +214,25 @@
                 <button class="btn btn-success" onclick="saveData()">💾 Save to Server</button>
                 <button class="btn" onclick="exportJSON()">📥 Export JSON</button>
                 <button class="btn" onclick="exportCSV()">📥 Export CSV</button>
+                <button class="btn" onclick="generateOWImportSheet()">📊 Generate OW Import Sheet</button>
+            </div>
+        </div>
+
+        <!-- Step 8: OW Import Sheet -->
+        <div id="step8" class="step">
+            <div class="step-header">Step 8: OW Import Sheet</div>
+
+            <div class="alert alert-info">
+                Review the data formatted for OrderWise import. All columns are currently empty and will be populated in future updates.
+            </div>
+
+            <div class="spreadsheet-container">
+                <table class="comparison-table" id="owImportTable"></table>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="goToStep(7)">← Back</button>
+                <button class="btn" onclick="exportOWImportCSV()">📥 Export OW Import CSV</button>
             </div>
         </div>
     </div>
@@ -1045,6 +1064,8 @@
                 renderPreviewOnly();
             } else if (step === 6) {
                 renderOriginalPriceList();
+            } else if (step === 8) {
+                renderOWImportSheet();
             }
         }
         
@@ -1696,6 +1717,115 @@
                 alert('Error saving data: ' + error);
             });
             */
+        }
+
+        function generateOWImportSheet() {
+            // Navigate to Step 8
+            goToStep(8);
+        }
+
+        function renderOWImportSheet() {
+            const table = document.getElementById('owImportTable');
+
+            // Define OW Import Sheet columns
+            const columns = [
+                'Supplier',
+                'Suppliers Part Code',
+                'Description',
+                'Category',
+                'Cost Price',
+                'List Price',
+                'Retro %',
+                'Serial Tracked?',
+                'Price List Name',
+                'EAN Code',
+                'Notes',
+                'Manufacturer',
+                'Main Supplier',
+                'vad_country_code_of_origin',
+                'vad_weight',
+                'vad_volume',
+                'vad_length',
+                'vad_width',
+                'vad_depth',
+                'vad_commodity_description',
+                'vad_commodity_code',
+                'vad_import_commodity_code',
+                'vad_harmonisation_code',
+                'vad_comments'
+            ];
+
+            // Build table header
+            let tableHTML = `
+                <thead>
+                    <tr>
+                        ${columns.map(col => `<th>${col}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            // Build rows HTML in a string (empty data for now)
+            let rowsHTML = '';
+
+            // Use processedData to determine how many rows (one per item)
+            processedData.forEach(item => {
+                rowsHTML += `
+                    <tr>
+                        ${columns.map(() => '<td>-</td>').join('')}
+                    </tr>
+                `;
+            });
+
+            tableHTML += rowsHTML + '</tbody>';
+            table.innerHTML = tableHTML;
+        }
+
+        function exportOWImportCSV() {
+            // Define OW Import Sheet columns
+            const columns = [
+                'Supplier',
+                'Suppliers Part Code',
+                'Description',
+                'Category',
+                'Cost Price',
+                'List Price',
+                'Retro %',
+                'Serial Tracked?',
+                'Price List Name',
+                'EAN Code',
+                'Notes',
+                'Manufacturer',
+                'Main Supplier',
+                'vad_country_code_of_origin',
+                'vad_weight',
+                'vad_volume',
+                'vad_length',
+                'vad_width',
+                'vad_depth',
+                'vad_commodity_description',
+                'vad_commodity_code',
+                'vad_import_commodity_code',
+                'vad_harmonisation_code',
+                'vad_comments'
+            ];
+
+            // Build CSV header
+            let csv = columns.join(',') + '\n';
+
+            // Build CSV rows (empty data for now)
+            processedData.forEach(item => {
+                const emptyRow = columns.map(() => '').join(',');
+                csv += emptyRow + '\n';
+            });
+
+            // Download CSV
+            const blob = new Blob([csv], {type: 'text/csv'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ow_import_sheet_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
         }
     </script>
 </body>
