@@ -1146,13 +1146,13 @@
                             onclick="setDescriptionToUse('${code}', '${escapedPreviousDesc}')"
                             title="Click to use this as Description to use">${previousDescription}</td>
                         <td id="charCount_${code}" style="text-align: center; ${descCharStyle} ${isNewProduct ? 'background: ' + yellowBg + ';' : ''}">${descCharCount}</td>
-                        <td>
+                        <td style="background: ${descToUseBg}; padding: 0;">
                             <input type="text"
                                    id="descInput_${code}"
                                    value="${descriptionToUseMap[code]}"
                                    onchange="updateDescriptionToUse('${code}', this.value)"
                                    oninput="updateCharCount('${code}')"
-                                   style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 3px; background: ${descToUseBg};">
+                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 0; background: transparent; box-sizing: border-box;">
                         </td>
                         <td style="${costListBg}">£${costPrice.toFixed(2)}</td>
                         <td style="${costListBg}">£${finalListPrice.toFixed(2)}</td>
