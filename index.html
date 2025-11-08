@@ -208,10 +208,6 @@
                 <h3>Preview Mapped Data (first 10 rows):</h3>
                 <table class="comparison-table" id="previewTable"></table>
             </div>
-
-            <div class="button-group" style="margin-top: 20px;">
-                <button class="btn btn-success" onclick="processData()">✅ Process Data & Calculate Prices</button>
-            </div>
         </div>
 
         <!-- Step 5: Previous Price List -->
@@ -1205,6 +1201,7 @@
             } else if (step === 6) {
                 renderOriginalPriceList();
             } else if (step === 7) {
+                processData();
                 renderResults();
             } else if (step === 8) {
                 renderOWImportSheet();
@@ -1740,9 +1737,6 @@
                 
                 return item;
             }).filter(item => item.code); // Remove empty rows
-
-            renderResults();
-            goToStep(7);
         }
         
         function renderResults() {
