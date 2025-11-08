@@ -457,12 +457,12 @@
                 <strong>ℹ️ Column Assignment Guide:</strong>
                 <div style="margin-top: 10px;">
                     <small style="color: #666;">
-                        <strong>Required:</strong> Code + (List Price OR Cost Price)<br>
+                        <strong>Required:</strong> Supplier Part Number + (List Price GBP OR Cost Price)<br>
                         <strong>Optional:</strong> Description, Barcode, Manufacturer, Country of Origin<br><br>
                         <strong>Next Step:</strong> Based on your mapping, Step 3 will automatically provide:<br>
-                        • Discount % column (if you only have List Price)<br>
+                        • Discount % column (if you only have List Price GBP)<br>
                         • Markup % column (if you only have Cost Price)<br>
-                        • Direct editing (if you have both Cost and List Price)
+                        • Direct editing (if you have both Cost Price and List Price GBP)
                     </small>
                 </div>
             </div>
@@ -729,10 +729,10 @@
 
             const fieldOptions = [
                 {value: '', label: '-- Ignore Column --'},
-                {value: 'code', label: '📦 Code *'},
+                {value: 'code', label: '📦 Supplier Part Number *'},
                 {value: 'description', label: '📝 Description'},
                 {value: 'costPrice', label: '💰 Cost Price'},
-                {value: 'listPrice', label: '💷 List Price'},
+                {value: 'listPrice', label: '💷 List Price GBP'},
                 {value: 'barcode', label: '🔢 Barcode'},
                 {value: 'manufacturer', label: '🏭 Manufacturer'},
                 {value: 'countryOfOrigin', label: '🌍 Country of Origin'}
@@ -769,7 +769,7 @@
         function validateMapping() {
             // Validate required mappings
             if (columnMapping.code === undefined) {
-                alert('Please map the required field: Product Code');
+                alert('Please map the required field: Supplier Part Number');
                 return;
             }
 
@@ -825,15 +825,18 @@
         }
 
         function getMappedColumnIndices() {
-            // Get array of column indices that are mapped (not ignored)
+            // Define the desired column order
+            const columnOrder = ['code', 'description', 'costPrice', 'discount', 'listPrice', 'markup', 'barcode', 'manufacturer', 'countryOfOrigin'];
+
             const mappedIndices = [];
-            for (let i = 0; i < currentData[0].length; i++) {
-                // Check if this column is mapped to any field
-                const isMapped = Object.values(columnMapping).includes(i);
-                if (isMapped) {
-                    mappedIndices.push(i);
+
+            // Add columns in the desired order
+            columnOrder.forEach(fieldName => {
+                if (columnMapping[fieldName] !== undefined) {
+                    mappedIndices.push(columnMapping[fieldName]);
                 }
-            }
+            });
+
             return mappedIndices;
         }
 
@@ -856,13 +859,30 @@
             // Header row with column names (only mapped columns)
             const headerRow = document.createElement('tr');
             headerRow.innerHTML = '<th>Actions</th><th class="row-number" style="cursor: pointer;" onclick="toggleAllRows()">✓</th>';
+
+            // Map field names to display names
+            const fieldDisplayNames = {
+                'code': 'Supplier Part Number',
+                'description': 'Description',
+                'costPrice': 'Cost Price',
+                'discount': 'Discount %',
+                'listPrice': 'List Price GBP',
+                'markup': 'Markup %',
+                'barcode': 'Barcode',
+                'manufacturer': 'Manufacturer',
+                'countryOfOrigin': 'Country of Origin'
+            };
+
             mappedIndices.forEach(i => {
-                const cell = currentData[0][i];
+                // Find which field this column is mapped to
+                const fieldName = Object.keys(columnMapping).find(key => columnMapping[key] === i);
+                const displayName = fieldDisplayNames[fieldName] || currentData[0][i];
+
                 const isDiscountCol = columnMapping.discount === i;
                 const isMarkupCol = columnMapping.markup === i;
                 const isFlexCol = isDiscountCol || isMarkupCol;
                 headerRow.innerHTML += `<th class="column-header-cell" style="${isFlexCol ? 'background: #fff3cd;' : ''}">
-                    <span class="column-header-text">${cell || `Column ${String.fromCharCode(65 + i)}`}</span>
+                    <span class="column-header-text">${displayName}</span>
                     ${isFlexCol ? `<button class="delete-btn" style="margin-left: 5px; font-size: 10px; padding: 2px 6px;" onclick="deleteColumn(${i}); event.stopPropagation();">✕</button>` : ''}
                 </th>`;
             });
