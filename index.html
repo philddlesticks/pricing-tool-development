@@ -412,9 +412,11 @@
                 currentData = jsonData.filter(row => row.some(cell => cell !== ''));
 
                 if (currentData.length > 0) {
-                    // Enable the next button instead of auto-progressing
-                    document.getElementById('uploadNextBtn').disabled = false;
-                    showUploadMessage('✓ File uploaded successfully! You can now optionally upload previous pricing data, or click Next to continue.', 'success');
+                    showUploadMessage('✓ File uploaded successfully! Automatically proceeding to Map Columns...', 'success');
+                    // Automatically proceed to mapping step after brief delay
+                    setTimeout(() => {
+                        proceedFromUpload();
+                    }, 1000);
                 }
             };
 
@@ -1137,6 +1139,61 @@
         }
         
         function goToStep(step) {
+            // Validate settings before allowing navigation past step 1
+            if (step > 1 && currentStep === 1) {
+                // Get settings values
+                const manufacturerName = document.getElementById('manufacturerName').value.trim();
+                const supplierAccountNumber = document.getElementById('supplierAccountNumber').value.trim();
+                const effectiveDate = document.getElementById('effectiveDate').value;
+
+                // Check required fields
+                if (!manufacturerName) {
+                    alert('Please enter the manufacturer or brand name before proceeding');
+                    return;
+                }
+                if (!supplierAccountNumber) {
+                    alert('Please enter the supplier account number before proceeding');
+                    return;
+                }
+                if (!effectiveDate) {
+                    alert('Please select the price list effective date before proceeding');
+                    return;
+                }
+
+                // Save settings
+                settings.manufacturerName = manufacturerName;
+                settings.supplierAccountNumber = supplierAccountNumber;
+                settings.effectiveDate = effectiveDate;
+                settings.region = document.getElementById('region').value;
+                settings.defaultCOO = document.getElementById('defaultCOO').value;
+                settings.costPriceCurrency = document.getElementById('costPriceCurrency').value;
+                settings.listPriceCurrency = document.getElementById('listPriceCurrency').value;
+                settings.exchangeRate = parseFloat(document.getElementById('exchangeRate').value) || 1.0;
+                settings.dutyFree = document.getElementById('dutyFree').value;
+            }
+
+            // Validate file upload before allowing navigation past step 2
+            if (step > 2 && currentStep === 2) {
+                if (!currentData || currentData.length === 0) {
+                    alert('Please upload a pricing file before proceeding');
+                    return;
+                }
+            }
+
+            // Validate column mapping before allowing navigation past step 3
+            if (step > 3 && currentStep === 3) {
+                if (!columnMapping.code) {
+                    alert('Please map the required field: Supplier Part Number');
+                    return;
+                }
+                if (!columnMapping.listPrice && !columnMapping.costPrice) {
+                    alert('Please map at least one price field: either List Price OR Cost Price');
+                    return;
+                }
+                // Prepare discount/markup columns if needed
+                prepareStep3();
+            }
+
             // Update step visibility
             document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
             document.getElementById(`step${step}`).classList.add('active');
