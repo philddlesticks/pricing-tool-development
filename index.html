@@ -582,7 +582,7 @@
 
             // Header row with column names (only mapped columns)
             const headerRow = document.createElement('tr');
-            headerRow.innerHTML = '<th class="row-number" style="cursor: pointer; text-align: center;" onclick="toggleAllRows()">✓</th><th>Actions</th><th>Previous Description</th>';
+            headerRow.innerHTML = '<th class="row-number" style="cursor: pointer; text-align: center;" onclick="toggleAllRows()">✓</th><th>Manufacturer pricing list - Supplier code</th><th>Actions</th>';
 
             // Map field names to display names
             const fieldDisplayNames = {
@@ -607,7 +607,6 @@
                 const isFlexCol = isDiscountCol || isMarkupCol;
                 headerRow.innerHTML += `<th class="column-header-cell" style="${isFlexCol ? 'background: #fff3cd;' : ''}">
                     <span class="column-header-text">${displayName}</span>
-                    ${isFlexCol ? `<button class="delete-btn" style="margin-left: 5px; font-size: 10px; padding: 2px 6px;" onclick="deleteColumn(${i}); event.stopPropagation();">✕</button>` : ''}
                 </th>`;
             });
             table.appendChild(headerRow);
@@ -647,7 +646,7 @@
 
                 tr.innerHTML = `<td class="row-number" style="cursor: pointer; text-align: center;" onclick="toggleRowSelection(${rowIndex}, event)">
                     ${isSelected ? '✓' : rowIndex}
-                </td><td><button class="delete-btn" onclick="toggleRowExclusion(${rowIndex})" title="${isExcluded ? 'Click to restore row' : 'Click to exclude row'}">❌</button></td><td style="background: ${prevDescBg};">${previousDescription}</td>`;
+                </td><td style="background: ${prevDescBg};">${previousDescription}</td><td><button class="delete-btn" onclick="toggleRowExclusion(${rowIndex})" title="${isExcluded ? 'Click to restore row' : 'Click to exclude row'}">❌</button></td>`;
 
                 mappedIndices.forEach(colIndex => {
                     const cell = row[colIndex] || '';
@@ -1052,8 +1051,11 @@
                 </thead>
                 <tbody>
             `;
-            
-            const previewRows = currentData.slice(1, 11);
+
+            // Filter out excluded rows, then take first 10 non-excluded rows
+            const previewRows = currentData.slice(1)
+                .filter((row, index) => !excludedRows.has(index + 1))
+                .slice(0, 10);
             previewRows.forEach(row => {
                 const listPrice = columnMapping.listPrice !== undefined ? parseFloat(row[columnMapping.listPrice]) || 0 : 0;
                 const discount = columnMapping.discount !== undefined ? parseFloat(row[columnMapping.discount]) || 0 : 0;
