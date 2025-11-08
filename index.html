@@ -12,6 +12,19 @@
         <h1>📊 Pricing List Processing Tool</h1>
         <p class="subtitle">Upload, edit, and compare pricing data with change detection</p>
 
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" onclick="goToStep(1)">Settings</button>
+            <button class="tab-btn" onclick="goToStep(2)">Upload</button>
+            <button class="tab-btn" onclick="goToStep(3)">Map Columns</button>
+            <button class="tab-btn" onclick="goToStep(4)">Edit Data</button>
+            <button class="tab-btn" onclick="goToStep(5)">Review</button>
+            <button class="tab-btn" onclick="goToStep(6)">Original List</button>
+            <button class="tab-btn" onclick="goToStep(7)">Previous List</button>
+            <button class="tab-btn" onclick="goToStep(8)">Results</button>
+            <button class="tab-btn" onclick="goToStep(9)">OW Import</button>
+        </div>
+
         <!-- Step 1: Settings -->
         <div id="step1" class="step active">
             <div class="step-header">Step 1: Settings</div>
@@ -99,10 +112,6 @@
                     </select>
                 </div>
             </div>
-
-            <div class="button-group">
-                <button class="btn" onclick="validateSettings()">Next: Upload File →</button>
-            </div>
         </div>
 
         <!-- Step 2: Upload -->
@@ -122,13 +131,8 @@
             </div>
 
             <div id="previousUploadMessages" style="margin: 15px 0;"></div>
-
-            <div class="button-group">
-                <button class="btn btn-secondary" onclick="goToStep(1)">← Back to Settings</button>
-                <button class="btn" id="uploadNextBtn" onclick="proceedFromUpload()" disabled>Next: Map Columns →</button>
-            </div>
         </div>
-        
+
         <!-- Step 3: Map Columns -->
         <div id="step3" class="step">
             <div class="step-header">Step 3: Map Columns</div>
@@ -152,10 +156,6 @@
 
             <div class="spreadsheet-container">
                 <table class="spreadsheet" id="mappingTable"></table>
-            </div>
-            <div class="button-group">
-                <button class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
-                <button class="btn" onclick="validateMapping()">Next: Edit Data →</button>
             </div>
         </div>
 
@@ -204,10 +204,6 @@
             <div class="spreadsheet-container">
                 <table class="spreadsheet" id="spreadsheet"></table>
             </div>
-            <div class="button-group">
-                <button class="btn btn-secondary" onclick="goToStep(3)">← Back to Mapping</button>
-                <button class="btn" onclick="goToStep(5)">Next: Review & Process →</button>
-            </div>
         </div>
 
         <!-- Step 5: Review & Process -->
@@ -222,11 +218,6 @@
                 <h3>Preview Mapped Data (first 10 rows):</h3>
                 <table class="comparison-table" id="previewTable"></table>
             </div>
-
-            <div class="button-group">
-                <button class="btn btn-secondary" onclick="goToStep(4)">← Back to Edit</button>
-                <button class="btn" onclick="goToStep(6)">Next: Original Price List →</button>
-            </div>
         </div>
 
         <!-- Step 6: Original Price List -->
@@ -239,11 +230,6 @@
 
             <div class="spreadsheet-container">
                 <table class="comparison-table" id="originalPriceTable"></table>
-            </div>
-
-            <div class="button-group">
-                <button class="btn btn-secondary" onclick="goToStep(5)">← Back</button>
-                <button class="btn" onclick="goToStep(7)">Next: Previous Price List →</button>
             </div>
         </div>
 
@@ -264,9 +250,8 @@
                 <table class="comparison-table" id="previousPriceTable"></table>
             </div>
 
-            <div class="button-group">
-                <button class="btn btn-secondary" onclick="goToStep(6)">← Back</button>
-                <button class="btn" onclick="processData()">Next: Review Changes →</button>
+            <div style="margin-top: 20px; text-align: center;">
+                <button class="btn" onclick="processData()">Process Data & View Results →</button>
             </div>
         </div>
 
@@ -294,9 +279,8 @@
             <div class="spreadsheet-container">
                 <table class="comparison-table" id="comparisonTable"></table>
             </div>
-            
+
             <div class="button-group">
-                <button class="btn btn-secondary" onclick="goToStep(7)">← Back</button>
                 <button class="btn btn-success" onclick="saveData()">💾 Save to Server</button>
                 <button class="btn" onclick="exportJSON()">📥 Export JSON</button>
                 <button class="btn" onclick="exportCSV()">📥 Export CSV</button>
@@ -318,7 +302,6 @@
             </div>
 
             <div class="button-group">
-                <button class="btn btn-secondary" onclick="goToStep(8)">← Back</button>
                 <button class="btn" onclick="exportOWImportCSV()">📥 Export OW Import CSV</button>
             </div>
         </div>
@@ -1154,10 +1137,21 @@
         }
         
         function goToStep(step) {
+            // Update step visibility
             document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
             document.getElementById(`step${step}`).classList.add('active');
+
+            // Update tab highlighting
+            document.querySelectorAll('.tab-btn').forEach((btn, index) => {
+                btn.classList.remove('active');
+                if (index + 1 === step) {
+                    btn.classList.add('active');
+                }
+            });
+
             currentStep = step;
 
+            // Render specific step content if needed
             if (step === 4) {
                 renderSpreadsheet();
             } else if (step === 5) {
