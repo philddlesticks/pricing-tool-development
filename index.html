@@ -1106,14 +1106,22 @@
                 // Style for "Description to use" character count
                 const descCharStyle = descCharCount >= 250 ? 'color: red; font-weight: bold;' : '';
 
+                // Escape values for JavaScript strings
+                const escapedNameWouldLike = nameWouldLike.replace(/'/g, "\\'").replace(/"/g, '\\"');
+                const escapedPreviousDesc = previousDescription.replace(/'/g, "\\'").replace(/"/g, '\\"');
+
                 table.innerHTML += `
                     <tr>
                         <td>${lineNumber}</td>
                         <td>${code}</td>
                         <td>${description}</td>
                         <td style="text-align: center; ${nameCharStyle}">${nameCharCount}</td>
-                        <td>${nameWouldLike}</td>
-                        <td>${previousDescription}</td>
+                        <td style="cursor: pointer; background: #f0f8ff;"
+                            onclick="setDescriptionToUse('${code}', '${escapedNameWouldLike}')"
+                            title="Click to use this as Description to use">${nameWouldLike}</td>
+                        <td style="cursor: pointer; background: #fff8f0;"
+                            onclick="setDescriptionToUse('${code}', '${escapedPreviousDesc}')"
+                            title="Click to use this as Description to use">${previousDescription}</td>
                         <td id="charCount_${code}" style="text-align: center; ${descCharStyle}">${descCharCount}</td>
                         <td>
                             <input type="text"
@@ -1138,6 +1146,20 @@
 
         function updateDescriptionToUse(code, value) {
             descriptionToUseMap[code] = value;
+        }
+
+        function setDescriptionToUse(code, value) {
+            // Update the map
+            descriptionToUseMap[code] = value;
+
+            // Update the input field
+            const input = document.getElementById(`descInput_${code}`);
+            if (input) {
+                input.value = value;
+            }
+
+            // Update the character count
+            updateCharCount(code);
         }
 
         function updateCharCount(code) {
