@@ -229,6 +229,7 @@
         let excludedRows = new Set();
         let descriptionToUseMap = {}; // Store "Description to use" values by product code
         let renderDebounceTimer = null; // Debounce timer for renders
+        let excludeDebounceTimer = null; // Debounce timer for exclude/restore operations
 
         // Settings data
         let settings = {
@@ -406,17 +407,18 @@
 
             // Header row with column names
             const headerRow = document.createElement('tr');
-            headerRow.innerHTML = '<th class="row-number">#</th>';
+            let headerHTML = '<th class="row-number">#</th>';
             currentData[0].forEach((cell, i) => {
-                headerRow.innerHTML += `<th class="column-header-cell">
+                headerHTML += `<th class="column-header-cell">
                     <span class="column-header-text">${cell || `Column ${String.fromCharCode(65 + i)}`}</span>
                 </th>`;
             });
+            headerRow.innerHTML = headerHTML;
             table.appendChild(headerRow);
 
             // Mapping row with dropdowns
             const mappingRow = document.createElement('tr');
-            mappingRow.innerHTML = '<th class="row-number" style="background: #e3f2fd;">Map to:</th>';
+            let mappingHTML = '<th class="row-number" style="background: #e3f2fd;">Map to:</th>';
 
             const fieldOptions = [
                 {value: '', label: '-- Ignore Column --'},
@@ -433,7 +435,7 @@
 
             currentData[0].forEach((header, colIndex) => {
                 // No auto-detection - all columns default to "Ignore"
-                mappingRow.innerHTML += `<th style="background: #e3f2fd; padding: 8px;">
+                mappingHTML += `<th style="background: #e3f2fd; padding: 8px;">
                     <select id="colMap_${colIndex}" class="column-mapping-select" onchange="updateColumnMapping()">
                         ${fieldOptions.map(opt =>
                             `<option value="${opt.value}">${opt.label}</option>`
@@ -441,17 +443,19 @@
                     </select>
                 </th>`;
             });
+            mappingRow.innerHTML = mappingHTML;
             table.appendChild(mappingRow);
 
             // Show first 5 rows as preview
             for (let rowIndex = 1; rowIndex <= Math.min(5, currentData.length - 1); rowIndex++) {
                 const row = currentData[rowIndex];
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td class="row-number">${rowIndex}</td>`;
+                let rowHTML = `<td class="row-number">${rowIndex}</td>`;
                 for (let colIndex = 0; colIndex < currentData[0].length; colIndex++) {
                     const cell = row[colIndex] || '';
-                    tr.innerHTML += `<td style="color: #666;">${cell}</td>`;
+                    rowHTML += `<td style="color: #666;">${cell}</td>`;
                 }
+                tr.innerHTML = rowHTML;
                 table.appendChild(tr);
             }
 
@@ -598,6 +602,7 @@
                 'countryOfOrigin': 'Country of Origin'
             };
 
+            let headerHTML = '';
             mappedIndices.forEach(i => {
                 // Find which field this column is mapped to
                 const fieldName = Object.keys(columnMapping).find(key => columnMapping[key] === i);
@@ -606,10 +611,11 @@
                 const isDiscountCol = columnMapping.discount === i;
                 const isMarkupCol = columnMapping.markup === i;
                 const isFlexCol = isDiscountCol || isMarkupCol;
-                headerRow.innerHTML += `<th class="column-header-cell" style="${isFlexCol ? 'background: #fff3cd;' : ''}">
+                headerHTML += `<th class="column-header-cell" style="${isFlexCol ? 'background: #fff3cd;' : ''}">
                     <span class="column-header-text">${displayName}</span>
                 </th>`;
             });
+            headerRow.innerHTML += headerHTML;
             table.appendChild(headerRow);
 
             // Data rows
@@ -644,7 +650,8 @@
                     previousDescription = '-';
                 }
 
-                tr.innerHTML = `<td class="row-number" style="cursor: pointer; text-align: center;" onclick="toggleRowExclusion(${rowIndex})" title="${isExcluded ? 'Click to restore row' : 'Click to exclude row'}">
+                // Build row HTML in a string first
+                let rowHTML = `<td class="row-number" style="cursor: pointer; text-align: center;" onclick="toggleRowExclusion(${rowIndex})" title="${isExcluded ? 'Click to restore row' : 'Click to exclude row'}">
                     ${isExcluded ? '❌' : rowIndex}
                 </td><td style="background: ${prevDescBg};">${previousDescription}</td>`;
 
@@ -666,7 +673,7 @@
                     const cellStyle = bgColor ? `background: ${bgColor};` : '';
                     const inputStyle = bgColor ? `background: ${bgColor};` : '';
 
-                    tr.innerHTML += `<td style="${cellStyle}"><input type="text"
+                    rowHTML += `<td style="${cellStyle}"><input type="text"
                         value="${cell}"
                         onchange="updateCell(${rowIndex}, ${colIndex}, this.value)"
                         onkeydown="handleKeyDown(event, ${rowIndex}, ${colIndex})"
@@ -675,6 +682,7 @@
                         placeholder="${isFlexCol ? '0' : ''}"></td>`;
                 });
 
+                tr.innerHTML = rowHTML;
                 table.appendChild(tr);
             }
         }
@@ -1000,17 +1008,25 @@
         }
         
         function toggleRowExclusion(rowIndex) {
+            // Update state immediately
             if (excludedRows.has(rowIndex)) {
                 excludedRows.delete(rowIndex);
             } else {
                 excludedRows.add(rowIndex);
             }
-            // Re-render current view
-            if (currentStep === 4) {
-                renderSpreadsheet();
-            } else if (currentStep === 6) {
-                renderOriginalPriceList();
+
+            // Debounce re-render to prevent browser crashes from rapid clicking
+            if (excludeDebounceTimer) {
+                clearTimeout(excludeDebounceTimer);
             }
+            excludeDebounceTimer = setTimeout(() => {
+                // Re-render current view
+                if (currentStep === 4) {
+                    renderSpreadsheet();
+                } else if (currentStep === 6) {
+                    renderOriginalPriceList();
+                }
+            }, 100); // 100ms debounce - batches rapid clicks while still feeling responsive
         }
 
         function deleteRow(rowIndex) {
