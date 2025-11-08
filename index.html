@@ -1051,6 +1051,14 @@
                 const barcode = columnMapping.barcode !== undefined ? row[columnMapping.barcode] : '';
                 const manufacturer = columnMapping.manufacturer !== undefined ? row[columnMapping.manufacturer] : settings.manufacturerName;
 
+                // Store the default variant code value
+                if (!variantCodeMap[code]) {
+                    variantCodeMap[code] = code;
+                }
+
+                // Get the current (possibly edited) variant code
+                const currentCode = variantCodeMap[code];
+
                 // Calculate prices
                 const listPrice = columnMapping.listPrice !== undefined ? parseFloat(row[columnMapping.listPrice]) || 0 : 0;
                 const discount = hasDiscount ? parseFloat(row[columnMapping.discount]) || 0 : 0;
@@ -1075,11 +1083,11 @@
                     costPrice = directCostPrice;
                 }
 
-                // Name would like to use: MANUFACTURER ( CODE ) DESCRIPTION
-                const nameWouldLike = `${manufacturer} ( ${code} ) ${description}`;
+                // Name would like to use: MANUFACTURER ( CODE ) DESCRIPTION - use current (possibly edited) code
+                const nameWouldLike = `${manufacturer} ( ${currentCode} ) ${description}`;
 
-                // Check if this item exists in previous data
-                const oldItem = previousData.find(p => p.code === code || p.productcode === code);
+                // Check if this item exists in previous data - use current (possibly edited) code
+                const oldItem = previousData.find(p => p.code === currentCode || p.productcode === currentCode);
 
                 let previousDescription = '';
                 let previousBarcode = '';
@@ -1097,15 +1105,8 @@
                     descriptionToUse = nameWouldLike; // Use the formatted name
                 }
 
-                // Store the default "Description to use" value
-                if (!descriptionToUseMap[code]) {
-                    descriptionToUseMap[code] = descriptionToUse;
-                }
-
-                // Store the default variant code value
-                if (!variantCodeMap[code]) {
-                    variantCodeMap[code] = code;
-                }
+                // Update "Description to use" value - always recalculate based on current variant code
+                descriptionToUseMap[code] = descriptionToUse;
 
                 // Calculate character counts
                 const nameCharCount = nameWouldLike.length;
@@ -1195,7 +1196,8 @@
 
         function updateVariantCode(code, value) {
             variantCodeMap[code] = value;
-            // No need to re-render for variant code changes
+            // Re-render the table to update Name, Previous Description, and Description to use
+            renderOriginalPriceList();
         }
 
         function setDescriptionToUse(code, value) {
