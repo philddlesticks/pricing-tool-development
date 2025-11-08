@@ -26,7 +26,41 @@ h1 {
 
 .subtitle {
     color: #666;
+    margin-bottom: 20px;
+}
+
+.tab-navigation {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
     margin-bottom: 30px;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 0;
+}
+
+.tab-btn {
+    background: #f8f9fa;
+    color: #666;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 12px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s;
+    border-radius: 4px 4px 0 0;
+}
+
+.tab-btn:hover {
+    background: #e9ecef;
+    color: #333;
+}
+
+.tab-btn.active {
+    background: #007bff;
+    color: white;
+    border-bottom-color: #007bff;
+    font-weight: 600;
 }
 
 .step {
