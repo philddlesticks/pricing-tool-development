@@ -424,3 +424,7 @@ input[type="file"] {
     opacity: 0.5;
     background: #e9ecef !important;
 }
+
+.excluded-row .row-number {
+    text-decoration: none;
+}
