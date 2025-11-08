@@ -1427,18 +1427,29 @@
         }
         
         function toggleFilter() {
-            const showOnlyFlagged = document.getElementById('showOnlyFlagged').checked;
-            const showOnlyNew = document.getElementById('showOnlyNew').checked;
+            const showOnlyFlaggedCheckbox = document.getElementById('showOnlyFlagged');
+            const showOnlyNewCheckbox = document.getElementById('showOnlyNew');
+            const showOnlyFlagged = showOnlyFlaggedCheckbox.checked;
+            const showOnlyNew = showOnlyNewCheckbox.checked;
+
+            // Make checkboxes mutually exclusive
+            if (showOnlyFlagged && showOnlyNew) {
+                // If both are checked, determine which one was just checked and uncheck the other
+                // We'll use a data attribute to track which was last clicked
+                const lastClicked = event.target.id;
+                if (lastClicked === 'showOnlyFlagged') {
+                    showOnlyNewCheckbox.checked = false;
+                } else {
+                    showOnlyFlaggedCheckbox.checked = false;
+                }
+            }
 
             let dataToShow = processedData;
 
-            if (showOnlyFlagged && showOnlyNew) {
-                // Show items that are either flagged OR new
-                dataToShow = processedData.filter(i => i.flagged || i.status === 'new');
-            } else if (showOnlyFlagged) {
+            if (showOnlyFlaggedCheckbox.checked) {
                 // Show only flagged items
                 dataToShow = processedData.filter(i => i.flagged);
-            } else if (showOnlyNew) {
+            } else if (showOnlyNewCheckbox.checked) {
                 // Show only new items
                 dataToShow = processedData.filter(i => i.status === 'new');
             }
