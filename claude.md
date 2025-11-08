@@ -1,225 +1,125 @@
-# Pricing Tool Development - Chat History
+# Pricing Tool Development
 
 ## Project Overview
 
-Building a web-based tool for processing pricing lists into data that can be loaded into a database. The tool compares new pricing data to previous pricing data and flags significant changes (+15% or -10% with cost ≥ £100).
+A web-based tool for processing pricing lists that can be loaded into a database. The tool compares new pricing data against previous pricing data and flags significant changes (≥15% increase OR ≤-10% decrease with cost ≥£100).
 
-## Initial Requirements
+## Current Architecture
 
-**User Request:**
-> I'm looking to build a web based tool for processing pricing lists into data we can load into our database. Data needs to be compared to previous pricing data to compare changes, and flag anything significant (+15% or -10% with a cost greater or equal to £100). The price lists usually come in excel format. If possible, the system will have a spreadsheet editor when you load the pricing list in, that way edits can be made. Once the file is loaded in the user needs to assign column headings so that it knows which data to use where: code, description, cost price, list price, barcode.
+### Technical Stack
+- **Single HTML File** (`index.html`) - Self-contained application
+- **External Stylesheet** (`pricingstyles.css`) - Separated CSS for maintainability
+- **SheetJS Library** - Loaded from CDN for Excel/CSV parsing
+- **Client-Side Processing** - All processing happens in the browser
+- **No Build Tools Required** - Editable in any text editor
 
-## Architecture Decisions
+### File Format Support
+- Excel files (`.xlsx`, `.xls`)
+- CSV files (`.csv`)
+- JSON (for previous pricing data comparison)
 
-### Initial Approach
-Claude suggested a multi-stage workflow application:
+## Current Workflow (7 Steps)
 
-1. **File Upload & Parsing** - Use SheetJS (XLSX library) to parse Excel files in browser
-2. **Interactive Spreadsheet Editor** - Editable grid for data manipulation
-3. **Column Mapping Interface** - Assign columns to: Code, Description, Cost Price, List Price, Barcode
-4. **Data Processing & Comparison** - Compare against previous pricing and flag significant changes
-5. **Review & Export** - Display results, export as JSON for database import
+### Step 1: Settings
+Configure pricing list metadata before uploading:
+- **Manufacturer Name** - Brand or manufacturer name (required)
+- **Supplier Account Number** - Account identifier (required)
+- **Price List Effective Date** - Date selector (required)
 
-### Technical Stack Decision
+All fields validated before proceeding.
 
-**Options Considered:**
-- Pure Frontend (JavaScript/React) - Simple deployment, no backend, browser-only
-- PHP Backend - Database storage, larger files, better security
-- **Hybrid Approach (CHOSEN)** - Frontend for UX, backend for persistence
+### Step 2: Upload Pricing File
+- Upload main pricing file (Excel or CSV)
+- Optional: Upload previous pricing data (Excel, CSV, or JSON)
+- "Next" button enables after file upload
+- User can upload both files before proceeding
 
-**Final Decision:** Hybrid approach with:
-- Browser-based editing (in-memory, fast)
-- Server save option (database or file formats)
-- SheetJS from CDN (no build tools required)
-- Single HTML file editable in Notepad++
+### Step 3: Map Columns
+Assign columns from uploaded file to data fields:
 
-### Storage Strategy
-- **Database**: MySQL/PostgreSQL for querying and comparisons
-- **File Storage**: Keep original Excel files and exported JSON for audit trail
+**Available Mappings:**
+- 📦 Supplier Part Number * (required)
+- 📝 Description
+- 💰 Cost Price
+- 💷 List Price GBP * (or Cost Price required)
+- 🔢 Barcode
+- 🏭 Manufacturer
+- 🌍 Country of Origin
+- -- Ignore Column --
 
-## Development Environment
+**Features:**
+- Dropdowns under each column header
+- All columns default to "Ignore" (no auto-assignment)
+- First 5 rows shown as preview
+- Validation before proceeding
 
-**User Requirement:** Using Notepad++ only (no Node.js, no build tools)
+### Step 4: Edit Data
+Full spreadsheet editor with all mapped columns:
 
-**Solution:** Self-contained HTML file with:
-- SheetJS loaded from CDN
-- Embedded HTML, CSS, JavaScript
-- No installation or dependencies needed
+**Column Order (Fixed):**
+1. Actions (❌ exclude/restore button)
+2. ✓ (row selector)
+3. Supplier Part Number
+4. Description
+5. Cost Price OR Discount %
+6. List Price GBP OR Markup %
+7. Barcode
+8. Manufacturer (if mapped)
+9. Country of Origin (if mapped)
 
-## Feature Evolution
+**Features:**
+- Only shows mapped columns (ignored columns hidden)
+- Row exclusion with ❌ (click to exclude, click again to restore)
+- Excluded rows shown with opacity and strikethrough
+- Auto-adds Discount % or Markup % column based on mapping
+- Quick Pricing Tools for bulk operations
+- Row selection (Ctrl+click for multiple)
+- Keyboard shortcuts (Ctrl+C, Ctrl+V, Ctrl+Shift+V)
 
-### Version 1: Basic Functionality
-- Excel file upload
-- Editable spreadsheet view
-- Column mapping (Step 3)
-- Comparison with previous pricing
-- Flagged items display
+### Step 5: Review & Process
+Preview of mapped data before processing:
+- Shows first 10 rows
+- Displays calculated prices
+- Sanity check before final processing
+
+### Step 6: Original Price List
+Review variant matching and descriptions:
+
+**Columns:**
+- # (line number)
+- Variant Code (supplier part number)
+- Description (from file)
+- Name would like to use: `MANUFACTURER ( CODE ) DESCRIPTION`
+- Previous Description (from database or "New product? Check if new")
+- Description to use (defaults to previous if found, otherwise uses formatted name)
+- Cost Price (calculated)
+- List Price (calculated)
+- Barcode
+- Previous Barcode (from database)
+
+**Logic:**
+- Matches items against previous pricing data by code
+- Existing items: uses previous description
+- New items: uses formatted name with manufacturer
+
+### Step 7: Review Changes & Flagged Items
+Final results with comparison:
+
+**Statistics:**
+- Total Items
+- New Items
+- Changed Items
+- Flagged Items (shown in red)
+
+**Flagging Criteria:**
+Items are flagged if:
+- (Cost change ≥15% OR ≤-10%) AND cost ≥£100
+- OR (List change ≥15% OR ≤-10%) AND list price ≥£100
+
+**Features:**
+- Filter to show only flagged items
 - Export as JSON or CSV
-- "Save to Server" placeholder for PHP integration
-
-### Version 2: Discount Column Support
-**User Need:** Price lists without cost price column, but with discount percentages
-
-**Solution:**
-- Added optional "Discount % (if no cost price)" mapping
-- Flexible cost calculation: `Cost Price = List Price × (1 - Discount/100)`
-- Uses Cost Price directly if available, OR calculates from discount
-
-### Version 9: Manual Discount Entry
-**User Need:** Not all price lists have discount columns, need manual entry
-
-**Solution:**
-- Auto-add "Discount % (Manual)" column when uploading
-- Column highlighted in green
-- Pre-mapped in Step 3
-- Editable for each row
-
-### Version 14: Bulk Discount Operations
-**User Problem:** "Not efficient clicking between each box entering the value"
-
-**Solution:**
-- Quick Discount Tools panel
-- Apply to All rows
-- Apply to Selected rows (Ctrl+click row numbers)
-- Clear All function
-- Keyboard shortcuts: Ctrl+C, Ctrl+V, Ctrl+Shift+V
-
-### Version 19: Multi-Discount Workflow
-**User Problem:** "Some suppliers will have many different discounts"
-
-**Solution:**
-- Enhanced row selection (Ctrl+click multiple rows)
-- Ctrl+Shift+V to paste to all selected rows
-- Button-based group operations
-- Individual cell paste with Ctrl+V
-
-### Version 22-26: Column Naming & Bug Fixes
-**Changes:**
-- Renamed column to just "Discount %"
-- Fixed bug where "Apply to All" created new columns
-- Fixed discount column indexing issues
-
-### Version 31: Column Mapping Moved to Step 2
-**User Request:** "Would it be possible we assign columns at the edit pricing data page instead of step 3?"
-
-**Solution:**
-- Combined editing and mapping into Step 2
-- Dropdowns in blue box above spreadsheet
-- Step 3 became preview step
-
-### Version 37: Dropdown Under Each Column
-**User Request:** "How about putting the drop down under each column heading"
-
-**Solution:**
-- Dropdown directly under each column header (Row 2)
-- Added emoji icons for easy identification
-- Expanded field options:
-  - 📦 Code
-  - 📝 Description
-  - 💰 Cost Price
-  - 💷 List Price
-  - 🔢 Barcode
-  - 🏷️ Discount %
-  - 📈 Markup %
-  - 🏭 Manufacturer
-  - 🌍 Country of Origin
-  - -- Ignore Column --
-
-### Version 42: Quick Tools Moved to Step 3
-**User Request:** "Can the Quick discount tools be part of Step 3?"
-
-**New Flow:**
-- Step 1: Upload
-- Step 2: Edit & Map
-- Step 3: Quick Tools & Preview
-- Step 4: Results
-
-### Version 45: Markup Support
-**User Request:** "If I try to choose cost price, I want to be able to do the same but instead of discounts, it will be for markups!"
-
-**Solution:**
-- Intelligent detection: Discount % mapped → show Discount Tools
-- Markup % mapped → show Markup Tools
-- Formula: `List Price = Cost Price × (1 + Markup/100)`
-- Can use both simultaneously
-
-### Version 51: Smart Validation & Flexible Column
-**User Problem:** Couldn't proceed without List Price column when using Cost + Markup
-
-**Solution:**
-- Column renamed to "Discount/Markup %" (yellow/orange highlight)
-- Flexible validation:
-  - Requires Code + at least one price field
-  - List Price but no Cost → need Discount %
-  - Cost Price but no List → need Markup %
-  - Both prices → no percentage field needed
-
-### Version 60: Full Spreadsheet in Step 3
-**User Problem:** "Apply to selected rows only showing mapped data first 5 rows"
-
-**Solution:**
-- Step 3 now shows full editable spreadsheet (not just preview)
-- Row selection works properly
-- Apply bulk operations see changes immediately
-
-### Version 64: On-Demand Column Creation
-**User Request:** "The yellow column Discount/Markup % should not exist until you add a column using a button"
-
-**Solution:**
-- No auto-added columns
-- Two buttons: "➕ Add Discount % Column" and "➕ Add Markup % Column"
-- Columns added only when needed
-- Smart duplicate prevention
-
-### Version 74: Final Refinements
-**User Requests:**
-1. "Add a tiny delete button on the discount % or markup % columns"
-2. "Move the step 3 discount/markup part into step 2"
-
-**Final Solution:**
-- ✕ delete button in Discount/Markup column headers
-- Quick Tools moved back to Step 2 (all-in-one editing)
-- Step 3 simplified to preview only (first 10 rows)
-
-### Version 75: Single Add Column Button + Fixed Apply Functions (Current)
-**User Issues:**
-1. "The markup and discount columns have dropdowns to select what they are, so there isn't a need for 2 create buttons as really it just needs a create column, then you choose the option on the dropdown"
-2. "The apply to selected and apply to all buttons don't work"
-
-**Solution:**
-- **Single "Add Column" Button**: Replaced "Add Discount % Column" and "Add Markup % Column" with one "➕ Add Column" button that creates "Custom %" columns
-- **Dropdown-Based Selection**: Users now choose whether a column is Discount % or Markup % from the dropdown under the column header
-- **Fixed Apply/Clear Functions**:
-  - Fixed input ID references (bulkDiscount2/bulkMarkup2)
-  - Added missing `clearAllDiscounts()` function
-  - Changed all column detection from name-based to mapping-based
-- **Mapping-Based Highlighting**: Columns now highlight yellow based on their dropdown mapping, not their name
-- **Flexible Column System**: Can add multiple custom columns and assign each one independently
-
-## Final Workflow
-
-### Step 1: Upload File
-- Upload Excel file
-- Optional: Upload previous pricing for comparison
-
-### Step 2: Edit Data & Map Columns (All-in-One)
-- Map columns using dropdowns under headers
-- ➕ Add Discount % or Markup % columns as needed
-- ✕ Delete unwanted columns
-- Edit any cell data directly
-- Select rows (Ctrl+click) and apply bulk discounts/markups
-- Use keyboard shortcuts (Ctrl+C, Ctrl+V, Ctrl+Shift+V)
-
-### Step 3: Preview
-- Clean preview table (first 10 rows)
-- Shows calculated prices
-- Sanity check before processing
-
-### Step 4: Review Changes & Flagged Items
-- Comparison results
-- Flagged items (≥15% increase OR ≤-10% decrease with cost ≥£100)
-- Export as JSON or CSV
-- Save to Server option
+- Save to Server option (placeholder for backend integration)
 
 ## Key Formulas
 
@@ -246,97 +146,106 @@ const flagged = (
 
 ## Keyboard Shortcuts
 
-- **Ctrl+C**: Copy cell value (flashes yellow)
+- **Ctrl+C**: Copy cell value
 - **Ctrl+V**: Paste to current cell
-- **Ctrl+Shift+V**: Paste to all selected rows
+- **Ctrl+Shift+V**: Paste to all selected rows (Discount/Markup columns only)
 - **Arrow Keys**: Navigate between cells
 - **Enter**: Move down to next row
 - **Ctrl+Click**: Select multiple rows
 
-## Next Steps for PHP Integration
+## Color Coding
 
-### Required PHP Endpoints
+- **Blue background**: Selected rows
+- **Yellow background**: Discount/Markup columns
+- **Gray with strikethrough**: Excluded rows
+- **Yellow highlight**: Flagged items in Step 7
+- **Light blue**: Column mapping dropdowns
 
+## Data Processing
+
+### Row Handling
+- Excluded rows (marked with ❌) are skipped during processing
+- Empty rows are filtered out
+- Line numbers are sequential (excluding excluded rows)
+
+### Price Calculation Logic
+1. **If only List Price mapped**: Add Discount % column, calculate cost
+2. **If only Cost Price mapped**: Add Markup % column, calculate list price
+3. **If both mapped**: Direct editing, no percentage columns added
+
+### Comparison Logic
+- Matches by product code
+- Compares cost price and list price changes
+- Flags significant changes based on criteria
+- Tracks new vs. existing products
+
+## Test Data
+
+Located in `/test-data/`:
+- `current-price-list.csv` - 15 test products
+- `previous-price-list.json` - Historical data for comparison
+- `README.md` - Detailed test scenarios documentation
+
+**Test Coverage:**
+- 5 flagged items (various scenarios)
+- 2 new products
+- Unchanged items
+- Small changes
+- Edge cases (just under/at thresholds)
+- Barcode changes
+- Description changes
+
+## Future PHP Integration
+
+### Required Endpoints
 ```php
-// GET /api/pricing/latest - Fetch last saved pricing for comparison
-// GET /api/pricing/history - List all previous imports
-// POST /api/pricing/save - Save new pricing data
+GET  /api/pricing/latest    - Fetch last saved pricing
+GET  /api/pricing/history   - List previous imports
+POST /api/pricing/save      - Save new pricing data
 ```
 
 ### Database Schema
 ```sql
--- For querying and comparisons
-pricing_imports (id, import_date, filename, status)
-pricing_items (id, import_id, code, description, cost_price, list_price, barcode)
-pricing_changes (id, import_id, item_id, change_type, old_value, new_value, flagged)
+pricing_imports (
+  id, manufacturer_name, supplier_account,
+  effective_date, import_date, filename, status
+)
+
+pricing_items (
+  id, import_id, code, description,
+  cost_price, list_price, barcode,
+  manufacturer, country_of_origin
+)
+
+pricing_changes (
+  id, import_id, item_id, change_type,
+  old_value, new_value, flagged
+)
 ```
 
-### File Storage Structure
-```
-/uploads/pricing/YYYY-MM-DD_filename.xlsx  (original files)
-/data/pricing/YYYY-MM-DD_import.json       (processed data)
-```
+## Browser Compatibility
 
-## Development Notes
-
-- Development Environment: Notepad++ (no build tools)
-- Technology: Single HTML file with embedded CSS/JS
-- External Dependency: SheetJS from CDN
-- Browser Compatibility: Modern browsers with ES6 support
-- File saved as: `pricing-tool.html`
-
-## User Experience Highlights
-
-1. **Emoji Icons** - Visual identification of column types
-2. **Color Coding**:
-   - Green: Auto-added columns
-   - Yellow/Orange: Discount/Markup columns
-   - Blue: Selected rows
-   - Yellow: Flagged items in results
-3. **Smart Validation** - Flexible field requirements
-4. **Efficient Bulk Operations** - Multiple methods for applying discounts/markups
-5. **In-Memory Editing** - Fast, responsive interface
-6. **Server Save** - Persistent storage when needed
-
-## Version History Summary
-
-- **v1**: Basic upload, edit, map, compare, export
-- **v2**: Discount column support
-- **v9**: Manual discount entry
-- **v14**: Bulk operations & keyboard shortcuts
-- **v19**: Multi-discount workflow
-- **v22-26**: Bug fixes & column naming
-- **v31**: Column mapping moved to Step 2
-- **v37**: Dropdowns under headers + emojis + new fields
-- **v42**: Quick tools moved to Step 3
-- **v45**: Markup support
-- **v51**: Smart validation & flexible column naming
-- **v60**: Full spreadsheet in Step 3
-- **v64**: On-demand column creation
-- **v74**: Delete buttons + all-in-one Step 2
-- **v75**: Single add column button + fixed apply/clear functions (CURRENT)
+- Modern browsers with ES6 support
+- JavaScript must be enabled
+- No server-side requirements
+- Works completely offline (except SheetJS CDN load)
 
 ## Deployment
 
-### GitHub Pages Setup
-
-The tool is available as a single HTML file that can be deployed to GitHub Pages:
+### GitHub Pages
+The tool can be deployed as a static site:
 
 **Files:**
-- `index.html` - Main entry point (GitHub Pages default)
-- `pricing-tool.html` - Same content as index.html
+- `index.html` - Main application
+- `pricingstyles.css` - Stylesheet
+- `test-data/` - Test files (optional)
 
-**To deploy:**
-1. Merge this branch to `main` via Pull Request
-2. Go to repository Settings → Pages
-3. Enable Pages with source: `main` branch, `/ (root)` folder
-4. Access at: `https://philddlesticks.github.io/pricing-tool-development/`
-
-**Alternative URLs:**
-- Direct file access: `https://philddlesticks.github.io/pricing-tool-development/pricing-tool.html`
+**To Deploy:**
+1. Push to `main` branch
+2. Enable GitHub Pages in repository settings
+3. Access at: `https://<username>.github.io/<repo-name>/`
 
 **Requirements:**
-- Modern web browser with JavaScript enabled
-- No server-side components needed
-- SheetJS loaded from CDN
-- Works completely client-side
+- Modern web browser
+- Internet connection (for SheetJS CDN)
+- No backend needed for basic functionality
