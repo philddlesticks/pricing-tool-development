@@ -1124,6 +1124,7 @@
                 const descCharStyle = descCharCount > 250 ? 'color: red; font-weight: bold;' : '';
 
                 // Escape values for JavaScript strings
+                const escapedCode = code.replace(/'/g, "\\'").replace(/"/g, '\\"');
                 const escapedNameWouldLike = nameWouldLike.replace(/'/g, "\\'").replace(/"/g, '\\"');
                 const escapedPreviousDesc = previousDescription.replace(/'/g, "\\'").replace(/"/g, '\\"');
 
@@ -1155,24 +1156,24 @@
                             <input type="text"
                                    id="codeInput_${code}"
                                    value="${variantCodeMap[code]}"
-                                   onchange="updateVariantCode('${code}', this.value)"
+                                   onchange="updateVariantCode('${escapedCode}', this.value)"
                                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 0; background: transparent; box-sizing: border-box;">
                         </td>
                         <td style="background: ${descriptionBg};">${description}</td>
                         <td style="text-align: center; ${nameCharStyle} ${isNewProduct ? 'background: ' + yellowBg + ';' : ''}">${nameCharCount}</td>
                         <td style="cursor: pointer; background: ${nameWouldLikeBg}; ${nameTextColor}"
-                            onclick="setDescriptionToUse('${code}', '${escapedNameWouldLike}')"
+                            onclick="setDescriptionToUse('${escapedCode}', '${escapedNameWouldLike}')"
                             title="Click to use this as Description to use">${nameWouldLike}</td>
                         <td style="${isNewProduct ? '' : 'cursor: pointer;'} background: ${prevDescBg}; ${prevTextColor}"
-                            ${isNewProduct ? '' : `onclick="setDescriptionToUse('${code}', '${escapedPreviousDesc}')"`}
+                            ${isNewProduct ? '' : `onclick="setDescriptionToUse('${escapedCode}', '${escapedPreviousDesc}')"`}
                             ${isNewProduct ? '' : 'title="Click to use this as Description to use"'}>${previousDescription}</td>
                         <td id="charCount_${code}" style="text-align: center; ${descCharStyle} ${isNewProduct ? 'background: ' + yellowBg + ';' : ''}">${descCharCount}</td>
                         <td style="background: ${descToUseBg}; padding: 0;">
                             <input type="text"
                                    id="descInput_${code}"
                                    value="${descriptionToUseMap[code]}"
-                                   onchange="updateDescriptionToUse('${code}', this.value)"
-                                   oninput="updateCharCount('${code}')"
+                                   onchange="updateDescriptionToUse('${escapedCode}', this.value)"
+                                   oninput="updateCharCount('${escapedCode}')"
                                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 0; background: transparent; box-sizing: border-box;">
                         </td>
                         <td style="${costListBg}">£${costPrice.toFixed(2)}</td>
