@@ -582,7 +582,7 @@
 
             // Header row with column names (only mapped columns)
             const headerRow = document.createElement('tr');
-            headerRow.innerHTML = '<th>Actions</th><th class="row-number" style="cursor: pointer;" onclick="toggleAllRows()">✓</th>';
+            headerRow.innerHTML = '<th class="row-number" style="cursor: pointer; text-align: center;" onclick="toggleAllRows()">✓</th><th>Actions</th><th>Previous Description</th>';
 
             // Map field names to display names
             const fieldDisplayNames = {
@@ -619,9 +619,35 @@
                 const isSelected = selectedRows.has(rowIndex);
                 const isExcluded = excludedRows.has(rowIndex);
                 tr.className = isExcluded ? 'excluded-row' : (isSelected ? 'selected-row' : '');
-                tr.innerHTML = `<td><button class="delete-btn" onclick="toggleRowExclusion(${rowIndex})" title="${isExcluded ? 'Click to restore row' : 'Click to exclude row'}">❌</button></td><td class="row-number" style="cursor: pointer;" onclick="toggleRowSelection(${rowIndex}, event)">
+
+                // Get the code to look up in previous data
+                const code = columnMapping.code !== undefined ? row[columnMapping.code] : '';
+                let previousDescription = '';
+                let prevDescBg = '';
+
+                if (code) {
+                    // Check if this item exists in previous data (case-insensitive)
+                    const oldItem = previousData.find(p =>
+                        (p.code && p.code.toLowerCase() === code.toLowerCase()) ||
+                        (p.productcode && p.productcode.toLowerCase() === code.toLowerCase())
+                    );
+
+                    if (oldItem) {
+                        // Found in database
+                        previousDescription = oldItem.description || '-';
+                        prevDescBg = '#90EE90'; // Bright green
+                    } else {
+                        // New product
+                        previousDescription = 'New product? Check if new';
+                        prevDescBg = '#FFFF00'; // Bright yellow
+                    }
+                } else {
+                    previousDescription = '-';
+                }
+
+                tr.innerHTML = `<td class="row-number" style="cursor: pointer; text-align: center;" onclick="toggleRowSelection(${rowIndex}, event)">
                     ${isSelected ? '✓' : rowIndex}
-                </td>`;
+                </td><td><button class="delete-btn" onclick="toggleRowExclusion(${rowIndex})" title="${isExcluded ? 'Click to restore row' : 'Click to exclude row'}">❌</button></td><td style="background: ${prevDescBg};">${previousDescription}</td>`;
 
                 mappedIndices.forEach(colIndex => {
                     const cell = row[colIndex] || '';
