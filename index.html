@@ -223,6 +223,7 @@
         let selectedRows = new Set();
         let copiedValue = null;
         let excludedRows = new Set();
+        let descriptionToUseMap = {}; // Store "Description to use" values by product code
 
         // Settings data
         let settings = {
@@ -1013,8 +1014,10 @@
                         <th>#</th>
                         <th>Variant Code</th>
                         <th>Description</th>
+                        <th>Char Count</th>
                         <th>Name would like to use</th>
                         <th>Previous Description</th>
+                        <th>Char Count</th>
                         <th>Description to use</th>
                         <th>Cost Price</th>
                         <th>List Price</th>
@@ -1083,14 +1086,43 @@
                     descriptionToUse = nameWouldLike; // Use the formatted name
                 }
 
+                // Store the default "Description to use" value
+                if (!descriptionToUseMap[code]) {
+                    descriptionToUseMap[code] = descriptionToUse;
+                }
+
+                // Calculate character counts
+                const nameCharCount = nameWouldLike.length;
+                const descCharCount = descriptionToUseMap[code].length;
+
+                // Style for "Name would like to use" character count
+                let nameCharStyle = '';
+                if (nameCharCount >= 250) {
+                    nameCharStyle = 'color: red; font-weight: bold;';
+                } else if (nameCharCount >= descCharCount * 1.1) {
+                    nameCharStyle = 'color: limegreen; font-weight: bold;';
+                }
+
+                // Style for "Description to use" character count
+                const descCharStyle = descCharCount >= 250 ? 'color: red; font-weight: bold;' : '';
+
                 table.innerHTML += `
                     <tr>
                         <td>${lineNumber}</td>
                         <td>${code}</td>
                         <td>${description}</td>
+                        <td style="${nameCharStyle}">${nameCharCount}</td>
                         <td>${nameWouldLike}</td>
                         <td>${previousDescription}</td>
-                        <td>${descriptionToUse}</td>
+                        <td id="charCount_${code}" style="${descCharStyle}">${descCharCount}</td>
+                        <td style="background: #fff3cd;">
+                            <input type="text"
+                                   id="descInput_${code}"
+                                   value="${descriptionToUseMap[code]}"
+                                   onchange="updateDescriptionToUse('${code}', this.value)"
+                                   oninput="updateCharCount('${code}')"
+                                   style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 3px;">
+                        </td>
                         <td>£${costPrice.toFixed(2)}</td>
                         <td>£${finalListPrice.toFixed(2)}</td>
                         <td>${barcode || '-'}</td>
@@ -1102,6 +1134,29 @@
             });
 
             table.innerHTML += '</tbody>';
+        }
+
+        function updateDescriptionToUse(code, value) {
+            descriptionToUseMap[code] = value;
+        }
+
+        function updateCharCount(code) {
+            const input = document.getElementById(`descInput_${code}`);
+            const charCountCell = document.getElementById(`charCount_${code}`);
+
+            if (input && charCountCell) {
+                const count = input.value.length;
+                charCountCell.textContent = count;
+
+                // Update styling based on character count
+                if (count >= 250) {
+                    charCountCell.style.color = 'red';
+                    charCountCell.style.fontWeight = 'bold';
+                } else {
+                    charCountCell.style.color = '';
+                    charCountCell.style.fontWeight = '';
+                }
+            }
         }
 
         function renderSpreadsheetStep3() {
@@ -1162,9 +1217,10 @@
                     costPrice = directCostPrice;
                 }
                 
+                const code = row[columnMapping.code];
                 const item = {
-                    code: row[columnMapping.code],
-                    description: columnMapping.description !== undefined ? row[columnMapping.description] : '',
+                    code: code,
+                    description: descriptionToUseMap[code] || (columnMapping.description !== undefined ? row[columnMapping.description] : ''),
                     costPrice: costPrice,
                     listPrice: finalListPrice,
                     discount: discount,
