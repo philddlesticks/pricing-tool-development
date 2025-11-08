@@ -1110,9 +1110,11 @@
                 const escapedNameWouldLike = nameWouldLike.replace(/'/g, "\\'").replace(/"/g, '\\"');
                 const escapedPreviousDesc = previousDescription.replace(/'/g, "\\'").replace(/"/g, '\\"');
 
-                // Check if "Name would like to use" matches "Description to use"
+                // Check if "Name would like to use" or "Previous Description" matches "Description to use"
                 const nameMatchesDesc = nameWouldLike === descriptionToUseMap[code];
+                const prevMatchesDesc = previousDescription === descriptionToUseMap[code];
                 const nameTextColor = nameMatchesDesc ? 'color: #999;' : '';
+                const prevTextColor = prevMatchesDesc ? 'color: #999;' : '';
 
                 table.innerHTML += `
                     <tr>
@@ -1123,7 +1125,7 @@
                         <td style="cursor: pointer; background: #f0f8ff; ${nameTextColor}"
                             onclick="setDescriptionToUse('${code}', '${escapedNameWouldLike}')"
                             title="Click to use this as Description to use">${nameWouldLike}</td>
-                        <td style="cursor: pointer; background: #fff8f0;"
+                        <td style="cursor: pointer; background: #fff8f0; ${prevTextColor}"
                             onclick="setDescriptionToUse('${code}', '${escapedPreviousDesc}')"
                             title="Click to use this as Description to use">${previousDescription}</td>
                         <td id="charCount_${code}" style="text-align: center; ${descCharStyle}">${descCharCount}</td>
