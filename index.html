@@ -582,7 +582,7 @@
 
             // Header row with column names (only mapped columns)
             const headerRow = document.createElement('tr');
-            headerRow.innerHTML = `<th class="row-number" style="cursor: pointer; text-align: center;" onclick="toggleAllRows()">✓</th><th>${settings.manufacturerName} - SupplierCode</th><th>Actions</th>`;
+            headerRow.innerHTML = `<th class="row-number" style="cursor: pointer; text-align: center;" onclick="toggleAllRows()">✓</th><th>${settings.manufacturerName} - ${settings.supplierAccountNumber}</th><th>Actions</th>`;
 
             // Map field names to display names
             const fieldDisplayNames = {
