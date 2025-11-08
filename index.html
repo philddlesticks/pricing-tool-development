@@ -1088,8 +1088,11 @@
                 // Name would like to use: MANUFACTURER ( CODE ) DESCRIPTION - use current (possibly edited) code
                 const nameWouldLike = `${manufacturer} ( ${currentCode} ) ${description}`;
 
-                // Check if this item exists in previous data - use current (possibly edited) code
-                const oldItem = previousData.find(p => p.code === currentCode || p.productcode === currentCode);
+                // Check if this item exists in previous data - use current (possibly edited) code (case-insensitive)
+                const oldItem = previousData.find(p =>
+                    (p.code && p.code.toLowerCase() === currentCode.toLowerCase()) ||
+                    (p.productcode && p.productcode.toLowerCase() === currentCode.toLowerCase())
+                );
 
                 let previousDescription = '';
                 let previousBarcode = '';
@@ -1306,9 +1309,12 @@
                     calculatedFrom: calculatedFrom,
                     barcode: columnMapping.barcode !== undefined ? row[columnMapping.barcode] : ''
                 };
-                
-                // Compare with previous data
-                const oldItem = previousData.find(p => p.code === item.code || p.productcode === item.code);
+
+                // Compare with previous data (case-insensitive)
+                const oldItem = previousData.find(p =>
+                    (p.code && p.code.toLowerCase() === item.code.toLowerCase()) ||
+                    (p.productcode && p.productcode.toLowerCase() === item.code.toLowerCase())
+                );
                 
                 if (oldItem) {
                     const oldCost = parseFloat(oldItem.costPrice || oldItem.costprice || 0);
