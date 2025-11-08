@@ -1125,10 +1125,10 @@
                         <td>${code}</td>
                         <td>${description}</td>
                         <td style="text-align: center; ${nameCharStyle}">${nameCharCount}</td>
-                        <td style="cursor: pointer; background: #f0f8ff; ${nameTextColor}"
+                        <td style="cursor: pointer; background: #ffe0f0; ${nameTextColor}"
                             onclick="setDescriptionToUse('${code}', '${escapedNameWouldLike}')"
                             title="Click to use this as Description to use">${nameWouldLike}</td>
-                        <td style="cursor: pointer; background: #fff8f0; ${prevTextColor}"
+                        <td style="cursor: pointer; background: #ffe5cc; ${prevTextColor}"
                             onclick="setDescriptionToUse('${code}', '${escapedPreviousDesc}')"
                             title="Click to use this as Description to use">${previousDescription}</td>
                         <td id="charCount_${code}" style="text-align: center; ${descCharStyle}">${descCharCount}</td>
@@ -1138,7 +1138,7 @@
                                    value="${descriptionToUseMap[code]}"
                                    onchange="updateDescriptionToUse('${code}', this.value)"
                                    oninput="updateCharCount('${code}')"
-                                   style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 3px;">
+                                   style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 3px; background: #ccffcc;">
                         </td>
                         <td>£${costPrice.toFixed(2)}</td>
                         <td>£${finalListPrice.toFixed(2)}</td>
@@ -1363,8 +1363,8 @@
                     <tr class="${rowClass}">
                         <td>${item.code}</td>
                         <td>${item.description}</td>
-                        <td style="background: #f8f9fa;">${costPriceDisplay}</td>
-                        <td style="background: #f8f9fa;">${listPriceDisplay}</td>
+                        <td>${costPriceDisplay}</td>
+                        <td>${listPriceDisplay}</td>
                         <td class="${costChangeClass}">
                             ${item.status === 'new' ? '-' :
                               `${item.costChange > 0 ? '+' : ''}${item.costChange.toFixed(1)}%<br>
