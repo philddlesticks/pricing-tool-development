@@ -1004,7 +1004,12 @@
             } else {
                 excludedRows.add(rowIndex);
             }
-            renderSpreadsheet();
+            // Re-render current view
+            if (currentStep === 4) {
+                renderSpreadsheet();
+            } else if (currentStep === 6) {
+                renderOriginalPriceList();
+            }
         }
 
         function deleteRow(rowIndex) {
@@ -1145,13 +1150,10 @@
                 <tbody>
             `;
 
-            // Process rows (skip excluded rows)
-            let lineNumber = 1;
+            // Process rows (show all rows, mark excluded ones)
             currentData.slice(1).forEach((row, index) => {
                 const rowIndex = index + 1;
-                if (excludedRows.has(rowIndex)) {
-                    return; // Skip excluded rows
-                }
+                const isExcluded = excludedRows.has(rowIndex);
 
                 const code = columnMapping.code !== undefined ? row[columnMapping.code] : '';
                 const description = columnMapping.description !== undefined ? row[columnMapping.description] : '';
@@ -1258,8 +1260,10 @@
                 const barcodeBg = isNewProduct ? `background: ${yellowBg};` : '';
 
                 table.innerHTML += `
-                    <tr>
-                        <td style="background: #00ff00; text-align: center;">${lineNumber}</td>
+                    <tr class="${isExcluded ? 'excluded-row' : ''}">
+                        <td class="row-number" style="cursor: pointer; background: #00ff00; text-align: center;" onclick="toggleRowExclusion(${rowIndex})" title="${isExcluded ? 'Click to restore row' : 'Click to exclude row'}">
+                            ${isExcluded ? '❌' : rowIndex}
+                        </td>
                         <td style="background: ${manufacturerBg};">${manufacturer}</td>
                         <td style="background: ${codeBg}; padding: 0;">
                             <input type="text"
@@ -1291,8 +1295,6 @@
                         <td style="${barcodeBg}">${previousBarcode}</td>
                     </tr>
                 `;
-
-                lineNumber++;
             });
 
             table.innerHTML += '</tbody>';
