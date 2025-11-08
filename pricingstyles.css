@@ -329,11 +329,11 @@ input[type="file"] {
 }
 
 .comparison-table tr.new-product {
-    background: #fff3cd;
+    background: #ffe082;
 }
 
 .comparison-table tr.new-product:hover {
-    background: #ffe8a1;
+    background: #ffd54f;
 }
 
 .change-positive {
