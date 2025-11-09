@@ -1706,14 +1706,24 @@
         function updateDescriptionToUse(rowIndex, value) {
             descriptionToUseMap[rowIndex] = value;
 
-            // Debounce re-render to prevent browser crashes from rapid typing
-            if (renderDebounceTimer) {
-                clearTimeout(renderDebounceTimer);
+            // Update character count display
+            const charCountCell = document.getElementById(`charCount_${rowIndex}`);
+            if (charCountCell) {
+                const count = value.length;
+                charCountCell.textContent = count;
+                charCountCell.style.textAlign = 'center';
+
+                // Update styling based on character count
+                if (count > 250) {
+                    charCountCell.style.color = 'red';
+                    charCountCell.style.fontWeight = 'bold';
+                } else {
+                    charCountCell.style.color = '';
+                    charCountCell.style.fontWeight = '';
+                }
             }
-            renderDebounceTimer = setTimeout(() => {
-                safeRender(() => renderOriginalPriceList());
-                renderDebounceTimer = null;
-            }, 250); // 250ms debounce for typing
+
+            // No need to re-render - character count is updated live via oninput
         }
 
         function updateVariantCode(rowIndex, value) {
@@ -1739,58 +1749,30 @@
             // Update the map
             descriptionToUseMap[rowIndex] = value;
 
-            // Track rapid clicking for adaptive debouncing
-            const now = Date.now();
-            if (now - lastUpdateTime < 500) { // If clicking within 500ms
-                pendingUpdateCount++;
-            } else {
-                pendingUpdateCount = 1; // Reset counter if pause detected
-            }
-            lastUpdateTime = now;
+            // Directly update the DOM elements instead of re-rendering entire table
+            const input = document.getElementById(`descInput_${rowIndex}`);
+            const charCountCell = document.getElementById(`charCount_${rowIndex}`);
 
-            // Show batch indicator if many rapid updates
-            const indicator = document.getElementById('batchUpdateIndicator');
-            const table = document.getElementById('originalPriceTable');
-
-            if (indicator && pendingUpdateCount > 10) {
-                indicator.style.display = 'block';
+            if (input) {
+                input.value = value;
             }
 
-            // Temporarily disable clicking on very large batches to prevent overload
-            if (table && pendingUpdateCount > 30) {
-                table.style.pointerEvents = 'none';
-                table.style.opacity = '0.7';
+            if (charCountCell) {
+                const count = value.length;
+                charCountCell.textContent = count;
+                charCountCell.style.textAlign = 'center';
+
+                // Update styling based on character count
+                if (count > 250) {
+                    charCountCell.style.color = 'red';
+                    charCountCell.style.fontWeight = 'bold';
+                } else {
+                    charCountCell.style.color = '';
+                    charCountCell.style.fontWeight = '';
+                }
             }
 
-            // Adaptive debouncing - longer delay for mass updates
-            let debounceDelay = 250; // Base delay
-            if (pendingUpdateCount > 50) {
-                debounceDelay = 2000; // 2s for very large batch (50+ rapid clicks)
-            } else if (pendingUpdateCount > 20) {
-                debounceDelay = 1000; // 1s for large batch (20-50 rapid clicks)
-            } else if (pendingUpdateCount > 10) {
-                debounceDelay = 500; // 500ms for medium batch (10-20 rapid clicks)
-            }
-
-            // Debounce re-render to prevent browser crashes from rapid clicking
-            if (renderDebounceTimer) {
-                clearTimeout(renderDebounceTimer);
-            }
-            renderDebounceTimer = setTimeout(() => {
-                safeRender(() => {
-                    renderOriginalPriceList();
-                    pendingUpdateCount = 0; // Reset counter after render
-                    // Hide batch indicator and re-enable clicking
-                    if (indicator) {
-                        indicator.style.display = 'none';
-                    }
-                    if (table) {
-                        table.style.pointerEvents = '';
-                        table.style.opacity = '';
-                    }
-                });
-                renderDebounceTimer = null;
-            }, debounceDelay);
+            // No need to re-render - we've updated the DOM directly!
         }
 
         function updateCharCount(rowIndex) {
