@@ -308,6 +308,9 @@
         let excludeDebounceTimer = null; // Debounce timer for exclude/restore operations
         let previousPriceListData = []; // Store previous price list with status for sorting
         let columnWidths = {}; // Store custom column widths by table ID
+        let isScrolling = false; // Track if user is currently scrolling
+        let scrollTimer = null; // Timer to detect end of scrolling
+        let pendingRender = null; // Store pending render function to execute after scroll
 
         // Settings data
         let settings = {
@@ -352,6 +355,17 @@
                 if (uploadRequirement) {
                     uploadRequirement.style.display = 'block';
                 }
+            }
+        }
+
+        // Safe render wrapper - defers render if user is scrolling
+        function safeRender(renderFunction) {
+            if (isScrolling) {
+                // Store the render to execute after scrolling stops
+                pendingRender = renderFunction;
+            } else {
+                // Safe to render now
+                renderFunction();
             }
         }
 
@@ -427,6 +441,28 @@
 
             // Initial check
             updateUploadAreaState();
+
+            // Add scroll event listener to prevent renders during scrolling
+            window.addEventListener('scroll', () => {
+                isScrolling = true;
+
+                // Clear existing timer
+                if (scrollTimer) {
+                    clearTimeout(scrollTimer);
+                }
+
+                // Set timer to detect when scrolling stops
+                scrollTimer = setTimeout(() => {
+                    isScrolling = false;
+
+                    // If there's a pending render, execute it now
+                    if (pendingRender) {
+                        const renderFn = pendingRender;
+                        pendingRender = null;
+                        renderFn();
+                    }
+                }, 200); // 200ms after scroll stops
+            }, { passive: true });
         });
 
         // File upload handling
@@ -1237,12 +1273,14 @@
                 clearTimeout(excludeDebounceTimer);
             }
             excludeDebounceTimer = setTimeout(() => {
-                // Re-render current view (Step 3 or Step 6)
-                if (currentStep === 3) {
-                    renderSpreadsheet();
-                } else if (currentStep === 6) {
-                    renderOriginalPriceList();
-                }
+                // Re-render current view (Step 3 or Step 6) - wrapped in safeRender
+                safeRender(() => {
+                    if (currentStep === 3) {
+                        renderSpreadsheet();
+                    } else if (currentStep === 6) {
+                        renderOriginalPriceList();
+                    }
+                });
                 excludeDebounceTimer = null;
             }, 300); // 300ms debounce - batches rapid clicks while still feeling responsive
         }
@@ -1652,7 +1690,7 @@
                 clearTimeout(renderDebounceTimer);
             }
             renderDebounceTimer = setTimeout(() => {
-                renderOriginalPriceList();
+                safeRender(() => renderOriginalPriceList());
                 renderDebounceTimer = null;
             }, 500); // 500ms debounce for typing
         }
@@ -1674,7 +1712,7 @@
                 clearTimeout(renderDebounceTimer);
             }
             renderDebounceTimer = setTimeout(() => {
-                renderOriginalPriceList();
+                safeRender(() => renderOriginalPriceList());
                 renderDebounceTimer = null;
             }, 500); // 500ms debounce
         }
@@ -1688,7 +1726,7 @@
                 clearTimeout(renderDebounceTimer);
             }
             renderDebounceTimer = setTimeout(() => {
-                renderOriginalPriceList();
+                safeRender(() => renderOriginalPriceList());
                 renderDebounceTimer = null;
             }, 500); // 500ms debounce - longer delay to prevent crashes from rapid clicking
         }
