@@ -1599,13 +1599,13 @@
                 }
 
                 // Set default "Description to use" value only if not already set by user
-                if (!descriptionToUseMap[code]) {
-                    descriptionToUseMap[code] = descriptionToUse;
+                if (!descriptionToUseMap[rowIndex]) {
+                    descriptionToUseMap[rowIndex] = descriptionToUse;
                 }
 
                 // Calculate character counts
                 const nameCharCount = nameWouldLike.length;
-                const descCharCount = descriptionToUseMap[code].length;
+                const descCharCount = descriptionToUseMap[rowIndex].length;
 
                 // Style for "Name would like to use" character count
                 let nameCharStyle = '';
@@ -1624,8 +1624,8 @@
                 const escapedPreviousDesc = previousDescription.replace(/'/g, "\\'").replace(/"/g, '\\"');
 
                 // Check if "Name would like to use" or "Previous Description" matches "Description to use"
-                const nameMatchesDesc = nameWouldLike === descriptionToUseMap[code];
-                const prevMatchesDesc = previousDescription === descriptionToUseMap[code];
+                const nameMatchesDesc = nameWouldLike === descriptionToUseMap[rowIndex];
+                const prevMatchesDesc = previousDescription === descriptionToUseMap[rowIndex];
                 const nameTextColor = nameMatchesDesc ? 'color: #999;' : '';
                 const prevTextColor = prevMatchesDesc ? 'color: #999;' : '';
 
@@ -1664,18 +1664,18 @@
                         <td style="background: ${descriptionBg};">${description}</td>
                         <td style="text-align: center; ${nameCharStyle} ${isNewProduct ? 'background: ' + yellowBg + ';' : ''}">${nameCharCount}</td>
                         <td style="cursor: pointer; background: ${nameWouldLikeBg}; ${nameTextColor}"
-                            onclick="setDescriptionToUse('${escapedCode}', '${escapedNameWouldLike}')"
+                            onclick="setDescriptionToUse(${rowIndex}, '${escapedNameWouldLike}')"
                             title="Click to use this as Description to use">${nameWouldLike}</td>
                         <td style="${isNewProduct ? '' : 'cursor: pointer;'} background: ${prevDescBg}; ${prevTextColor}"
-                            ${isNewProduct ? '' : `onclick="setDescriptionToUse('${escapedCode}', '${escapedPreviousDesc}')"`}
+                            ${isNewProduct ? '' : `onclick="setDescriptionToUse(${rowIndex}, '${escapedPreviousDesc}')"`}
                             ${isNewProduct ? '' : 'title="Click to use this as Description to use"'}>${previousDescription}</td>
-                        <td id="charCount_${code}" style="text-align: center; ${descCharStyle} ${isNewProduct ? 'background: ' + yellowBg + ';' : ''}">${descCharCount}</td>
+                        <td id="charCount_${rowIndex}" style="text-align: center; ${descCharStyle} ${isNewProduct ? 'background: ' + yellowBg + ';' : ''}">${descCharCount}</td>
                         <td style="background: ${descToUseBg}; padding: 0;">
                             <input type="text"
-                                   id="descInput_${code}"
-                                   value="${descriptionToUseMap[code]}"
-                                   onchange="updateDescriptionToUse('${escapedCode}', this.value)"
-                                   oninput="updateCharCount('${escapedCode}')"
+                                   id="descInput_${rowIndex}"
+                                   value="${descriptionToUseMap[rowIndex]}"
+                                   onchange="updateDescriptionToUse(${rowIndex}, this.value)"
+                                   oninput="updateCharCount(${rowIndex})"
                                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 0; background: transparent; box-sizing: border-box;">
                         </td>
                         <td style="${costListBg}">£${costPrice.toFixed(2)}</td>
@@ -1697,8 +1697,8 @@
             makeColumnsResizable(table);
         }
 
-        function updateDescriptionToUse(code, value) {
-            descriptionToUseMap[code] = value;
+        function updateDescriptionToUse(rowIndex, value) {
+            descriptionToUseMap[rowIndex] = value;
 
             // Debounce re-render to prevent browser crashes from rapid typing
             if (renderDebounceTimer) {
@@ -1711,16 +1711,13 @@
         }
 
         function updateVariantCode(rowIndex, value) {
-            // Get the original code for this row to clear its description
-            const originalCode = columnMapping.code !== undefined ? currentData[rowIndex][columnMapping.code] : '';
-            if (originalCode) {
-                delete descriptionToUseMap[originalCode];
-            }
-
             // Update the currentData array directly
             if (columnMapping.code !== undefined) {
                 currentData[rowIndex][columnMapping.code] = value;
             }
+
+            // Clear the description for this row to trigger recalculation
+            delete descriptionToUseMap[rowIndex];
 
             // Debounce re-render to prevent browser crashes
             if (renderDebounceTimer) {
@@ -1732,9 +1729,9 @@
             }, 250); // 250ms debounce
         }
 
-        function setDescriptionToUse(code, value) {
+        function setDescriptionToUse(rowIndex, value) {
             // Update the map
-            descriptionToUseMap[code] = value;
+            descriptionToUseMap[rowIndex] = value;
 
             // Debounce re-render to prevent browser crashes from rapid clicking
             if (renderDebounceTimer) {
@@ -1746,9 +1743,9 @@
             }, 250); // 250ms debounce - longer delay to prevent crashes from rapid clicking
         }
 
-        function updateCharCount(code) {
-            const input = document.getElementById(`descInput_${code}`);
-            const charCountCell = document.getElementById(`charCount_${code}`);
+        function updateCharCount(rowIndex) {
+            const input = document.getElementById(`descInput_${rowIndex}`);
+            const charCountCell = document.getElementById(`charCount_${rowIndex}`);
 
             if (input && charCountCell) {
                 const count = input.value.length;
@@ -1756,7 +1753,7 @@
 
                 // IMPORTANT: Also update the map to preserve value during re-renders
                 // This prevents losing unsaved typing if user clicks another cell
-                descriptionToUseMap[code] = input.value;
+                descriptionToUseMap[rowIndex] = input.value;
 
                 // Update styling based on character count (always keep text-align: center)
                 charCountCell.style.textAlign = 'center';
@@ -1932,7 +1929,7 @@
                 const code = row[columnMapping.code];
                 const item = {
                     code: code,
-                    description: descriptionToUseMap[code] || (columnMapping.description !== undefined ? row[columnMapping.description] : ''),
+                    description: descriptionToUseMap[rowIndex] || (columnMapping.description !== undefined ? row[columnMapping.description] : ''),
                     costPrice: costPrice,
                     listPrice: finalListPrice,
                     discount: discount,
