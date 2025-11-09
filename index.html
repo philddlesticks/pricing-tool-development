@@ -369,8 +369,15 @@
             headers.forEach((header, index) => {
                 // Restore saved width if it exists
                 if (columnWidths[tableId][index]) {
-                    header.style.width = columnWidths[tableId][index] + 'px';
-                    header.style.minWidth = columnWidths[tableId][index] + 'px';
+                    const width = columnWidths[tableId][index];
+                    header.style.width = width + 'px';
+                    header.style.minWidth = width + 'px';
+                    header.style.maxWidth = width + 'px';
+                }
+
+                // Check if resizer already exists to prevent duplicates
+                if (header.querySelector('.column-resizer')) {
+                    return; // Resizer already exists, skip
                 }
 
                 const resizer = document.createElement('div');
@@ -391,6 +398,7 @@
                         if (width > 30) { // Minimum width
                             header.style.width = width + 'px';
                             header.style.minWidth = width + 'px';
+                            header.style.maxWidth = width + 'px';
                             // Save the width
                             columnWidths[tableId][index] = width;
                         }
@@ -1402,6 +1410,9 @@
             });
 
             table.innerHTML += rowsHTML + '</tbody>';
+
+            // Make columns resizable
+            makeColumnsResizable(table);
         }
 
         function findDuplicateVariantCodes() {
