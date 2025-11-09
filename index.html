@@ -578,7 +578,8 @@
                 {value: 'markup', label: '📈 Markup %'},
                 {value: 'barcode', label: '🔢 Barcode'},
                 {value: 'manufacturer', label: '🏭 Manufacturer'},
-                {value: 'countryOfOrigin', label: '🌍 Country of Origin'}
+                {value: 'countryOfOrigin', label: '🌍 Country of Origin'},
+                {value: 'commodityCode', label: '📋 Commodity Code'}
             ];
 
             currentData[0].forEach((header, colIndex) => {
@@ -671,7 +672,7 @@
 
         function getMappedColumnIndices() {
             // Define the desired column order
-            const columnOrder = ['code', 'description', 'costPrice', 'discount', 'listPrice', 'markup', 'barcode', 'manufacturer', 'countryOfOrigin'];
+            const columnOrder = ['code', 'description', 'costPrice', 'discount', 'listPrice', 'markup', 'barcode', 'manufacturer', 'countryOfOrigin', 'commodityCode'];
 
             const mappedIndices = [];
 
@@ -747,7 +748,8 @@
                 'markup': 'Markup %',
                 'barcode': 'Barcode',
                 'manufacturer': 'Manufacturer',
-                'countryOfOrigin': 'Country of Origin'
+                'countryOfOrigin': 'Country of Origin',
+                'commodityCode': 'Commodity Code'
             };
 
             let headerHTML = '';
@@ -1383,6 +1385,11 @@
                         <th>List Price</th>
                         <th>Barcode</th>
                         <th>Previous Barcode</th>
+                        <th>Commodity Code</th>
+                        <th>Previous Commodity Code</th>
+                        <th>Is Commodity Code valid?</th>
+                        <th>Country Code</th>
+                        <th>Previous Country Code</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1400,6 +1407,8 @@
                 const description = columnMapping.description !== undefined ? row[columnMapping.description] : '';
                 const barcode = columnMapping.barcode !== undefined ? row[columnMapping.barcode] : '';
                 const manufacturer = columnMapping.manufacturer !== undefined ? row[columnMapping.manufacturer] : settings.manufacturerName;
+                const commodityCode = columnMapping.commodityCode !== undefined ? row[columnMapping.commodityCode] : '';
+                const countryCode = columnMapping.countryOfOrigin !== undefined ? row[columnMapping.countryOfOrigin] : (settings.defaultCOO || '');
 
                 // Calculate prices
                 const listPrice = columnMapping.listPrice !== undefined ? parseFloat(row[columnMapping.listPrice]) || 0 : 0;
@@ -1436,17 +1445,23 @@
 
                 let previousDescription = '';
                 let previousBarcode = '';
+                let previousCommodityCode = '';
+                let previousCountryCode = '';
                 let descriptionToUse = '';
 
                 if (oldItem) {
                     // Found in database
                     previousDescription = oldItem.description || '-';
                     previousBarcode = oldItem.barcode || '-';
+                    previousCommodityCode = oldItem.commoditycode || oldItem.commodityCode || '-';
+                    previousCountryCode = oldItem.countrycode || oldItem.countryCode || oldItem.countryoforigin || oldItem.countryOfOrigin || '-';
                     descriptionToUse = previousDescription; // Default to previous description
                 } else {
                     // New product
                     previousDescription = 'New product? Check if new';
                     previousBarcode = '-';
+                    previousCommodityCode = '-';
+                    previousCountryCode = '-';
                     descriptionToUse = nameWouldLike; // Use the formatted name
                 }
 
@@ -1534,6 +1549,11 @@
                         <td style="${costListBg}">£${finalListPrice.toFixed(2)}</td>
                         <td style="${barcodeBg}">${barcode || '-'}</td>
                         <td style="${barcodeBg}">${previousBarcode}</td>
+                        <td style="${barcodeBg}">${commodityCode || '-'}</td>
+                        <td style="${barcodeBg}">${previousCommodityCode}</td>
+                        <td style="${barcodeBg}">-</td>
+                        <td style="${barcodeBg}">${countryCode || '-'}</td>
+                        <td style="${barcodeBg}">${previousCountryCode}</td>
                     </tr>
                 `;
             });
@@ -1762,6 +1782,7 @@
                     markup: markup,
                     manufacturer: columnMapping.manufacturer !== undefined ? row[columnMapping.manufacturer] : '',
                     countryOfOrigin: columnMapping.countryOfOrigin !== undefined ? row[columnMapping.countryOfOrigin] : '',
+                    commodityCode: columnMapping.commodityCode !== undefined ? row[columnMapping.commodityCode] : '',
                     calculatedFrom: calculatedFrom,
                     barcode: columnMapping.barcode !== undefined ? row[columnMapping.barcode] : ''
                 };
