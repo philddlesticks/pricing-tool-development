@@ -1753,8 +1753,16 @@
 
             // Show batch indicator if many rapid updates
             const indicator = document.getElementById('batchUpdateIndicator');
+            const table = document.getElementById('originalPriceTable');
+
             if (indicator && pendingUpdateCount > 10) {
                 indicator.style.display = 'block';
+            }
+
+            // Temporarily disable clicking on very large batches to prevent overload
+            if (table && pendingUpdateCount > 30) {
+                table.style.pointerEvents = 'none';
+                table.style.opacity = '0.7';
             }
 
             // Adaptive debouncing - longer delay for mass updates
@@ -1775,9 +1783,13 @@
                 safeRender(() => {
                     renderOriginalPriceList();
                     pendingUpdateCount = 0; // Reset counter after render
-                    // Hide batch indicator
+                    // Hide batch indicator and re-enable clicking
                     if (indicator) {
                         indicator.style.display = 'none';
+                    }
+                    if (table) {
+                        table.style.pointerEvents = '';
+                        table.style.opacity = '';
                     }
                 });
                 renderDebounceTimer = null;
