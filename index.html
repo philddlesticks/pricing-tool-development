@@ -34,26 +34,16 @@
 
             <div style="max-width: 600px; margin: 0 auto;">
                 <div class="mapping-item" style="margin-bottom: 20px;">
-                    <label>Manufacturer Name (or "Multiple Manufacturers"):</label>
-                    <input type="text" id="manufacturerName" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" placeholder="Enter manufacturer or brand name">
-                </div>
-
-                <div class="mapping-item" style="margin-bottom: 20px;">
-                    <label>Supplier Account Number:</label>
-                    <input type="text" id="supplierAccountNumber" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" placeholder="Enter supplier account number">
-                </div>
-
-                <div class="mapping-item" style="margin-bottom: 20px;">
-                    <label>Price List Effective Date:</label>
-                    <input type="date" id="effectiveDate" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; cursor: pointer;" onclick="this.showPicker ? this.showPicker() : this.focus();">
-                </div>
-
-                <div class="mapping-item" style="margin-bottom: 20px;">
                     <label>Region:</label>
                     <select id="region" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
                         <option value="GB">GB</option>
                         <option value="BE">BE</option>
                     </select>
+                </div>
+
+                <div class="mapping-item" style="margin-bottom: 20px;">
+                    <label>Manufacturer Name (or "Multiple Manufacturers"):</label>
+                    <input type="text" id="manufacturerName" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" placeholder="Enter manufacturer or brand name">
                 </div>
 
                 <div class="mapping-item" style="margin-bottom: 20px;">
@@ -74,6 +64,11 @@
                         <option value="US">US - United States</option>
                         <option value="VN">VN - Vietnam</option>
                     </select>
+                </div>
+
+                <div class="mapping-item" style="margin-bottom: 20px;">
+                    <label>Supplier Account Number:</label>
+                    <input type="text" id="supplierAccountNumber" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" placeholder="Enter supplier account number">
                 </div>
 
                 <div class="mapping-item" style="margin-bottom: 20px;">
@@ -109,6 +104,11 @@
                         <option value="FALSE">FALSE</option>
                         <option value="TRUE" selected>TRUE</option>
                     </select>
+                </div>
+
+                <div class="mapping-item" style="margin-bottom: 20px;">
+                    <label>Price List Effective Date:</label>
+                    <input type="date" id="effectiveDate" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; cursor: pointer;" onclick="this.showPicker ? this.showPicker() : this.focus();">
                 </div>
 
                 <div class="mapping-item" style="margin-top: 30px;">
