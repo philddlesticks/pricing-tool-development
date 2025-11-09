@@ -257,6 +257,10 @@
             
             <div style="margin: 20px 0;">
                 <label style="margin-right: 20px;">
+                    <input type="checkbox" id="showAllItems" onchange="toggleFilter()" checked>
+                    Show all items
+                </label>
+                <label style="margin-right: 20px;">
                     <input type="checkbox" id="showOnlyFlagged" onchange="toggleFilter()">
                     Show only flagged items
                 </label>
@@ -1913,21 +1917,28 @@
         }
         
         function toggleFilter() {
+            const showAllItemsCheckbox = document.getElementById('showAllItems');
             const showOnlyFlaggedCheckbox = document.getElementById('showOnlyFlagged');
             const showOnlyNewCheckbox = document.getElementById('showOnlyNew');
-            const showOnlyFlagged = showOnlyFlaggedCheckbox.checked;
-            const showOnlyNew = showOnlyNewCheckbox.checked;
 
             // Make checkboxes mutually exclusive
-            if (showOnlyFlagged && showOnlyNew) {
-                // If both are checked, determine which one was just checked and uncheck the other
-                // We'll use a data attribute to track which was last clicked
-                const lastClicked = event.target.id;
-                if (lastClicked === 'showOnlyFlagged') {
-                    showOnlyNewCheckbox.checked = false;
-                } else {
-                    showOnlyFlaggedCheckbox.checked = false;
-                }
+            const lastClicked = event.target.id;
+
+            // Uncheck other checkboxes when one is clicked
+            if (lastClicked === 'showAllItems') {
+                showOnlyFlaggedCheckbox.checked = false;
+                showOnlyNewCheckbox.checked = false;
+            } else if (lastClicked === 'showOnlyFlagged') {
+                showAllItemsCheckbox.checked = false;
+                showOnlyNewCheckbox.checked = false;
+            } else if (lastClicked === 'showOnlyNew') {
+                showAllItemsCheckbox.checked = false;
+                showOnlyFlaggedCheckbox.checked = false;
+            }
+
+            // Ensure at least one is always checked (default to showAll if none checked)
+            if (!showAllItemsCheckbox.checked && !showOnlyFlaggedCheckbox.checked && !showOnlyNewCheckbox.checked) {
+                showAllItemsCheckbox.checked = true;
             }
 
             let dataToShow = processedData;
@@ -1939,6 +1950,7 @@
                 // Show only new items
                 dataToShow = processedData.filter(i => i.status === 'new');
             }
+            // else showAllItems is checked - show all processedData (default)
 
             renderComparisonTable(dataToShow);
         }
