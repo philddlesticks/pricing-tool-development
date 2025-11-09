@@ -1701,6 +1701,10 @@
                 const count = input.value.length;
                 charCountCell.textContent = count;
 
+                // IMPORTANT: Also update the map to preserve value during re-renders
+                // This prevents losing unsaved typing if user clicks another cell
+                descriptionToUseMap[code] = input.value;
+
                 // Update styling based on character count (always keep text-align: center)
                 charCountCell.style.textAlign = 'center';
                 if (count > 250) {
