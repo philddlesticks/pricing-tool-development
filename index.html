@@ -354,6 +354,42 @@
             }
         }
 
+        // Column resize functionality
+        function makeColumnsResizable(table) {
+            const headers = table.querySelectorAll('th');
+            headers.forEach((header, index) => {
+                const resizer = document.createElement('div');
+                resizer.className = 'column-resizer';
+                header.style.position = 'relative';
+                header.appendChild(resizer);
+
+                let startX, startWidth;
+
+                resizer.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    startX = e.pageX;
+                    startWidth = header.offsetWidth;
+
+                    const onMouseMove = (e) => {
+                        const width = startWidth + (e.pageX - startX);
+                        if (width > 30) { // Minimum width
+                            header.style.width = width + 'px';
+                            header.style.minWidth = width + 'px';
+                        }
+                    };
+
+                    const onMouseUp = () => {
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                    };
+
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                });
+            });
+        }
+
         // Add event listeners to required settings fields
         document.addEventListener('DOMContentLoaded', () => {
             const manufacturerNameInput = document.getElementById('manufacturerName');
@@ -610,6 +646,9 @@
 
             // Initialize mapping
             updateColumnMapping();
+
+            // Make columns resizable
+            makeColumnsResizable(table);
         }
 
         function validateMapping() {
@@ -835,8 +874,11 @@
                 tr.innerHTML = rowHTML;
                 table.appendChild(tr);
             }
+
+            // Make columns resizable
+            makeColumnsResizable(table);
         }
-        
+
         function updateColumnMapping() {
             columnMapping = {};
             
@@ -1569,6 +1611,9 @@
             });
 
             table.innerHTML += rowsHTML + '</tbody>';
+
+            // Make columns resizable
+            makeColumnsResizable(table);
         }
 
         function updateDescriptionToUse(code, value) {
@@ -1735,6 +1780,9 @@
             });
 
             table.innerHTML += rowsHTML + '</tbody>';
+
+            // Make columns resizable
+            makeColumnsResizable(table);
         }
 
         function sortPreviousPriceList(sortBy) {
@@ -1946,8 +1994,11 @@
             });
 
             table.innerHTML += rowsHTML + '</tbody>';
+
+            // Make columns resizable
+            makeColumnsResizable(table);
         }
-        
+
         function toggleFilter() {
             const showAllItemsCheckbox = document.getElementById('showAllItems');
             const showOnlyFlaggedCheckbox = document.getElementById('showOnlyFlagged');
@@ -2103,6 +2154,9 @@
 
             tableHTML += rowsHTML + '</tbody>';
             table.innerHTML = tableHTML;
+
+            // Make columns resizable
+            makeColumnsResizable(table);
         }
 
         function exportOWImportExcel() {
