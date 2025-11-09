@@ -1669,10 +1669,12 @@
                         </td>
                         <td style="background: ${descriptionBg};">${description}</td>
                         <td style="text-align: center; ${nameCharStyle} ${isNewProduct ? 'background: ' + yellowBg + ';' : ''}">${nameCharCount}</td>
-                        <td style="cursor: pointer; background: ${nameWouldLikeBg}; ${nameTextColor}"
+                        <td id="nameCell_${rowIndex}" style="cursor: pointer; background: ${nameWouldLikeBg}; ${nameTextColor}"
+                            data-value="${escapedNameWouldLike}"
                             onclick="setDescriptionToUse(${rowIndex}, '${escapedNameWouldLike}')"
                             title="Click to use this as Description to use">${nameWouldLike}</td>
-                        <td style="${isNewProduct ? '' : 'cursor: pointer;'} background: ${prevDescBg}; ${prevTextColor}"
+                        <td id="prevCell_${rowIndex}" style="${isNewProduct ? '' : 'cursor: pointer;'} background: ${prevDescBg}; ${prevTextColor}"
+                            data-value="${escapedPreviousDesc}"
                             ${isNewProduct ? '' : `onclick="setDescriptionToUse(${rowIndex}, '${escapedPreviousDesc}')"`}
                             ${isNewProduct ? '' : 'title="Click to use this as Description to use"'}>${previousDescription}</td>
                         <td id="charCount_${rowIndex}" style="text-align: center; ${descCharStyle} ${isNewProduct ? 'background: ' + yellowBg + ';' : ''}">${descCharCount}</td>
@@ -1752,6 +1754,8 @@
             // Directly update the DOM elements instead of re-rendering entire table
             const input = document.getElementById(`descInput_${rowIndex}`);
             const charCountCell = document.getElementById(`charCount_${rowIndex}`);
+            const nameCell = document.getElementById(`nameCell_${rowIndex}`);
+            const prevCell = document.getElementById(`prevCell_${rowIndex}`);
 
             if (input) {
                 input.value = value;
@@ -1772,12 +1776,33 @@
                 }
             }
 
+            // Update greying out for Name and Previous Description cells
+            if (nameCell) {
+                const nameValue = nameCell.getAttribute('data-value');
+                if (nameValue === value) {
+                    nameCell.style.color = '#999'; // Grey out if matches
+                } else {
+                    nameCell.style.color = ''; // Normal color
+                }
+            }
+
+            if (prevCell) {
+                const prevValue = prevCell.getAttribute('data-value');
+                if (prevValue === value) {
+                    prevCell.style.color = '#999'; // Grey out if matches
+                } else {
+                    prevCell.style.color = ''; // Normal color
+                }
+            }
+
             // No need to re-render - we've updated the DOM directly!
         }
 
         function updateCharCount(rowIndex) {
             const input = document.getElementById(`descInput_${rowIndex}`);
             const charCountCell = document.getElementById(`charCount_${rowIndex}`);
+            const nameCell = document.getElementById(`nameCell_${rowIndex}`);
+            const prevCell = document.getElementById(`prevCell_${rowIndex}`);
 
             if (input && charCountCell) {
                 const count = input.value.length;
@@ -1795,6 +1820,27 @@
                 } else {
                     charCountCell.style.color = '';
                     charCountCell.style.fontWeight = '';
+                }
+
+                // Update greying out for Name and Previous Description cells as user types
+                const currentValue = input.value;
+
+                if (nameCell) {
+                    const nameValue = nameCell.getAttribute('data-value');
+                    if (nameValue === currentValue) {
+                        nameCell.style.color = '#999'; // Grey out if matches
+                    } else {
+                        nameCell.style.color = ''; // Normal color
+                    }
+                }
+
+                if (prevCell) {
+                    const prevValue = prevCell.getAttribute('data-value');
+                    if (prevValue === currentValue) {
+                        prevCell.style.color = '#999'; // Grey out if matches
+                    } else {
+                        prevCell.style.color = ''; // Normal color
+                    }
                 }
             }
         }
