@@ -113,10 +113,11 @@
 
                 <div class="mapping-item" style="margin-top: 30px;">
                     <h3 style="margin-bottom: 15px;">Upload Pricing File</h3>
-                    <div class="upload-area" id="uploadArea">
+                    <div class="upload-area disabled" id="uploadArea">
                         <h2>📁 Drop file here or click to browse</h2>
                         <p style="color: #666; margin-top: 10px;">Supports .xlsx, .xls, and .csv formats</p>
-                        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+                        <p style="color: #ff6b6b; margin-top: 10px; font-weight: bold;" id="uploadRequirement">⚠️ Please complete all required fields above first</p>
+                        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" disabled>
                     </div>
                     <div id="uploadMessages" style="margin: 15px 0;"></div>
                 </div>
@@ -318,28 +319,80 @@
         
         const REQUIRED_FIELDS = ['code', 'listPrice'];
         const OPTIONAL_FIELDS = ['description', 'barcode', 'costPrice', 'discount'];
-        
+
+        // Check if required settings fields are filled
+        function checkRequiredSettings() {
+            const manufacturerName = document.getElementById('manufacturerName').value.trim();
+            const supplierAccountNumber = document.getElementById('supplierAccountNumber').value.trim();
+            const effectiveDate = document.getElementById('effectiveDate').value;
+
+            return manufacturerName && supplierAccountNumber && effectiveDate;
+        }
+
+        // Enable or disable upload area based on required settings
+        function updateUploadAreaState() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const uploadRequirement = document.getElementById('uploadRequirement');
+
+            if (checkRequiredSettings()) {
+                uploadArea.classList.remove('disabled');
+                fileInput.disabled = false;
+                if (uploadRequirement) {
+                    uploadRequirement.style.display = 'none';
+                }
+            } else {
+                uploadArea.classList.add('disabled');
+                fileInput.disabled = true;
+                if (uploadRequirement) {
+                    uploadRequirement.style.display = 'block';
+                }
+            }
+        }
+
+        // Add event listeners to required settings fields
+        document.addEventListener('DOMContentLoaded', () => {
+            const manufacturerNameInput = document.getElementById('manufacturerName');
+            const supplierAccountNumberInput = document.getElementById('supplierAccountNumber');
+            const effectiveDateInput = document.getElementById('effectiveDate');
+
+            manufacturerNameInput.addEventListener('input', updateUploadAreaState);
+            supplierAccountNumberInput.addEventListener('input', updateUploadAreaState);
+            effectiveDateInput.addEventListener('change', updateUploadAreaState);
+
+            // Initial check
+            updateUploadAreaState();
+        });
+
         // File upload handling
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const previousFileInput = document.getElementById('previousFileInput');
-        
-        uploadArea.addEventListener('click', () => fileInput.click());
-        
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
+
+        uploadArea.addEventListener('click', () => {
+            if (!uploadArea.classList.contains('disabled')) {
+                fileInput.click();
+            }
         });
         
+        uploadArea.addEventListener('dragover', (e) => {
+            if (!uploadArea.classList.contains('disabled')) {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            }
+        });
+
         uploadArea.addEventListener('dragleave', () => {
             uploadArea.classList.remove('dragover');
         });
-        
+
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
             uploadArea.classList.remove('dragover');
-            const file = e.dataTransfer.files[0];
-            if (file) handleFile(file);
+            if (!uploadArea.classList.contains('disabled')) {
+                const file = e.dataTransfer.files[0];
+                if (file) handleFile(file);
+            }
         });
         
         fileInput.addEventListener('change', (e) => {
