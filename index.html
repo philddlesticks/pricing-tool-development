@@ -1295,7 +1295,7 @@
                     }
                 });
                 excludeDebounceTimer = null;
-            }, 300); // 300ms debounce - batches rapid clicks while still feeling responsive
+            }, 250); // 250ms debounce - batches rapid clicks while still feeling responsive
         }
 
         function deleteRow(rowIndex) {
@@ -1707,7 +1707,7 @@
             renderDebounceTimer = setTimeout(() => {
                 safeRender(() => renderOriginalPriceList());
                 renderDebounceTimer = null;
-            }, 500); // 500ms debounce for typing
+            }, 250); // 250ms debounce for typing
         }
 
         function updateVariantCode(rowIndex, value) {
@@ -1729,7 +1729,7 @@
             renderDebounceTimer = setTimeout(() => {
                 safeRender(() => renderOriginalPriceList());
                 renderDebounceTimer = null;
-            }, 500); // 500ms debounce
+            }, 250); // 250ms debounce
         }
 
         function setDescriptionToUse(code, value) {
@@ -1743,7 +1743,7 @@
             renderDebounceTimer = setTimeout(() => {
                 safeRender(() => renderOriginalPriceList());
                 renderDebounceTimer = null;
-            }, 500); // 500ms debounce - longer delay to prevent crashes from rapid clicking
+            }, 250); // 250ms debounce - longer delay to prevent crashes from rapid clicking
         }
 
         function updateCharCount(code) {
