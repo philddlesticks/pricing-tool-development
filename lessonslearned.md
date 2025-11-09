@@ -593,6 +593,56 @@ map[uniqueRowIndex] = data; // Each row has unique index
 
 ---
 
+## 17. Dynamic Character Count Color Updates
+
+### Issue
+After implementing targeted DOM updates to eliminate re-renders, the character count color for "Name would like to use" column wasn't updating when:
+- Clicking on "Name would like to use" cells
+- Clicking on "Previous Description" cells
+- Typing in "Description to use" field
+
+The character count number updated, but the color styling didn't change.
+
+### Root Cause
+The `setDescriptionToUseFromCell()` and `updateCharCount()` functions updated the character count text but didn't apply the color styling logic that was previously handled during table renders.
+
+### Solution
+1. Added ID to "Name would like to use" character count cell: `nameCharCount_${rowIndex}`
+2. Updated `setDescriptionToUseFromCell()` to apply character count styling when clicking cells
+3. Updated `updateCharCount()` to apply character count styling when typing
+
+**Styling Logic Applied:**
+```javascript
+if (nameCharCount > 250) {
+    nameCharCountCell.style.color = 'red';
+    nameCharCountCell.style.fontWeight = 'bold';
+} else if (nameCharCount === descCharCount) {
+    // Grey when equal
+    nameCharCountCell.style.color = '#999';
+    nameCharCountCell.style.fontWeight = '';
+} else if (nameCharCount >= descCharCount * 1.1) {
+    // Green when 10% longer
+    nameCharCountCell.style.color = 'limegreen';
+    nameCharCountCell.style.fontWeight = 'bold';
+} else {
+    // Default
+    nameCharCountCell.style.color = '';
+    nameCharCountCell.style.fontWeight = '';
+}
+```
+
+### Testing
+User confirmed: "big success! it works FLAWLESS. i was able to click every row with no issues."
+
+**Key Learning:** When moving from declarative rendering to imperative DOM updates, ensure ALL visual state changes are explicitly handled in the update functions. Color, styling, and visual feedback that was automatic during re-renders must be manually maintained.
+
+**Code Locations:**
+- ID added: `index.html:1666`
+- `setDescriptionToUseFromCell()` styling: `index.html:1779-1802`
+- `updateCharCount()` styling: `index.html:1850-1873`
+
+---
+
 ## Conclusion
 
 Most issues stemmed from assumptions about user preferences:

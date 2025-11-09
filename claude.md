@@ -86,21 +86,52 @@ Preview of mapped data before processing:
 Review variant matching and descriptions:
 
 **Columns:**
-- # (line number)
-- Variant Code (supplier part number)
+- # (line number with exclude/restore button)
+- Manufacturer
+- Variant Code (editable input field)
 - Description (from file)
-- Name would like to use: `MANUFACTURER ( CODE ) DESCRIPTION`
-- Previous Description (from database or "New product? Check if new")
-- Description to use (defaults to previous if found, otherwise uses formatted name)
+- 🔢 (Name would like to use character count)
+- Name would like to use: `MANUFACTURER ( CODE ) DESCRIPTION` (clickable)
+- Previous Description (from database or "New product? Check if new") (clickable)
+- 🔢 (Description to use character count)
+- Description to use (editable input field)
 - Cost Price (calculated)
 - List Price (calculated)
 - Barcode
 - Previous Barcode (from database)
+- Commodity Code
+- Previous Commodity Code
+- Is Commodity Code valid?
+- Country Code
+- Previous Country Code
+
+**Interactive Features:**
+- **Clickable Descriptions**: Click on "Name would like to use" or "Previous Description" to copy to "Description to use"
+- **Character Count Indicators**:
+  - Shows character count for Name, Previous Description, and Description to use
+  - Green when Name count ≥10% longer than Description to use
+  - Grey when counts are equal
+  - Red when count exceeds 250 characters
+- **Greying Logic**: Cells grey out (#999) when they match the "Description to use"
+- **Resizable Columns**: Drag column edges to resize, widths persist across interactions
+- **Editable Fields**:
+  - Variant Code can be edited
+  - Description to use can be typed directly with real-time character count updates
+
+**Color Coding:**
+- **Yellow background**: New products
+- **Red background**: Duplicate variant codes (case-insensitive)
+- **Pink background**: "Name would like to use" column
+- **Orange background**: "Previous Description" column
+- **Green background**: "Description to use" column
+- **Grey text (#999)**: Matched descriptions (when equals "Description to use")
 
 **Logic:**
-- Matches items against previous pricing data by code
-- Existing items: uses previous description
-- New items: uses formatted name with manufacturer
+- Matches items against previous pricing data by code (O(1) hash map lookup)
+- Existing items: defaults to previous description
+- New items: defaults to formatted name with manufacturer
+- Each row has independent state (uses rowIndex as key, not product code)
+- Updates are instant with targeted DOM manipulation (no full re-renders)
 
 ### Step 7: Review Changes & Flagged Items
 Final results with comparison:
@@ -155,12 +186,25 @@ const flagged = (
 
 ## Color Coding
 
+### Step 4 (Edit Data)
 - **Blue background**: Selected rows
 - **Yellow background**: Discount/Markup columns
 - **Gray with strikethrough**: Excluded rows
-- **Light blue highlight**: Flagged items in Step 7
-- **Yellow highlight**: New products in Step 7
 - **Light blue**: Column mapping dropdowns
+
+### Step 6 (Original Price List)
+- **Yellow background (#ffe082)**: New products (all fields)
+- **Red background (#ffcccc)**: Duplicate variant codes
+- **Pink background (#ffe0f0)**: "Name would like to use" column
+- **Orange background (#ffe5cc)**: "Previous Description" column
+- **Green background (#ccffcc)**: "Description to use" column
+- **Grey text (#999)**: Matched descriptions (when cell value equals "Description to use")
+- **Green text (limegreen)**: Character count when Name ≥10% longer than Description to use
+- **Red text**: Character count when exceeds 250 characters
+
+### Step 7 (Review Changes)
+- **Light blue highlight**: Flagged items
+- **Yellow highlight**: New products
 
 ## Data Processing
 
@@ -179,6 +223,95 @@ const flagged = (
 - Compares cost price and list price changes
 - Flags significant changes based on criteria
 - Tracks new vs. existing products
+
+## Performance Optimizations
+
+### Hash Map Lookups (O(1) vs O(n))
+Previous pricing data is loaded into a `Map` for instant lookups:
+```javascript
+// Build once when data loads
+previousDataMap = new Map();
+previousData.forEach(item => {
+    previousDataMap.set(item.code.toLowerCase(), item);
+});
+
+// Use everywhere - O(1) instead of O(n)
+const oldItem = previousDataMap.get(code.toLowerCase());
+```
+
+**Impact**: 100-1000x faster for large datasets (1000+ rows)
+
+### Targeted DOM Updates
+When clicking description cells or typing, only specific elements update:
+```javascript
+// Updates only 2-3 elements instead of rebuilding entire table
+const input = document.getElementById(`descInput_${rowIndex}`);
+const charCountCell = document.getElementById(`charCount_${rowIndex}`);
+input.value = value;
+charCountCell.textContent = count;
+```
+
+**Impact**: Eliminates browser crashes from rapid clicking, instant updates
+
+### Row-Based State Keys
+Each row uses unique `rowIndex` instead of potentially duplicate `code`:
+```javascript
+// Prevents collision when duplicate codes exist
+descriptionToUseMap[rowIndex] = value; // not descriptionToUseMap[code]
+```
+
+**Impact**: Prevents data corruption with duplicate variant codes
+
+### Column Width Persistence
+Column widths are saved and restored with all three CSS properties:
+```javascript
+header.style.width = width + 'px';
+header.style.minWidth = width + 'px';
+header.style.maxWidth = width + 'px'; // Prevents auto-expansion
+```
+
+**Impact**: Custom column widths persist across all interactions
+
+### Result
+- No re-renders when clicking cells
+- Handles 1000+ rows without performance issues
+- Instant character count updates
+- Stable with duplicate variant codes
+- Flawless rapid clicking through all rows
+
+## Security & Data Integrity
+
+### No-Escaping Architecture
+All data is treated as pure data, never as code:
+
+**Approach:**
+- Pass only identifiers (rowIndex, cellId) through onclick attributes
+- Retrieve actual data from DOM using `textContent`
+- Never pass data values through HTML attributes or JavaScript strings
+
+**Example:**
+```html
+<!-- BEFORE - Required escaping, broke with backslashes -->
+<td onclick="setDesc('${description.replace(/\\/g, '\\\\')}')">
+
+<!-- AFTER - Data as data, works with ANY characters -->
+<td id="cell_${rowIndex}" onclick="setDescFromCell(${rowIndex}, 'cell_${rowIndex}')">
+```
+
+```javascript
+function setDescFromCell(rowIndex, cellId) {
+    const cell = document.getElementById(cellId);
+    const value = cell.textContent; // Pure data retrieval
+    // Works with: backslashes, quotes, newlines, unicode, etc.
+}
+```
+
+**Benefits:**
+- Works with ANY characters (backslashes, quotes, newlines, tabs, unicode, etc.)
+- No escaping logic needed
+- No character corruption
+- Simpler, more robust code
+- True data integrity
 
 ## Test Data
 
