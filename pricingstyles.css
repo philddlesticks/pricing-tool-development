@@ -490,17 +490,17 @@ input[type="file"] {
 
 #originalPriceTable th:nth-child(6),
 #originalPriceTable td:nth-child(6) {
-    min-width: 400px; /* Name would like to use */
+    min-width: 200px; /* Name would like to use */
 }
 
 #originalPriceTable th:nth-child(7),
 #originalPriceTable td:nth-child(7) {
-    min-width: 400px; /* Previous Description */
+    min-width: 200px; /* Previous Description */
 }
 
 #originalPriceTable th:nth-child(9),
 #originalPriceTable td:nth-child(9) {
-    min-width: 400px; /* Description to use */
+    min-width: 200px; /* Description to use */
 }
 
 /* Column resizer */
