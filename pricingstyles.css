@@ -481,3 +481,24 @@ input[type="file"] {
 .excluded-row .row-number {
     opacity: 1 !important;
 }
+
+/* Step 6 Original Price List - wider columns for text content */
+#originalPriceTable th:nth-child(3),
+#originalPriceTable td:nth-child(3) {
+    min-width: 200px; /* Variant Code */
+}
+
+#originalPriceTable th:nth-child(6),
+#originalPriceTable td:nth-child(6) {
+    min-width: 400px; /* Name would like to use */
+}
+
+#originalPriceTable th:nth-child(7),
+#originalPriceTable td:nth-child(7) {
+    min-width: 400px; /* Previous Description */
+}
+
+#originalPriceTable th:nth-child(9),
+#originalPriceTable td:nth-child(9) {
+    min-width: 400px; /* Description to use */
+}
