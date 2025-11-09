@@ -1778,8 +1778,9 @@
             }
 
             // Update greying out for Name and Previous Description cells
+            // Compare against textContent (actual displayed value) not data-value (escaped version)
             if (nameCell) {
-                const nameValue = nameCell.getAttribute('data-value');
+                const nameValue = nameCell.textContent;
                 if (nameValue === value) {
                     nameCell.style.color = '#999'; // Grey out if matches
                 } else {
@@ -1788,7 +1789,7 @@
             }
 
             if (prevCell) {
-                const prevValue = prevCell.getAttribute('data-value');
+                const prevValue = prevCell.textContent;
                 if (prevValue === value) {
                     prevCell.style.color = '#999'; // Grey out if matches
                 } else {
@@ -1824,10 +1825,11 @@
                 }
 
                 // Update greying out for Name and Previous Description cells as user types
+                // Compare against textContent (actual displayed value) not data-value (escaped version)
                 const currentValue = input.value;
 
                 if (nameCell) {
-                    const nameValue = nameCell.getAttribute('data-value');
+                    const nameValue = nameCell.textContent;
                     if (nameValue === currentValue) {
                         nameCell.style.color = '#999'; // Grey out if matches
                     } else {
@@ -1836,7 +1838,7 @@
                 }
 
                 if (prevCell) {
-                    const prevValue = prevCell.getAttribute('data-value');
+                    const prevValue = prevCell.textContent;
                     if (prevValue === currentValue) {
                         prevCell.style.color = '#999'; // Grey out if matches
                     } else {
