@@ -240,6 +240,10 @@
                 Review the original price list data with variant matching. Edit the "Description to use" field if needed.
             </div>
 
+            <div id="batchUpdateIndicator" class="alert alert-warning" style="display: none; font-weight: bold;">
+                ⏳ Batching updates... Table will refresh shortly to prevent crashes.
+            </div>
+
             <div class="spreadsheet-container">
                 <table class="comparison-table" id="originalPriceTable"></table>
             </div>
@@ -312,6 +316,8 @@
         let scrollTimer = null; // Timer to detect end of scrolling
         let pendingRender = null; // Store pending render function to execute after scroll
         let previousDataMap = null; // Cached lookup map for previousData (performance optimization)
+        let pendingUpdateCount = 0; // Track number of pending updates for adaptive debouncing
+        let lastUpdateTime = 0; // Track last update time to detect rapid clicking
 
         // Settings data
         let settings = {
@@ -1736,14 +1742,58 @@
             // Update the map
             descriptionToUseMap[code] = value;
 
+            // Track rapid clicking for adaptive debouncing
+            const now = Date.now();
+            if (now - lastUpdateTime < 500) { // If clicking within 500ms
+                pendingUpdateCount++;
+            } else {
+                pendingUpdateCount = 1; // Reset counter if pause detected
+            }
+            lastUpdateTime = now;
+
+            // Show batch indicator if many rapid updates
+            const indicator = document.getElementById('batchUpdateIndicator');
+            const table = document.getElementById('originalPriceTable');
+
+            if (indicator && pendingUpdateCount > 10) {
+                indicator.style.display = 'block';
+            }
+
+            // Temporarily disable clicking on very large batches to prevent overload
+            if (table && pendingUpdateCount > 30) {
+                table.style.pointerEvents = 'none';
+                table.style.opacity = '0.7';
+            }
+
+            // Adaptive debouncing - longer delay for mass updates
+            let debounceDelay = 250; // Base delay
+            if (pendingUpdateCount > 50) {
+                debounceDelay = 2000; // 2s for very large batch (50+ rapid clicks)
+            } else if (pendingUpdateCount > 20) {
+                debounceDelay = 1000; // 1s for large batch (20-50 rapid clicks)
+            } else if (pendingUpdateCount > 10) {
+                debounceDelay = 500; // 500ms for medium batch (10-20 rapid clicks)
+            }
+
             // Debounce re-render to prevent browser crashes from rapid clicking
             if (renderDebounceTimer) {
                 clearTimeout(renderDebounceTimer);
             }
             renderDebounceTimer = setTimeout(() => {
-                safeRender(() => renderOriginalPriceList());
+                safeRender(() => {
+                    renderOriginalPriceList();
+                    pendingUpdateCount = 0; // Reset counter after render
+                    // Hide batch indicator and re-enable clicking
+                    if (indicator) {
+                        indicator.style.display = 'none';
+                    }
+                    if (table) {
+                        table.style.pointerEvents = '';
+                        table.style.opacity = '';
+                    }
+                });
                 renderDebounceTimer = null;
-            }, 250); // 250ms debounce - longer delay to prevent crashes from rapid clicking
+            }, debounceDelay);
         }
 
         function updateCharCount(code) {
