@@ -1170,12 +1170,13 @@
                 clearTimeout(excludeDebounceTimer);
             }
             excludeDebounceTimer = setTimeout(() => {
-                // Re-render current view
+                // Re-render current view (Step 3 or Step 6)
                 if (currentStep === 3) {
                     renderSpreadsheet();
                 } else if (currentStep === 6) {
                     renderOriginalPriceList();
                 }
+                excludeDebounceTimer = null;
             }, 100); // 100ms debounce - batches rapid clicks while still feeling responsive
         }
 
@@ -1185,6 +1186,15 @@
         }
         
         function goToStep(step) {
+            // Wait for any pending debounce timers to complete before changing steps
+            const hasPendingTimers = excludeDebounceTimer || renderDebounceTimer;
+
+            if (hasPendingTimers) {
+                // Store the target step and retry after a short delay
+                setTimeout(() => goToStep(step), 150);
+                return;
+            }
+
             // Validate settings and file upload before allowing navigation past step 1
             if (step > 1 && currentStep === 1) {
                 // Get settings values
@@ -1593,6 +1603,7 @@
             }
             renderDebounceTimer = setTimeout(() => {
                 renderOriginalPriceList();
+                renderDebounceTimer = null;
             }, 50); // 50ms debounce - fast enough to feel instant, slow enough to batch rapid clicks
         }
 
