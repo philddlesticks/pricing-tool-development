@@ -1624,12 +1624,6 @@
                 // Style for "Description to use" character count
                 const descCharStyle = descCharCount > 250 ? 'color: red; font-weight: bold;' : '';
 
-                // Escape values for JavaScript strings
-                // IMPORTANT: Escape backslashes FIRST, then quotes
-                const escapedCode = code.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '\\"');
-                const escapedNameWouldLike = nameWouldLike.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '\\"');
-                const escapedPreviousDesc = previousDescription.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '\\"');
-
                 // Check if "Name would like to use" or "Previous Description" matches "Description to use"
                 const nameMatchesDesc = nameWouldLike === descriptionToUseMap[rowIndex];
                 const prevMatchesDesc = previousDescription === descriptionToUseMap[rowIndex];
@@ -1671,12 +1665,10 @@
                         <td style="background: ${descriptionBg};">${description}</td>
                         <td style="text-align: center; ${nameCharStyle} ${isNewProduct ? 'background: ' + yellowBg + ';' : ''}">${nameCharCount}</td>
                         <td id="nameCell_${rowIndex}" style="cursor: pointer; background: ${nameWouldLikeBg}; ${nameTextColor}"
-                            data-value="${escapedNameWouldLike}"
-                            onclick="setDescriptionToUse(${rowIndex}, '${escapedNameWouldLike}')"
+                            onclick="setDescriptionToUseFromCell(${rowIndex}, 'nameCell_${rowIndex}')"
                             title="Click to use this as Description to use">${nameWouldLike}</td>
                         <td id="prevCell_${rowIndex}" style="${isNewProduct ? '' : 'cursor: pointer;'} background: ${prevDescBg}; ${prevTextColor}"
-                            data-value="${escapedPreviousDesc}"
-                            ${isNewProduct ? '' : `onclick="setDescriptionToUse(${rowIndex}, '${escapedPreviousDesc}')"`}
+                            ${isNewProduct ? '' : `onclick="setDescriptionToUseFromCell(${rowIndex}, 'prevCell_${rowIndex}')"`}
                             ${isNewProduct ? '' : 'title="Click to use this as Description to use"'}>${previousDescription}</td>
                         <td id="charCount_${rowIndex}" style="text-align: center; ${descCharStyle} ${isNewProduct ? 'background: ' + yellowBg + ';' : ''}">${descCharCount}</td>
                         <td style="background: ${descToUseBg}; padding: 0;">
@@ -1748,7 +1740,14 @@
             }, 250); // 250ms debounce
         }
 
-        function setDescriptionToUse(rowIndex, value) {
+        function setDescriptionToUseFromCell(rowIndex, cellId) {
+            // Get the value directly from the cell's textContent - NO ESCAPING!
+            // This treats data as pure data, never as code
+            const cell = document.getElementById(cellId);
+            if (!cell) return;
+
+            const value = cell.textContent; // Pure data - works with ANY characters
+
             // Update the map
             descriptionToUseMap[rowIndex] = value;
 
@@ -1778,7 +1777,6 @@
             }
 
             // Update greying out for Name and Previous Description cells
-            // Compare against textContent (actual displayed value) not data-value (escaped version)
             if (nameCell) {
                 const nameValue = nameCell.textContent;
                 if (nameValue === value) {
