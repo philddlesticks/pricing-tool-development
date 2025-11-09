@@ -307,6 +307,7 @@
         let renderDebounceTimer = null; // Debounce timer for renders
         let excludeDebounceTimer = null; // Debounce timer for exclude/restore operations
         let previousPriceListData = []; // Store previous price list with status for sorting
+        let columnWidths = {}; // Store custom column widths by table ID
 
         // Settings data
         let settings = {
@@ -356,8 +357,22 @@
 
         // Column resize functionality
         function makeColumnsResizable(table) {
+            const tableId = table.id;
+            if (!tableId) return; // Skip if table has no ID
+
+            // Initialize storage for this table if it doesn't exist
+            if (!columnWidths[tableId]) {
+                columnWidths[tableId] = {};
+            }
+
             const headers = table.querySelectorAll('th');
             headers.forEach((header, index) => {
+                // Restore saved width if it exists
+                if (columnWidths[tableId][index]) {
+                    header.style.width = columnWidths[tableId][index] + 'px';
+                    header.style.minWidth = columnWidths[tableId][index] + 'px';
+                }
+
                 const resizer = document.createElement('div');
                 resizer.className = 'column-resizer';
                 header.style.position = 'relative';
@@ -376,6 +391,8 @@
                         if (width > 30) { // Minimum width
                             header.style.width = width + 'px';
                             header.style.minWidth = width + 'px';
+                            // Save the width
+                            columnWidths[tableId][index] = width;
                         }
                     };
 
@@ -1618,8 +1635,15 @@
 
         function updateDescriptionToUse(code, value) {
             descriptionToUseMap[code] = value;
-            // Re-render the table to update grey-out styling
-            renderOriginalPriceList();
+
+            // Debounce re-render to prevent browser crashes from rapid typing
+            if (renderDebounceTimer) {
+                clearTimeout(renderDebounceTimer);
+            }
+            renderDebounceTimer = setTimeout(() => {
+                renderOriginalPriceList();
+                renderDebounceTimer = null;
+            }, 300); // 300ms debounce for typing
         }
 
         function updateVariantCode(rowIndex, value) {
@@ -1634,8 +1658,14 @@
                 currentData[rowIndex][columnMapping.code] = value;
             }
 
-            // Re-render the table to update Name, Previous Description, and Description to use
-            renderOriginalPriceList();
+            // Debounce re-render to prevent browser crashes
+            if (renderDebounceTimer) {
+                clearTimeout(renderDebounceTimer);
+            }
+            renderDebounceTimer = setTimeout(() => {
+                renderOriginalPriceList();
+                renderDebounceTimer = null;
+            }, 300); // 300ms debounce
         }
 
         function setDescriptionToUse(code, value) {
@@ -1649,7 +1679,7 @@
             renderDebounceTimer = setTimeout(() => {
                 renderOriginalPriceList();
                 renderDebounceTimer = null;
-            }, 50); // 50ms debounce - fast enough to feel instant, slow enough to batch rapid clicks
+            }, 150); // 150ms debounce - fast enough to feel instant, slow enough to batch rapid clicks
         }
 
         function updateCharCount(code) {
