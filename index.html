@@ -308,6 +308,10 @@
         let excludeDebounceTimer = null; // Debounce timer for exclude/restore operations
         let previousPriceListData = []; // Store previous price list with status for sorting
         let columnWidths = {}; // Store custom column widths by table ID
+        let isScrolling = false; // Track if user is currently scrolling
+        let scrollTimer = null; // Timer to detect end of scrolling
+        let pendingRender = null; // Store pending render function to execute after scroll
+        let previousDataMap = null; // Cached lookup map for previousData (performance optimization)
 
         // Settings data
         let settings = {
@@ -352,6 +356,30 @@
                 if (uploadRequirement) {
                     uploadRequirement.style.display = 'block';
                 }
+            }
+        }
+
+        // Build previousData lookup map for O(1) access (performance optimization)
+        function buildPreviousDataMap() {
+            previousDataMap = new Map();
+            if (previousData && previousData.length > 0) {
+                previousData.forEach(item => {
+                    const code = (item.code || item.productcode || '').toLowerCase();
+                    if (code) {
+                        previousDataMap.set(code, item);
+                    }
+                });
+            }
+        }
+
+        // Safe render wrapper - defers render if user is scrolling
+        function safeRender(renderFunction) {
+            if (isScrolling) {
+                // Store the render to execute after scrolling stops
+                pendingRender = renderFunction;
+            } else {
+                // Safe to render now
+                renderFunction();
             }
         }
 
@@ -427,6 +455,28 @@
 
             // Initial check
             updateUploadAreaState();
+
+            // Add scroll event listener to prevent renders during scrolling
+            window.addEventListener('scroll', () => {
+                isScrolling = true;
+
+                // Clear existing timer
+                if (scrollTimer) {
+                    clearTimeout(scrollTimer);
+                }
+
+                // Set timer to detect when scrolling stops
+                scrollTimer = setTimeout(() => {
+                    isScrolling = false;
+
+                    // If there's a pending render, execute it now
+                    if (pendingRender) {
+                        const renderFn = pendingRender;
+                        pendingRender = null;
+                        renderFn();
+                    }
+                }, 200); // 200ms after scroll stops
+            }, { passive: true });
         });
 
         // File upload handling
@@ -571,6 +621,7 @@
             reader.onload = (e) => {
                 if (file.name.endsWith('.json')) {
                     previousData = JSON.parse(e.target.result);
+                    buildPreviousDataMap(); // Build lookup map for performance
                     showUploadMessage('✓ Previous pricing data loaded successfully! Review the data below.', 'success', 'previousUploadMessages');
                 } else {
                     const data = new Uint8Array(e.target.result);
@@ -587,6 +638,7 @@
                         });
                         return obj;
                     });
+                    buildPreviousDataMap(); // Build lookup map for performance
                     showUploadMessage('✓ Previous pricing data loaded successfully! Review the data below.', 'success', 'previousUploadMessages');
                 }
 
@@ -845,11 +897,8 @@
                 let prevDescBg = '';
 
                 if (code) {
-                    // Check if this item exists in previous data (case-insensitive)
-                    const oldItem = previousData.find(p =>
-                        (p.code && p.code.toLowerCase() === code.toLowerCase()) ||
-                        (p.productcode && p.productcode.toLowerCase() === code.toLowerCase())
-                    );
+                    // Check if this item exists in previous data (O(1) lookup)
+                    const oldItem = previousDataMap ? previousDataMap.get(code.toLowerCase()) : null;
 
                     if (oldItem) {
                         // Found in database
@@ -1237,14 +1286,16 @@
                 clearTimeout(excludeDebounceTimer);
             }
             excludeDebounceTimer = setTimeout(() => {
-                // Re-render current view (Step 3 or Step 6)
-                if (currentStep === 3) {
-                    renderSpreadsheet();
-                } else if (currentStep === 6) {
-                    renderOriginalPriceList();
-                }
+                // Re-render current view (Step 3 or Step 6) - wrapped in safeRender
+                safeRender(() => {
+                    if (currentStep === 3) {
+                        renderSpreadsheet();
+                    } else if (currentStep === 6) {
+                        renderOriginalPriceList();
+                    }
+                });
                 excludeDebounceTimer = null;
-            }, 300); // 300ms debounce - batches rapid clicks while still feeling responsive
+            }, 250); // 250ms debounce - batches rapid clicks while still feeling responsive
         }
 
         function deleteRow(rowIndex) {
@@ -1449,6 +1500,11 @@
             // Find duplicate variant codes
             const duplicateVariantCodes = findDuplicateVariantCodes();
 
+            // Ensure previousDataMap is built (for performance)
+            if (!previousDataMap && previousData && previousData.length > 0) {
+                buildPreviousDataMap();
+            }
+
             table.innerHTML = `
                 <thead>
                     <tr>
@@ -1517,11 +1573,8 @@
                 // Name would like to use: MANUFACTURER ( CODE ) DESCRIPTION
                 const nameWouldLike = `${manufacturer} ( ${code} ) ${description}`;
 
-                // Check if this item exists in previous data (case-insensitive)
-                const oldItem = previousData.find(p =>
-                    (p.code && p.code.toLowerCase() === code.toLowerCase()) ||
-                    (p.productcode && p.productcode.toLowerCase() === code.toLowerCase())
-                );
+                // Check if this item exists in previous data (O(1) lookup instead of O(m) search)
+                const oldItem = previousDataMap.get(code.toLowerCase());
 
                 let previousDescription = '';
                 let previousBarcode = '';
@@ -1652,9 +1705,9 @@
                 clearTimeout(renderDebounceTimer);
             }
             renderDebounceTimer = setTimeout(() => {
-                renderOriginalPriceList();
+                safeRender(() => renderOriginalPriceList());
                 renderDebounceTimer = null;
-            }, 500); // 500ms debounce for typing
+            }, 250); // 250ms debounce for typing
         }
 
         function updateVariantCode(rowIndex, value) {
@@ -1674,9 +1727,9 @@
                 clearTimeout(renderDebounceTimer);
             }
             renderDebounceTimer = setTimeout(() => {
-                renderOriginalPriceList();
+                safeRender(() => renderOriginalPriceList());
                 renderDebounceTimer = null;
-            }, 500); // 500ms debounce
+            }, 250); // 250ms debounce
         }
 
         function setDescriptionToUse(code, value) {
@@ -1688,9 +1741,9 @@
                 clearTimeout(renderDebounceTimer);
             }
             renderDebounceTimer = setTimeout(() => {
-                renderOriginalPriceList();
+                safeRender(() => renderOriginalPriceList());
                 renderDebounceTimer = null;
-            }, 500); // 500ms debounce - longer delay to prevent crashes from rapid clicking
+            }, 250); // 250ms debounce - longer delay to prevent crashes from rapid clicking
         }
 
         function updateCharCount(code) {
@@ -1891,11 +1944,8 @@
                     barcode: columnMapping.barcode !== undefined ? row[columnMapping.barcode] : ''
                 };
 
-                // Compare with previous data (case-insensitive)
-                const oldItem = previousData.find(p =>
-                    (p.code && p.code.toLowerCase() === item.code.toLowerCase()) ||
-                    (p.productcode && p.productcode.toLowerCase() === item.code.toLowerCase())
-                );
+                // Compare with previous data (O(1) lookup)
+                const oldItem = previousDataMap ? previousDataMap.get(item.code.toLowerCase()) : null;
                 
                 if (oldItem) {
                     const oldCost = parseFloat(oldItem.costPrice || oldItem.costprice || 0);
@@ -2146,11 +2196,8 @@
 
             // Use processedData to populate rows
             processedData.forEach(item => {
-                // Find previous data for barcode lookup
-                const oldItem = previousData.find(p =>
-                    (p.code && p.code.toLowerCase() === item.code.toLowerCase()) ||
-                    (p.productcode && p.productcode.toLowerCase() === item.code.toLowerCase())
-                );
+                // Find previous data for barcode lookup (O(1) lookup)
+                const oldItem = previousDataMap ? previousDataMap.get(item.code.toLowerCase()) : null;
 
                 // Get barcode - use previous barcode if exists, otherwise use new barcode
                 const previousBarcode = oldItem ? (oldItem.barcode || '') : '';
@@ -2250,11 +2297,8 @@
 
             // Build rows with actual data
             processedData.forEach(item => {
-                // Find previous data for barcode lookup
-                const oldItem = previousData.find(p =>
-                    (p.code && p.code.toLowerCase() === item.code.toLowerCase()) ||
-                    (p.productcode && p.productcode.toLowerCase() === item.code.toLowerCase())
-                );
+                // Find previous data for barcode lookup (O(1) lookup)
+                const oldItem = previousDataMap ? previousDataMap.get(item.code.toLowerCase()) : null;
 
                 // Get barcode - use previous barcode if exists, otherwise use new barcode
                 const previousBarcode = oldItem ? (oldItem.barcode || '') : '';
