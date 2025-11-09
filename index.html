@@ -1625,9 +1625,10 @@
                 const descCharStyle = descCharCount > 250 ? 'color: red; font-weight: bold;' : '';
 
                 // Escape values for JavaScript strings
-                const escapedCode = code.replace(/'/g, "\\'").replace(/"/g, '\\"');
-                const escapedNameWouldLike = nameWouldLike.replace(/'/g, "\\'").replace(/"/g, '\\"');
-                const escapedPreviousDesc = previousDescription.replace(/'/g, "\\'").replace(/"/g, '\\"');
+                // IMPORTANT: Escape backslashes FIRST, then quotes
+                const escapedCode = code.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '\\"');
+                const escapedNameWouldLike = nameWouldLike.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '\\"');
+                const escapedPreviousDesc = previousDescription.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '\\"');
 
                 // Check if "Name would like to use" or "Previous Description" matches "Description to use"
                 const nameMatchesDesc = nameWouldLike === descriptionToUseMap[rowIndex];
