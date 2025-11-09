@@ -1187,14 +1187,13 @@
         }
         
         function goToStep(step) {
-            // Clear any pending timers to prevent rendering conflicts
-            if (excludeDebounceTimer) {
-                clearTimeout(excludeDebounceTimer);
-                excludeDebounceTimer = null;
-            }
-            if (renderDebounceTimer) {
-                clearTimeout(renderDebounceTimer);
-                renderDebounceTimer = null;
+            // Wait for any pending debounce timers to complete before changing steps
+            const hasPendingTimers = excludeDebounceTimer || renderDebounceTimer;
+
+            if (hasPendingTimers) {
+                // Store the target step and retry after a short delay
+                setTimeout(() => goToStep(step), 150);
+                return;
             }
 
             // Validate settings and file upload before allowing navigation past step 1
