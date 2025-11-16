@@ -2188,16 +2188,8 @@
                 const dbItem = databaseExportDataMap ? databaseExportDataMap.get(item.code.toLowerCase()) : null;
                 if (dbItem) {
                     item.db_description = dbItem.vad_description || '';
-                    item.db_barcode = dbItem.vad_ean_code || '';
-                    item.db_manufacturer = dbItem.md_name || '';
                     item.db_cost = parseFloat(dbItem.vasd_standard_cost) || 0;
-                    item.db_country = dbItem.vad_country_code_of_origin || '';
-                    item.db_commodity = dbItem.vad_commodity_description || '';
                     item.db_discontinued = dbItem.vas_discontinued_product === 1 || dbItem.vas_discontinued_product === '1';
-                    item.db_weight = dbItem.vad_weight || '';
-                    item.db_length = dbItem.vad_length || '';
-                    item.db_width = dbItem.vad_width || '';
-                    item.db_depth = dbItem.vad_depth || '';
                 }
 
                 // Compare with database export data for cost change (use database as source of truth)
@@ -2293,24 +2285,11 @@
                     <tr>
                         <th>Code</th>
                         <th>Description</th>
-                        <th>DB Description</th>
-                        <th>Barcode</th>
-                        <th>DB Barcode</th>
-                        <th>Manufacturer</th>
-                        <th>DB Manufacturer</th>
                         <th>Cost Price</th>
-                        <th>DB Cost</th>
+                        <th>Previous Cost</th>
                         <th>List Price</th>
-                        <th>Country</th>
-                        <th>DB Country</th>
-                        <th>Commodity</th>
-                        <th>DB Commodity</th>
                         <th>DB Discontinued</th>
-                        <th>Weight</th>
-                        <th>Length</th>
-                        <th>Width</th>
-                        <th>Depth</th>
-                        <th>Cost Change vs DB</th>
+                        <th>Difference</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -2351,24 +2330,11 @@
                 rowsHTML += `
                     <tr class="${rowClass}">
                         <td style="${codeStyle}">${item.code}</td>
-                        <td style="${compareStyle(item.description, item.db_description)}">${item.description || '-'}</td>
-                        <td>${item.db_description || '-'}</td>
-                        <td style="${compareStyle(item.barcode, item.db_barcode)}">${item.barcode || '-'}</td>
-                        <td>${item.db_barcode || '-'}</td>
-                        <td style="${compareStyle(item.manufacturer, item.db_manufacturer)}">${item.manufacturer || '-'}</td>
-                        <td>${item.db_manufacturer || '-'}</td>
-                        <td style="${compareStyle(item.costPrice.toFixed(2), item.db_cost ? item.db_cost.toFixed(2) : '')}">${costPriceDisplay}</td>
+                        <td>${item.description || '-'}</td>
+                        <td>${costPriceDisplay}</td>
                         <td>${item.db_cost ? '£' + item.db_cost.toFixed(2) : '-'}</td>
                         <td>${listPriceDisplay}</td>
-                        <td style="${compareStyle(item.countryOfOrigin, item.db_country)}">${item.countryOfOrigin || '-'}</td>
-                        <td>${item.db_country || '-'}</td>
-                        <td style="${compareStyle(item.commodityCode, item.db_commodity)}">${item.commodityCode || '-'}</td>
-                        <td>${item.db_commodity || '-'}</td>
                         <td style="${item.db_discontinued ? 'background: #f8d7da; font-weight: bold;' : ''}">${item.db_discontinued ? 'YES' : (item.db_description ? 'NO' : '-')}</td>
-                        <td>${item.db_weight || '-'}</td>
-                        <td>${item.db_length || '-'}</td>
-                        <td>${item.db_width || '-'}</td>
-                        <td>${item.db_depth || '-'}</td>
                         <td class="${costChangeClass}">
                             ${item.status === 'new' ? '-' :
                               `${item.costChange > 0 ? '+' : ''}${item.costChange.toFixed(1)}%<br>
