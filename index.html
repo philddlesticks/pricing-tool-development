@@ -1751,7 +1751,7 @@
                         // Database export data
                         previousDescription = oldItem.vad_description || '-';
                         previousBarcode = oldItem.vad_ean_code || '-';
-                        previousCommodityCode = oldItem.vad_commodity_description || '-';
+                        previousCommodityCode = oldItem.vad_commodity_code || '-';
                         previousCountryCode = oldItem.vad_country_code_of_origin || '-';
                     } else {
                         // Previous price list data
@@ -2407,6 +2407,11 @@
                 if (dbItem) {
                     item.db_description = dbItem.vad_description || '';
                     item.db_cost = parseFloat(dbItem.vasd_standard_cost) || 0;
+                    item.db_commodity = dbItem.vad_commodity_code || '';
+                    item.db_weight = dbItem.vad_weight || '';
+                    item.db_length = dbItem.vad_length || '';
+                    item.db_width = dbItem.vad_width || '';
+                    item.db_depth = dbItem.vad_depth || '';
                 }
 
                 // Compare with database export data for cost change (use database as source of truth)
