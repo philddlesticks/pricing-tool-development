@@ -112,6 +112,22 @@
                 </div>
 
                 <div class="mapping-item" style="margin-top: 30px;">
+                    <h3 style="margin-bottom: 15px;">Upload Database Export File</h3>
+                    <div class="alert alert-info" style="margin-bottom: 15px; padding: 10px; background: #e7f3ff;">
+                        <small style="color: #004085;">
+                            📊 Upload the database export Excel file containing current product data.<br>
+                            This file should include: vad_variant_code, vad_ean_code, vad_description, md_name, vasd_standard_cost, etc.
+                        </small>
+                    </div>
+                    <div class="upload-area" id="databaseUploadArea">
+                        <h2>📊 Drop database export here or click to browse</h2>
+                        <p style="color: #666; margin-top: 10px;">Supports .xlsx and .xls formats</p>
+                        <input type="file" id="databaseExportFileInput2" accept=".xlsx,.xls">
+                    </div>
+                    <div id="databaseExportUploadMessages" style="margin: 15px 0;"></div>
+                </div>
+
+                <div class="mapping-item" style="margin-top: 30px;">
                     <h3 style="margin-bottom: 15px;">Upload Pricing File</h3>
                     <div class="upload-area disabled" id="uploadArea">
                         <h2>📁 Drop file here or click to browse</h2>
@@ -221,17 +237,6 @@
             </div>
 
             <div id="previousUploadMessages" style="margin: 15px 0;"></div>
-
-            <div class="alert alert-info" style="margin-top: 20px;">
-                <strong>Optional:</strong> Upload database export file for comparison (Excel format)
-                <p style="margin: 10px 0; font-size: 12px; color: #666;">
-                    This file should contain product data exported from your database with fields like:<br>
-                    vad_variant_code, vad_ean_code, vad_description, md_name, vasd_standard_cost, vad_country_code_of_origin, etc.
-                </p>
-                <input type="file" id="databaseExportFileInput" accept=".xlsx,.xls" style="display: block; margin-top: 10px;">
-            </div>
-
-            <div id="databaseExportUploadMessages" style="margin: 15px 0;"></div>
 
             <div style="margin: 20px 0;">
                 <button class="btn" onclick="sortPreviousPriceList('status')">Sort by Status (Missing First)</button>
@@ -557,8 +562,8 @@
             if (file) handlePreviousFile(file);
         });
 
-        const databaseExportFileInput = document.getElementById('databaseExportFileInput');
-        databaseExportFileInput.addEventListener('change', (e) => {
+        const databaseExportFileInput2 = document.getElementById('databaseExportFileInput2');
+        databaseExportFileInput2.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) handleDatabaseExportFile(file);
         });
@@ -719,12 +724,7 @@
                 buildDatabaseExportDataMap(); // Build lookup map for performance
                 showUploadMessage(`✓ Database export loaded successfully! (${databaseExportData.length} records)`, 'success', 'databaseExportUploadMessages');
 
-                // Refresh displays that use database export data
-                if (currentStep === 6) {
-                    renderOriginalPriceList();
-                } else if (currentStep === 7) {
-                    renderResults();
-                }
+                console.log('Database export loaded:', databaseExportData.length, 'records');
             };
 
             reader.readAsArrayBuffer(file);
@@ -2177,29 +2177,26 @@
                     item.db_depth = dbItem.vad_depth || '';
                 }
 
-                // Compare with previous data (O(1) lookup)
-                const oldItem = previousDataMap ? previousDataMap.get(item.code.toLowerCase()) : null;
-                
-                if (oldItem) {
-                    const oldCost = parseFloat(oldItem.costPrice || oldItem.costprice || 0);
-                    const oldList = parseFloat(oldItem.listPrice || oldItem.listprice || 0);
-                    
-                    item.costChange = oldCost > 0 ? ((item.costPrice - oldCost) / oldCost) * 100 : 0;
-                    item.listChange = oldList > 0 ? ((item.listPrice - oldList) / oldList) * 100 : 0;
-                    item.oldCostPrice = oldCost;
-                    item.oldListPrice = oldList;
+                // Compare with database export data for cost change (use database as source of truth)
+                if (dbItem && item.db_cost > 0) {
+                    // Product exists in database - calculate cost change from database cost
+                    item.costChange = ((item.costPrice - item.db_cost) / item.db_cost) * 100;
+                    item.oldCostPrice = item.db_cost;
                     item.status = 'changed';
-                    
+
                     // Flag if significant change
                     item.flagged = (
                         (item.costChange >= 15 || item.costChange <= -10) && item.costPrice >= 100
-                    ) || (
-                        (item.listChange >= 15 || item.listChange <= -10) && item.listPrice >= 100
                     );
                 } else {
+                    // New product (not in database)
                     item.status = 'new';
                     item.flagged = false;
+                    item.costChange = 0;
                 }
+
+                // Note: Previous price list data is only used for Previous List tab (Step 5)
+                // All other comparisons use database export data
                 
                 return item;
             }).filter(item => item.code); // Remove empty rows
@@ -2290,7 +2287,7 @@
                         <th>Length</th>
                         <th>Width</th>
                         <th>Depth</th>
-                        <th>Cost Change</th>
+                        <th>Cost Change vs DB</th>
                         <th>Status</th>
                     </tr>
                 </thead>
