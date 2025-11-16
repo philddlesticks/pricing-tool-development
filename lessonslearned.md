@@ -663,3 +663,179 @@ Most **performance issues** stemmed from assumptions about scale:
 4. Minimize DOM operations - update what changed, not everything
 5. Use unique keys in maps to prevent silent data corruption
 6. Test with realistic data sizes early in development
+
+---
+
+## 18. User-Selectable Field Pattern (Barcode, Commodity Code, Country Code)
+
+### Issue
+Users needed to choose between new values from their price list and previous values from the database for multiple fields (barcode, commodity code, country code). When editing these values in the Edit Data step, the OW Import sheet wasn't reflecting the user's selected and edited values.
+
+### Requirements
+1. Display both new value and previous value from database
+2. Allow user to click either value to select it
+3. Default to previous value unless blank
+4. Grey out the selected value for visual feedback
+5. Sync edits in Edit Data step with user's selection
+6. Export the chosen value to OW Import sheet
+
+### Solution Pattern
+
+This pattern was implemented consistently across three fields: **Barcode**, **Commodity Code**, and **Country Code**.
+
+#### Step 1: Add Selection Map Variable
+```javascript
+let barcodeToUseMap = {};        // Store "Barcode to use" values by row index
+let commodityCodeToUseMap = {};  // Store "Commodity Code to use" values by row index
+let countryCodeToUseMap = {};    // Store "Country Code to use" values by row index
+```
+
+#### Step 2: Set Default Values
+```javascript
+// Default to Previous Barcode unless it's blank or '-'
+if (!barcodeToUseMap[rowIndex]) {
+    if (previousBarcode && previousBarcode !== '-') {
+        barcodeToUseMap[rowIndex] = previousBarcode;
+    } else {
+        barcodeToUseMap[rowIndex] = barcode || '';
+    }
+}
+```
+
+#### Step 3: Add Greying Logic
+```javascript
+// Check which value matches the user's selection
+const codeMatchesBarcode = (barcode || '') === barcodeToUseMap[rowIndex];
+const prevMatchesBarcode = previousBarcode === barcodeToUseMap[rowIndex];
+const barcodeTextColor = codeMatchesBarcode ? 'color: #999;' : '';
+const prevBarcodeTextColor = prevMatchesBarcode ? 'color: #999;' : '';
+```
+
+#### Step 4: Make Cells Clickable
+```javascript
+<td id="barcodeCell_${rowIndex}"
+    style="cursor: pointer; ${barcodeTextColor}"
+    onclick="setBarcodeToUseFromCell(${rowIndex}, 'barcodeCell_${rowIndex}')"
+    title="Click to use this barcode">${barcode || '-'}</td>
+<td id="prevBarcodeCell_${rowIndex}"
+    style="${(previousBarcode === '-') ? '' : 'cursor: pointer;'} ${prevBarcodeTextColor}"
+    ${(previousBarcode === '-') ? '' : `onclick="setBarcodeToUseFromCell(${rowIndex}, 'prevBarcodeCell_${rowIndex}')"`}
+    ${(previousBarcode === '-') ? '' : 'title="Click to use this barcode"'}>${previousBarcode}</td>
+```
+
+#### Step 5: Add Click Handler Function
+```javascript
+function setBarcodeToUseFromCell(rowIndex, cellId) {
+    // Get value from cell - NO ESCAPING for security
+    const cell = document.getElementById(cellId);
+    if (!cell) return;
+    const value = cell.textContent; // Pure data
+
+    // Update the map
+    barcodeToUseMap[rowIndex] = value;
+
+    // Update greying directly on DOM (no re-render)
+    const barcodeCell = document.getElementById(`barcodeCell_${rowIndex}`);
+    const prevBarcodeCell = document.getElementById(`prevBarcodeCell_${rowIndex}`);
+
+    if (barcodeCell) {
+        const barcodeValue = barcodeCell.textContent;
+        barcodeCell.style.color = (barcodeValue === value) ? '#999' : '';
+    }
+
+    if (prevBarcodeCell) {
+        const prevBarcodeValue = prevBarcodeCell.textContent;
+        prevBarcodeCell.style.color = (prevBarcodeValue === value && prevBarcodeValue !== '-') ? '#999' : '';
+    }
+}
+```
+
+#### Step 6: Use Selected Value in processData
+```javascript
+const item = {
+    // ... other fields
+    barcode: barcodeToUseMap[rowIndex] || (columnMapping.barcode !== undefined ? row[columnMapping.barcode] : ''),
+    commodityCode: commodityCodeToUseMap[rowIndex] || (columnMapping.commodityCode !== undefined ? row[columnMapping.commodityCode] : ''),
+    countryOfOrigin: countryCodeToUseMap[rowIndex] || (columnMapping.countryOfOrigin !== undefined ? row[columnMapping.countryOfOrigin] : '')
+};
+```
+
+#### Step 7: Sync Edit Data Changes
+```javascript
+function updateCell(row, col, value) {
+    const oldValue = currentData[row][col];
+    currentData[row][col] = value;
+
+    // If barcode was edited and user had selected the new barcode, update the map
+    if (columnMapping.barcode === col) {
+        if (barcodeToUseMap[row] === oldValue) {
+            barcodeToUseMap[row] = value;
+        }
+    }
+
+    // Same for commodity code
+    if (columnMapping.commodityCode === col) {
+        if (commodityCodeToUseMap[row] === oldValue) {
+            commodityCodeToUseMap[row] = value;
+        }
+    }
+
+    // Same for country code
+    if (columnMapping.countryOfOrigin === col) {
+        if (countryCodeToUseMap[row] === oldValue) {
+            countryCodeToUseMap[row] = value;
+        }
+    }
+}
+```
+
+### Key Learnings
+
+1. **Consistent Pattern**: Once established for one field (barcode), the exact same pattern applies to all user-selectable fields. This makes the codebase predictable and maintainable.
+
+2. **Direct DOM Manipulation**: Using `textContent` instead of `innerHTML` prevents XSS and escaping issues. The data is treated as pure data, never as code.
+
+3. **No Re-rendering**: Click handlers update only the specific cells that changed, maintaining the performance benefits from earlier optimizations.
+
+4. **Default to Previous**: Users typically want to keep database values unless they explicitly change them. Defaulting to "Previous" values reduces required clicks.
+
+5. **Edit Data Sync Critical**: When users edit a value in Edit Data step, check if they had selected the new value (not previous). If so, update the selection map to the edited value. This ensures consistency across all steps.
+
+6. **Row-Based Keys**: Using `rowIndex` as the map key (not product code) prevents collisions when duplicate codes exist.
+
+### Pattern Template
+
+When adding a new user-selectable field:
+1. Add `fieldToUseMap = {}` variable
+2. Set default value (prefer previous unless blank)
+3. Add greying comparison logic
+4. Make both cells clickable with IDs
+5. Create `setFieldToUseFromCell()` handler
+6. Use `fieldToUseMap[rowIndex]` in processData
+7. Add sync logic to `updateCell()` for Edit Data step
+
+This pattern has been successfully applied to:
+- **Barcode selection** (Barcode vs Previous Barcode)
+- **Commodity Code selection** (Commodity Code vs Previous Commodity Code)
+- **Country Code selection** (Country Code vs Previous Country Code)
+- **Description selection** (Name Would Like to Use vs Previous Description) - with additional input field
+
+**Code Locations:**
+- Variable declarations: `index.html:565-567`
+- Default value setting: `index.html:2038-2062`
+- Greying logic: `index.html:2085-2095`
+- Clickable cells: `index.html:2161-2194`
+- Click handlers: `index.html:2330-2524`
+- processData usage: `index.html:2767-2770`
+- Edit Data sync: `index.html:1646-1671`
+
+---
+
+**Key Takeaways:**
+1. When in doubt, give users control and let them choose the level of automation
+2. Profile and measure before optimizing - fix the root cause, not symptoms
+3. Data structure choice (Map vs Array) can make 100x+ performance difference
+4. Minimize DOM operations - update what changed, not everything
+5. Use unique keys in maps to prevent silent data corruption
+6. Test with realistic data sizes early in development
+7. **Establish consistent patterns for similar features** - makes code predictable and reduces bugs

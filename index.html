@@ -564,6 +564,7 @@
         let descriptionToUseMap = {}; // Store "Description to use" values by product code
         let barcodeToUseMap = {}; // Store "Barcode to use" values by row index
         let commodityCodeToUseMap = {}; // Store "Commodity Code to use" values by row index
+        let countryCodeToUseMap = {}; // Store "Country Code to use" values by row index
         let renderDebounceTimer = null; // Debounce timer for renders
         let excludeDebounceTimer = null; // Debounce timer for exclude/restore operations
         let previousPriceListData = []; // Store previous price list with status for sorting
@@ -1660,6 +1661,15 @@
                 }
             }
 
+            // If country code column was edited, update countryCodeToUseMap if user had selected the new country code
+            if (columnMapping.countryOfOrigin === col) {
+                // Check if user had selected to use the new country code (not the previous country code)
+                if (countryCodeToUseMap[row] === oldValue) {
+                    // User had selected the new country code, so update it to the new value
+                    countryCodeToUseMap[row] = value;
+                }
+            }
+
             // Re-render if code column was edited to update duplicate highlighting
             if (columnMapping.code === col) {
                 renderSpreadsheet();
@@ -2050,6 +2060,16 @@
                     commodityCodeToUseMap[rowIndex] = commodityCodeToUse;
                 }
 
+                // Set default "Country Code to use" value only if not already set by user
+                // Default to Previous Country Code unless it's blank or '-'
+                if (!countryCodeToUseMap[rowIndex]) {
+                    if (previousCountryCode && previousCountryCode !== '-') {
+                        countryCodeToUseMap[rowIndex] = previousCountryCode;
+                    } else {
+                        countryCodeToUseMap[rowIndex] = countryCode || '';
+                    }
+                }
+
                 // Calculate character counts
                 const nameCharCount = nameWouldLike.length;
                 const descCharCount = descriptionToUseMap[rowIndex].length;
@@ -2076,6 +2096,12 @@
                 const prevMatchesCommodity = previousCommodityCode === commodityCodeToUseMap[rowIndex];
                 const commodityCodeTextColor = codeMatchesCommodity ? 'color: #999;' : '';
                 const prevCommodityCodeTextColor = prevMatchesCommodity ? 'color: #999;' : '';
+
+                // Check if "Country Code" or "Previous Country Code" matches "Country Code to use"
+                const codeMatchesCountry = (countryCode || '') === countryCodeToUseMap[rowIndex];
+                const prevMatchesCountry = previousCountryCode === countryCodeToUseMap[rowIndex];
+                const countryCodeTextColor = codeMatchesCountry ? 'color: #999;' : '';
+                const prevCountryCodeTextColor = prevMatchesCountry ? 'color: #999;' : '';
 
                 // Validate commodity code to use against database
                 let commodityValidation = '';
@@ -2169,8 +2195,12 @@
                                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 0; background: transparent; box-sizing: border-box;">
                         </td>
                         <td id="commodityValidation_${rowIndex}" style="${commodityValidationBg}" title="${commodityValidation}">${commodityValidation}</td>
-                        <td style="${barcodeBg}">${countryCode || '-'}</td>
-                        <td style="${barcodeBg}">${previousCountryCode}</td>
+                        <td id="countryCodeCell_${rowIndex}" style="cursor: pointer; ${barcodeBg} ${countryCodeTextColor}"
+                            onclick="setCountryCodeToUseFromCell(${rowIndex}, 'countryCodeCell_${rowIndex}')"
+                            title="Click to use this country code">${countryCode || '-'}</td>
+                        <td id="prevCountryCodeCell_${rowIndex}" style="${(previousCountryCode === '-') ? '' : 'cursor: pointer;'} ${barcodeBg} ${prevCountryCodeTextColor}"
+                            ${(previousCountryCode === '-') ? '' : `onclick="setCountryCodeToUseFromCell(${rowIndex}, 'prevCountryCodeCell_${rowIndex}')"`}
+                            ${(previousCountryCode === '-') ? '' : 'title="Click to use this country code"'}>${previousCountryCode}</td>
                     </tr>
                 `;
             });
@@ -2465,6 +2495,43 @@
             }
         }
 
+        function setCountryCodeToUseFromCell(rowIndex, cellId) {
+            // Get the value directly from the cell's textContent - NO ESCAPING!
+            // This treats data as pure data, never as code
+            const cell = document.getElementById(cellId);
+            if (!cell) return;
+
+            const value = cell.textContent; // Pure data - works with ANY characters
+
+            // Update the map
+            countryCodeToUseMap[rowIndex] = value;
+
+            // Directly update the DOM elements instead of re-rendering entire table
+            const countryCodeCell = document.getElementById(`countryCodeCell_${rowIndex}`);
+            const prevCountryCodeCell = document.getElementById(`prevCountryCodeCell_${rowIndex}`);
+
+            // Update greying out for Country Code cells
+            if (countryCodeCell) {
+                const countryCodeValue = countryCodeCell.textContent;
+                if (countryCodeValue === value) {
+                    countryCodeCell.style.color = '#999'; // Grey out if matches
+                } else {
+                    countryCodeCell.style.color = ''; // Normal color
+                }
+            }
+
+            if (prevCountryCodeCell) {
+                const prevCountryCodeValue = prevCountryCodeCell.textContent;
+                if (prevCountryCodeValue === value && prevCountryCodeValue !== '-') {
+                    prevCountryCodeCell.style.color = '#999'; // Grey out if matches
+                } else {
+                    prevCountryCodeCell.style.color = ''; // Normal color
+                }
+            }
+
+            // No need to re-render - we've updated the DOM directly!
+        }
+
         function updateCharCount(rowIndex) {
             const input = document.getElementById(`descInput_${rowIndex}`);
             const charCountCell = document.getElementById(`charCount_${rowIndex}`);
@@ -2706,7 +2773,7 @@
                     discount: discount,
                     markup: markup,
                     manufacturer: columnMapping.manufacturer !== undefined ? row[columnMapping.manufacturer] : '',
-                    countryOfOrigin: columnMapping.countryOfOrigin !== undefined ? row[columnMapping.countryOfOrigin] : '',
+                    countryOfOrigin: countryCodeToUseMap[rowIndex] || (columnMapping.countryOfOrigin !== undefined ? row[columnMapping.countryOfOrigin] : ''),
                     commodityCode: commodityCodeToUseMap[rowIndex] || (columnMapping.commodityCode !== undefined ? row[columnMapping.commodityCode] : ''),
                     calculatedFrom: calculatedFrom,
                     barcode: barcodeToUseMap[rowIndex] || (columnMapping.barcode !== undefined ? row[columnMapping.barcode] : '')
