@@ -318,6 +318,7 @@
         let currentData = [];
         let previousData = [];
         let databaseExportData = []; // Store database export data for comparison
+        let commodityCodeData = []; // Store commodity codes from database 'commodity codes' sheet
         let processedData = [];
         let columnMapping = {};
         let currentStep = 1;
@@ -326,6 +327,7 @@
         let excludedRows = new Set();
         let descriptionToUseMap = {}; // Store "Description to use" values by product code
         let barcodeToUseMap = {}; // Store "Barcode to use" values by row index
+        let commodityCodeToUseMap = {}; // Store "Commodity Code to use" values by row index
         let renderDebounceTimer = null; // Debounce timer for renders
         let excludeDebounceTimer = null; // Debounce timer for exclude/restore operations
         let previousPriceListData = []; // Store previous price list with status for sorting
@@ -335,6 +337,7 @@
         let pendingRender = null; // Store pending render function to execute after scroll
         let previousDataMap = null; // Cached lookup map for previousData (performance optimization)
         let databaseExportDataMap = null; // Cached lookup map for databaseExportData (performance optimization)
+        let commodityCodeMap = null; // Cached lookup map for commodity codes (performance optimization)
         let pendingUpdateCount = 0; // Track number of pending updates for adaptive debouncing
         let lastUpdateTime = 0; // Track last update time to detect rapid clicking
 
@@ -410,6 +413,29 @@
                     const barcode = (item.vad_ean_code || '').toString().toLowerCase();
                     if (barcode) {
                         databaseExportDataMap.set(`barcode_${barcode}`, item);
+                    }
+                });
+            }
+        }
+
+        function buildCommodityCodeMap() {
+            commodityCodeMap = new Map();
+            if (commodityCodeData && commodityCodeData.length > 0) {
+                commodityCodeData.forEach(item => {
+                    // Expected columns: Commodity Codes, Duty Rate, Country Code, Category
+                    // Get the commodity code from first column (normalize to string and trim)
+                    const code = (item['Commodity Codes'] || item['Commodity Code'] || '').toString().trim();
+                    // Get the category from fourth column
+                    const category = (item['Category'] || '').toString().trim();
+
+                    if (code) {
+                        // Store the full item so we can access all fields if needed
+                        commodityCodeMap.set(code, {
+                            code: code,
+                            dutyRate: item['Duty Rate'] || '',
+                            countryCode: item['Country Code'] || '',
+                            category: category
+                        });
                     }
                 });
             }
@@ -746,7 +772,32 @@
                     return obj;
                 });
                 buildDatabaseExportDataMap(); // Build lookup map for performance
-                showUploadMessage(`✓ Database export loaded successfully! (${databaseExportData.length} records)`, 'success', 'databaseExportUploadMessages');
+
+                // Also load the "commodity codes" sheet if it exists
+                const commoditySheetName = workbook.SheetNames.find(name =>
+                    name.toLowerCase() === 'commodity codes'
+                );
+
+                if (commoditySheetName) {
+                    const commoditySheet = workbook.Sheets[commoditySheetName];
+                    const commodityJsonData = XLSX.utils.sheet_to_json(commoditySheet, {header: 1, defval: ''});
+
+                    // Expected columns: Commodity Codes, Duty Rate, Country Code, Category
+                    const commodityHeaders = commodityJsonData[0];
+                    commodityCodeData = commodityJsonData.slice(1).map(row => {
+                        let obj = {};
+                        commodityHeaders.forEach((header, i) => {
+                            obj[header] = row[i];
+                        });
+                        return obj;
+                    });
+                    buildCommodityCodeMap(); // Build lookup map for performance
+                    console.log('Commodity codes loaded:', commodityCodeData.length, 'codes');
+                    showUploadMessage(`✓ Database export loaded successfully! (${databaseExportData.length} records, ${commodityCodeData.length} commodity codes)`, 'success', 'databaseExportUploadMessages');
+                } else {
+                    console.log('No "commodity codes" sheet found in database export');
+                    showUploadMessage(`✓ Database export loaded successfully! (${databaseExportData.length} records)`, 'success', 'databaseExportUploadMessages');
+                }
 
                 console.log('Database export loaded:', databaseExportData.length, 'records');
             };
@@ -1627,6 +1678,7 @@
                         <th>Previous Barcode</th>
                         <th>Commodity Code</th>
                         <th>Previous Commodity Code</th>
+                        <th>Commodity Code to use</th>
                         <th>Is Commodity Code valid?</th>
                         <th>Country Code</th>
                         <th>Previous Country Code</th>
@@ -1734,6 +1786,12 @@
                     }
                 }
 
+                // Set default "Commodity Code to use" value only if not already set by user
+                const commodityCodeToUse = previousCommodityCode && previousCommodityCode !== '-' ? previousCommodityCode : (commodityCode || '');
+                if (!commodityCodeToUseMap[rowIndex]) {
+                    commodityCodeToUseMap[rowIndex] = commodityCodeToUse;
+                }
+
                 // Calculate character counts
                 const nameCharCount = nameWouldLike.length;
                 const descCharCount = descriptionToUseMap[rowIndex].length;
@@ -1754,6 +1812,33 @@
                 const prevMatchesDesc = previousDescription === descriptionToUseMap[rowIndex];
                 const nameTextColor = nameMatchesDesc ? 'color: #999;' : '';
                 const prevTextColor = prevMatchesDesc ? 'color: #999;' : '';
+
+                // Check if "Commodity Code" or "Previous Commodity Code" matches "Commodity Code to use"
+                const codeMatchesCommodity = (commodityCode || '') === commodityCodeToUseMap[rowIndex];
+                const prevMatchesCommodity = previousCommodityCode === commodityCodeToUseMap[rowIndex];
+                const commodityCodeTextColor = codeMatchesCommodity ? 'color: #999;' : '';
+                const prevCommodityCodeTextColor = prevMatchesCommodity ? 'color: #999;' : '';
+
+                // Validate commodity code to use against database
+                let commodityValidation = '';
+                let commodityValidationBg = '';
+                if (commodityCodeMap && commodityCodeToUseMap[rowIndex] && commodityCodeToUseMap[rowIndex] !== '-') {
+                    const lookupResult = commodityCodeMap.get(commodityCodeToUseMap[rowIndex]);
+                    if (lookupResult && lookupResult.category) {
+                        // Found - show category (limit length for horizontal space)
+                        const category = lookupResult.category;
+                        const maxLength = 40; // Limit to 40 characters
+                        commodityValidation = category.length > maxLength ?
+                            category.substring(0, maxLength) + '...' : category;
+                        commodityValidationBg = 'background: #d4edda;'; // Light green
+                    } else {
+                        commodityValidation = 'Not found!';
+                        commodityValidationBg = 'background: #f8d7da;'; // Light red
+                    }
+                } else {
+                    commodityValidation = '-';
+                    commodityValidationBg = '';
+                }
 
                 // Check if this is a new product
                 const isNewProduct = previousDescription === 'New product? Check if new';
@@ -1812,9 +1897,20 @@
                         <td id="prevBarcodeCell_${rowIndex}" style="${(previousBarcode === '-') ? '' : 'cursor: pointer;'} ${barcodeBg} ${(barcodeToUseMap[rowIndex] === previousBarcode && previousBarcode !== '-') ? 'color: #999;' : ''}"
                             ${(previousBarcode === '-') ? '' : `onclick="setBarcodeToUseFromCell(${rowIndex}, 'prevBarcodeCell_${rowIndex}')"`}
                             ${(previousBarcode === '-') ? '' : 'title="Click to use this barcode"'}>${previousBarcode}</td>
-                        <td style="${barcodeBg}">${commodityCode || '-'}</td>
-                        <td style="${barcodeBg}">${previousCommodityCode}</td>
-                        <td style="${barcodeBg}">-</td>
+                        <td id="commodityCodeCell_${rowIndex}" style="cursor: pointer; ${barcodeBg} ${commodityCodeTextColor}"
+                            onclick="setCommodityCodeToUseFromCell(${rowIndex}, 'commodityCodeCell_${rowIndex}')"
+                            title="Click to use this as Commodity Code to use">${commodityCode || '-'}</td>
+                        <td id="prevCommodityCodeCell_${rowIndex}" style="${previousCommodityCode === '-' ? '' : 'cursor: pointer;'} ${barcodeBg} ${prevCommodityCodeTextColor}"
+                            ${previousCommodityCode === '-' ? '' : `onclick="setCommodityCodeToUseFromCell(${rowIndex}, 'prevCommodityCodeCell_${rowIndex}')"`}
+                            ${previousCommodityCode === '-' ? '' : 'title="Click to use this as Commodity Code to use"'}>${previousCommodityCode}</td>
+                        <td style="${barcodeBg} padding: 0;">
+                            <input type="text"
+                                   id="commodityCodeInput_${rowIndex}"
+                                   value="${commodityCodeToUseMap[rowIndex] || ''}"
+                                   onchange="updateCommodityCodeToUse(${rowIndex}, this.value)"
+                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 0; background: transparent; box-sizing: border-box;">
+                        </td>
+                        <td id="commodityValidation_${rowIndex}" style="${commodityValidationBg}" title="${commodityValidation}">${commodityValidation}</td>
                         <td style="${barcodeBg}">${countryCode || '-'}</td>
                         <td style="${barcodeBg}">${previousCountryCode}</td>
                     </tr>
@@ -1987,6 +2083,128 @@
             }
 
             // No need to re-render - we've updated the DOM directly!
+        }
+
+        function setCommodityCodeToUseFromCell(rowIndex, cellId) {
+            // Get the value directly from the cell's textContent - NO ESCAPING!
+            const cell = document.getElementById(cellId);
+            if (!cell) return;
+
+            const value = cell.textContent; // Pure data - works with ANY characters
+
+            // Update the map
+            commodityCodeToUseMap[rowIndex] = value;
+
+            // Directly update the DOM elements instead of re-rendering entire table
+            const input = document.getElementById(`commodityCodeInput_${rowIndex}`);
+            const validationCell = document.getElementById(`commodityValidation_${rowIndex}`);
+            const codeCell = document.getElementById(`commodityCodeCell_${rowIndex}`);
+            const prevCodeCell = document.getElementById(`prevCommodityCodeCell_${rowIndex}`);
+
+            if (input) {
+                input.value = value;
+            }
+
+            // Update validation
+            if (validationCell) {
+                let commodityValidation = '';
+                let commodityValidationBg = '';
+
+                if (commodityCodeMap && value && value !== '-') {
+                    const lookupResult = commodityCodeMap.get(value);
+                    if (lookupResult && lookupResult.category) {
+                        // Found - show category (limit length)
+                        const category = lookupResult.category;
+                        const maxLength = 40;
+                        commodityValidation = category.length > maxLength ?
+                            category.substring(0, maxLength) + '...' : category;
+                        validationCell.style.background = '#d4edda'; // Light green
+                    } else {
+                        commodityValidation = 'Not found!';
+                        validationCell.style.background = '#f8d7da'; // Light red
+                    }
+                } else {
+                    commodityValidation = '-';
+                    validationCell.style.background = '';
+                }
+
+                validationCell.textContent = commodityValidation;
+                validationCell.title = commodityValidation;
+            }
+
+            // Update greying out for Commodity Code and Previous Commodity Code cells
+            if (codeCell) {
+                const codeValue = codeCell.textContent;
+                if (codeValue === value) {
+                    codeCell.style.color = '#999'; // Grey out if matches
+                } else {
+                    codeCell.style.color = ''; // Normal color
+                }
+            }
+
+            if (prevCodeCell) {
+                const prevCodeValue = prevCodeCell.textContent;
+                if (prevCodeValue === value) {
+                    prevCodeCell.style.color = '#999'; // Grey out if matches
+                } else {
+                    prevCodeCell.style.color = ''; // Normal color
+                }
+            }
+
+            // No need to re-render - we've updated the DOM directly!
+        }
+
+        function updateCommodityCodeToUse(rowIndex, value) {
+            commodityCodeToUseMap[rowIndex] = value;
+
+            // Update validation display
+            const validationCell = document.getElementById(`commodityValidation_${rowIndex}`);
+            if (validationCell) {
+                let commodityValidation = '';
+
+                if (commodityCodeMap && value && value !== '-') {
+                    const lookupResult = commodityCodeMap.get(value);
+                    if (lookupResult && lookupResult.category) {
+                        // Found - show category (limit length)
+                        const category = lookupResult.category;
+                        const maxLength = 40;
+                        commodityValidation = category.length > maxLength ?
+                            category.substring(0, maxLength) + '...' : category;
+                        validationCell.style.background = '#d4edda'; // Light green
+                    } else {
+                        commodityValidation = 'Not found!';
+                        validationCell.style.background = '#f8d7da'; // Light red
+                    }
+                } else {
+                    commodityValidation = '-';
+                    validationCell.style.background = '';
+                }
+
+                validationCell.textContent = commodityValidation;
+                validationCell.title = commodityValidation;
+            }
+
+            // Update greying for commodity code cells
+            const codeCell = document.getElementById(`commodityCodeCell_${rowIndex}`);
+            const prevCodeCell = document.getElementById(`prevCommodityCodeCell_${rowIndex}`);
+
+            if (codeCell) {
+                const codeValue = codeCell.textContent;
+                if (codeValue === value) {
+                    codeCell.style.color = '#999';
+                } else {
+                    codeCell.style.color = '';
+                }
+            }
+
+            if (prevCodeCell) {
+                const prevCodeValue = prevCodeCell.textContent;
+                if (prevCodeValue === value) {
+                    prevCodeCell.style.color = '#999';
+                } else {
+                    prevCodeCell.style.color = '';
+                }
+            }
         }
 
         function updateCharCount(rowIndex) {
@@ -2231,7 +2449,7 @@
                     markup: markup,
                     manufacturer: columnMapping.manufacturer !== undefined ? row[columnMapping.manufacturer] : '',
                     countryOfOrigin: columnMapping.countryOfOrigin !== undefined ? row[columnMapping.countryOfOrigin] : '',
-                    commodityCode: columnMapping.commodityCode !== undefined ? row[columnMapping.commodityCode] : '',
+                    commodityCode: commodityCodeToUseMap[rowIndex] || (columnMapping.commodityCode !== undefined ? row[columnMapping.commodityCode] : ''),
                     calculatedFrom: calculatedFrom,
                     barcode: barcodeToUseMap[rowIndex] || (columnMapping.barcode !== undefined ? row[columnMapping.barcode] : '')
                 };
