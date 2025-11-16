@@ -525,13 +525,42 @@
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const previousFileInput = document.getElementById('previousFileInput');
+        const databaseUploadArea = document.getElementById('databaseUploadArea');
+        const databaseExportFileInput2 = document.getElementById('databaseExportFileInput2');
 
+        // Database export upload area event handlers
+        databaseUploadArea.addEventListener('click', () => {
+            databaseExportFileInput2.click();
+        });
+
+        databaseUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            databaseUploadArea.classList.add('dragover');
+        });
+
+        databaseUploadArea.addEventListener('dragleave', () => {
+            databaseUploadArea.classList.remove('dragover');
+        });
+
+        databaseUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            databaseUploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) handleDatabaseExportFile(file);
+        });
+
+        databaseExportFileInput2.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleDatabaseExportFile(file);
+        });
+
+        // Pricing file upload area event handlers
         uploadArea.addEventListener('click', () => {
             if (!uploadArea.classList.contains('disabled')) {
                 fileInput.click();
             }
         });
-        
+
         uploadArea.addEventListener('dragover', (e) => {
             if (!uploadArea.classList.contains('disabled')) {
                 e.preventDefault();
@@ -551,21 +580,15 @@
                 if (file) handleFile(file);
             }
         });
-        
+
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) handleFile(file);
         });
-        
+
         previousFileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) handlePreviousFile(file);
-        });
-
-        const databaseExportFileInput2 = document.getElementById('databaseExportFileInput2');
-        databaseExportFileInput2.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) handleDatabaseExportFile(file);
         });
 
         function handleFile(file) {
