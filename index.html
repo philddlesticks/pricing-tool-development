@@ -1401,7 +1401,29 @@
         }
         
         function updateCell(row, col, value) {
+            // Store old value for barcode/commodity code update logic
+            const oldValue = currentData[row][col];
+
             currentData[row][col] = value;
+
+            // If barcode column was edited, update barcodeToUseMap if user had selected the new barcode
+            if (columnMapping.barcode === col) {
+                // Check if user had selected to use the new barcode (not the previous barcode)
+                if (barcodeToUseMap[row] === oldValue) {
+                    // User had selected the new barcode, so update it to the new value
+                    barcodeToUseMap[row] = value;
+                }
+            }
+
+            // If commodity code column was edited, update commodityCodeToUseMap if user had selected the new commodity code
+            if (columnMapping.commodityCode === col) {
+                // Check if user had selected to use the new commodity code (not the previous commodity code)
+                if (commodityCodeToUseMap[row] === oldValue) {
+                    // User had selected the new commodity code, so update it to the new value
+                    commodityCodeToUseMap[row] = value;
+                }
+            }
+
             // Re-render if code column was edited to update duplicate highlighting
             if (columnMapping.code === col) {
                 renderSpreadsheet();
