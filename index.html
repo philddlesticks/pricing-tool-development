@@ -1625,7 +1625,6 @@
                         <th>List Price</th>
                         <th>Barcode</th>
                         <th>Previous Barcode</th>
-                        <th style="text-align: center;">📱</th>
                         <th>Commodity Code</th>
                         <th>Previous Commodity Code</th>
                         <th>Is Commodity Code valid?</th>
@@ -1813,7 +1812,6 @@
                         <td id="prevBarcodeCell_${rowIndex}" style="${(previousBarcode === '-') ? '' : 'cursor: pointer;'} ${barcodeBg} ${(barcodeToUseMap[rowIndex] === previousBarcode && previousBarcode !== '-') ? 'color: #999;' : ''}"
                             ${(previousBarcode === '-') ? '' : `onclick="setBarcodeToUseFromCell(${rowIndex}, 'prevBarcodeCell_${rowIndex}')"`}
                             ${(previousBarcode === '-') ? '' : 'title="Click to use this barcode"'}>${previousBarcode}</td>
-                        <td style="text-align: center; ${barcodeBg}">${(barcodeToUseMap[rowIndex] === previousBarcode && previousBarcode !== '-') ? '⬅️' : '➡️'}</td>
                         <td style="${barcodeBg}">${commodityCode || '-'}</td>
                         <td style="${barcodeBg}">${previousCommodityCode}</td>
                         <td style="${barcodeBg}">-</td>
@@ -1985,18 +1983,6 @@
                     prevBarcodeCell.style.color = '#999'; // Grey out if matches
                 } else {
                     prevBarcodeCell.style.color = ''; // Normal color
-                }
-            }
-
-            // Update the icon to show which barcode is selected
-            // Find the icon cell (it's right after prevBarcodeCell)
-            const iconCell = prevBarcodeCell ? prevBarcodeCell.nextElementSibling : null;
-            if (iconCell && prevBarcodeCell) {
-                const prevBarcodeValue = prevBarcodeCell.textContent;
-                if (value === prevBarcodeValue && prevBarcodeValue !== '-') {
-                    iconCell.textContent = '⬅️'; // Pointing to Previous Barcode
-                } else {
-                    iconCell.textContent = '➡️'; // Pointing to Barcode
                 }
             }
 
