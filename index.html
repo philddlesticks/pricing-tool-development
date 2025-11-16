@@ -2189,7 +2189,6 @@
                 if (dbItem) {
                     item.db_description = dbItem.vad_description || '';
                     item.db_cost = parseFloat(dbItem.vasd_standard_cost) || 0;
-                    item.db_discontinued = dbItem.vas_discontinued_product === 1 || dbItem.vas_discontinued_product === '1';
                 }
 
                 // Compare with database export data for cost change (use database as source of truth)
@@ -2288,7 +2287,6 @@
                         <th>Cost Price</th>
                         <th>Previous Cost</th>
                         <th>List Price</th>
-                        <th>DB Discontinued</th>
                         <th>Difference</th>
                         <th>Status</th>
                     </tr>
@@ -2327,6 +2325,11 @@
                     return currentStr !== dbStr ? 'background: #fff3cd; font-weight: bold;' : '';
                 };
 
+                const costDifference = item.status === 'new' ? 0 : (item.costPrice - item.db_cost);
+                const costDifferenceDisplay = item.status === 'new' ? '-' :
+                    `${costDifference > 0 ? '+' : ''}£${costDifference.toFixed(2)}<br>
+                     <small>${item.costChange > 0 ? '+' : ''}${item.costChange.toFixed(1)}%</small>`;
+
                 rowsHTML += `
                     <tr class="${rowClass}">
                         <td style="${codeStyle}">${item.code}</td>
@@ -2334,11 +2337,8 @@
                         <td>${costPriceDisplay}</td>
                         <td>${item.db_cost ? '£' + item.db_cost.toFixed(2) : '-'}</td>
                         <td>${listPriceDisplay}</td>
-                        <td style="${item.db_discontinued ? 'background: #f8d7da; font-weight: bold;' : ''}">${item.db_discontinued ? 'YES' : (item.db_description ? 'NO' : '-')}</td>
                         <td class="${costChangeClass}">
-                            ${item.status === 'new' ? '-' :
-                              `${item.costChange > 0 ? '+' : ''}${item.costChange.toFixed(1)}%<br>
-                               <small>(was £${item.oldCostPrice.toFixed(2)})</small>`}
+                            ${costDifferenceDisplay}
                         </td>
                         <td>${statusBadge}</td>
                     </tr>
