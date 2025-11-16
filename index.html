@@ -2505,7 +2505,8 @@
                 const length = item.db_length || '';
                 const width = item.db_width || '';
                 const depth = item.db_depth || '';
-                const commodityDescription = item.db_commodity || item.commodityCode || '';
+                // Get commodity code from database (Previous Commodity Code from Original List)
+                const commodityCode = item.db_commodity || item.commodityCode || '';
 
                 // Build row data
                 const rowData = [
@@ -2528,9 +2529,9 @@
                     length,                                 // vad_length
                     width,                                  // vad_width
                     depth,                                  // vad_depth
-                    commodityDescription,                   // vad_commodity_description
-                    '',                                     // vad_commodity_code (empty for now)
-                    '',                                     // vad_import_commodity_code (empty for now)
+                    '',                                     // vad_commodity_description (empty)
+                    commodityCode,                          // vad_commodity_code (from database)
+                    commodityCode,                          // vad_import_commodity_code (from database)
                     '',                                     // vad_harmonisation_code (empty for now)
                     ''                                      // vad_comments (empty for now)
                 ];
@@ -2613,7 +2614,8 @@
                 const length = item.db_length || '';
                 const width = item.db_width || '';
                 const depth = item.db_depth || '';
-                const commodityDescription = item.db_commodity || item.commodityCode || '';
+                // Get commodity code from database (Previous Commodity Code from Original List)
+                const commodityCode = item.db_commodity || item.commodityCode || '';
 
                 // Build row data
                 const rowData = [
@@ -2636,9 +2638,9 @@
                     length,                                 // vad_length
                     width,                                  // vad_width
                     depth,                                  // vad_depth
-                    commodityDescription,                   // vad_commodity_description
-                    '',                                     // vad_commodity_code (empty for now)
-                    '',                                     // vad_import_commodity_code (empty for now)
+                    '',                                     // vad_commodity_description (empty)
+                    commodityCode,                          // vad_commodity_code (from database)
+                    commodityCode,                          // vad_import_commodity_code (from database)
                     '',                                     // vad_harmonisation_code (empty for now)
                     ''                                      // vad_comments (empty for now)
                 ];
