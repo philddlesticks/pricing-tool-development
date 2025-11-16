@@ -326,6 +326,7 @@
         let copiedValue = null;
         let excludedRows = new Set();
         let descriptionToUseMap = {}; // Store "Description to use" values by product code
+        let barcodeToUseMap = {}; // Store "Barcode to use" values by row index
         let commodityCodeToUseMap = {}; // Store "Commodity Code to use" values by row index
         let renderDebounceTimer = null; // Debounce timer for renders
         let excludeDebounceTimer = null; // Debounce timer for exclude/restore operations
@@ -1775,6 +1776,16 @@
                     descriptionToUseMap[rowIndex] = descriptionToUse;
                 }
 
+                // Set default "Barcode to use" value only if not already set by user
+                // Default to Previous Barcode unless it's blank or '-'
+                if (!barcodeToUseMap[rowIndex]) {
+                    if (previousBarcode && previousBarcode !== '-') {
+                        barcodeToUseMap[rowIndex] = previousBarcode;
+                    } else {
+                        barcodeToUseMap[rowIndex] = barcode || '';
+                    }
+                }
+
                 // Set default "Commodity Code to use" value only if not already set by user
                 const commodityCodeToUse = previousCommodityCode && previousCommodityCode !== '-' ? previousCommodityCode : (commodityCode || '');
                 if (!commodityCodeToUseMap[rowIndex]) {
@@ -1880,8 +1891,12 @@
                         </td>
                         <td style="${costListBg}">£${costPrice.toFixed(2)}</td>
                         <td style="${costListBg}">£${finalListPrice.toFixed(2)}</td>
-                        <td style="${barcodeBg}">${barcode || '-'}</td>
-                        <td style="${barcodeBg}">${previousBarcode}</td>
+                        <td id="barcodeCell_${rowIndex}" style="cursor: pointer; ${barcodeBg} ${(barcodeToUseMap[rowIndex] === (barcode || '')) ? 'color: #999;' : ''}"
+                            onclick="setBarcodeToUseFromCell(${rowIndex}, 'barcodeCell_${rowIndex}')"
+                            title="Click to use this barcode">${barcode || '-'}</td>
+                        <td id="prevBarcodeCell_${rowIndex}" style="${(previousBarcode === '-') ? '' : 'cursor: pointer;'} ${barcodeBg} ${(barcodeToUseMap[rowIndex] === previousBarcode && previousBarcode !== '-') ? 'color: #999;' : ''}"
+                            ${(previousBarcode === '-') ? '' : `onclick="setBarcodeToUseFromCell(${rowIndex}, 'prevBarcodeCell_${rowIndex}')"`}
+                            ${(previousBarcode === '-') ? '' : 'title="Click to use this barcode"'}>${previousBarcode}</td>
                         <td id="commodityCodeCell_${rowIndex}" style="cursor: pointer; ${barcodeBg} ${commodityCodeTextColor}"
                             onclick="setCommodityCodeToUseFromCell(${rowIndex}, 'commodityCodeCell_${rowIndex}')"
                             title="Click to use this as Commodity Code to use">${commodityCode || '-'}</td>
@@ -2027,6 +2042,43 @@
                     prevCell.style.color = '#999'; // Grey out if matches
                 } else {
                     prevCell.style.color = ''; // Normal color
+                }
+            }
+
+            // No need to re-render - we've updated the DOM directly!
+        }
+
+        function setBarcodeToUseFromCell(rowIndex, cellId) {
+            // Get the value directly from the cell's textContent - NO ESCAPING!
+            // This treats data as pure data, never as code
+            const cell = document.getElementById(cellId);
+            if (!cell) return;
+
+            const value = cell.textContent; // Pure data - works with ANY characters
+
+            // Update the map
+            barcodeToUseMap[rowIndex] = value;
+
+            // Directly update the DOM elements instead of re-rendering entire table
+            const barcodeCell = document.getElementById(`barcodeCell_${rowIndex}`);
+            const prevBarcodeCell = document.getElementById(`prevBarcodeCell_${rowIndex}`);
+
+            // Update greying out for Barcode cells
+            if (barcodeCell) {
+                const barcodeValue = barcodeCell.textContent;
+                if (barcodeValue === value) {
+                    barcodeCell.style.color = '#999'; // Grey out if matches
+                } else {
+                    barcodeCell.style.color = ''; // Normal color
+                }
+            }
+
+            if (prevBarcodeCell) {
+                const prevBarcodeValue = prevBarcodeCell.textContent;
+                if (prevBarcodeValue === value && prevBarcodeValue !== '-') {
+                    prevBarcodeCell.style.color = '#999'; // Grey out if matches
+                } else {
+                    prevBarcodeCell.style.color = ''; // Normal color
                 }
             }
 
@@ -2399,7 +2451,7 @@
                     countryOfOrigin: columnMapping.countryOfOrigin !== undefined ? row[columnMapping.countryOfOrigin] : '',
                     commodityCode: commodityCodeToUseMap[rowIndex] || (columnMapping.commodityCode !== undefined ? row[columnMapping.commodityCode] : ''),
                     calculatedFrom: calculatedFrom,
-                    barcode: columnMapping.barcode !== undefined ? row[columnMapping.barcode] : ''
+                    barcode: barcodeToUseMap[rowIndex] || (columnMapping.barcode !== undefined ? row[columnMapping.barcode] : '')
                 };
 
                 // Get database export data for comparison (O(1) lookup)
@@ -2676,12 +2728,8 @@
 
             // Use processedData to populate rows
             processedData.forEach(item => {
-                // Find previous data for barcode lookup (O(1) lookup)
-                const oldItem = previousDataMap ? previousDataMap.get(item.code.toLowerCase()) : null;
-
-                // Get barcode - use previous barcode if exists, otherwise use new barcode
-                const previousBarcode = oldItem ? (oldItem.barcode || '') : '';
-                const eanCode = previousBarcode || item.barcode || '';
+                // Get barcode from user's selection (already set in processedData from barcodeToUseMap)
+                const eanCode = item.barcode || '';
 
                 // Get manufacturer - use item's manufacturer or fall back to settings
                 const manufacturer = item.manufacturer || settings.manufacturerName;
@@ -2785,12 +2833,8 @@
 
             // Build rows with actual data
             processedData.forEach(item => {
-                // Find previous data for barcode lookup (O(1) lookup)
-                const oldItem = previousDataMap ? previousDataMap.get(item.code.toLowerCase()) : null;
-
-                // Get barcode - use previous barcode if exists, otherwise use new barcode
-                const previousBarcode = oldItem ? (oldItem.barcode || '') : '';
-                const eanCode = previousBarcode || item.barcode || '';
+                // Get barcode from user's selection (already set in processedData from barcodeToUseMap)
+                const eanCode = item.barcode || '';
 
                 // Get manufacturer - use item's manufacturer or fall back to settings
                 const manufacturer = item.manufacturer || settings.manufacturerName;
