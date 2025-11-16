@@ -989,23 +989,23 @@
                 const isExcluded = excludedRows.has(rowIndex);
                 tr.className = isExcluded ? 'excluded-row' : '';
 
-                // Get the code to look up in previous data
+                // Get the code to look up in database export data
                 const code = columnMapping.code !== undefined ? row[columnMapping.code] : '';
                 let previousDescription = '';
                 let prevDescBg = '';
 
                 if (code) {
-                    // Check if this item exists in previous data (O(1) lookup)
-                    const oldItem = previousDataMap ? previousDataMap.get(code.toLowerCase()) : null;
+                    // Check if this item exists in database export data (O(1) lookup)
+                    const dbItem = databaseExportDataMap ? databaseExportDataMap.get(code.toLowerCase()) : null;
 
-                    if (oldItem) {
+                    if (dbItem) {
                         // Found in database
-                        previousDescription = oldItem.description || '-';
-                        prevDescBg = '#90EE90'; // Bright green
+                        previousDescription = dbItem.vad_description || '-';
+                        prevDescBg = '#90EE90'; // Bright green - exists in database
                     } else {
-                        // New product
+                        // New product (not in database)
                         previousDescription = 'New product? Check if new';
-                        prevDescBg = '#FFFF00'; // Bright yellow
+                        prevDescBg = '#FFFF00'; // Bright yellow - not in database
                     }
                 } else {
                     previousDescription = '-';
