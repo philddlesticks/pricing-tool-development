@@ -989,23 +989,23 @@
                 const isExcluded = excludedRows.has(rowIndex);
                 tr.className = isExcluded ? 'excluded-row' : '';
 
-                // Get the code to look up in previous data
+                // Get the code to look up in database export data
                 const code = columnMapping.code !== undefined ? row[columnMapping.code] : '';
                 let previousDescription = '';
                 let prevDescBg = '';
 
                 if (code) {
-                    // Check if this item exists in previous data (O(1) lookup)
-                    const oldItem = previousDataMap ? previousDataMap.get(code.toLowerCase()) : null;
+                    // Check if this item exists in database export data (O(1) lookup)
+                    const dbItem = databaseExportDataMap ? databaseExportDataMap.get(code.toLowerCase()) : null;
 
-                    if (oldItem) {
+                    if (dbItem) {
                         // Found in database
-                        previousDescription = oldItem.description || '-';
-                        prevDescBg = '#90EE90'; // Bright green
+                        previousDescription = dbItem.vad_description || '-';
+                        prevDescBg = '#90EE90'; // Bright green - exists in database
                     } else {
-                        // New product
+                        // New product (not in database)
                         previousDescription = 'New product? Check if new';
-                        prevDescBg = '#FFFF00'; // Bright yellow
+                        prevDescBg = '#FFFF00'; // Bright yellow - not in database
                     }
                 } else {
                     previousDescription = '-';
@@ -2505,7 +2505,8 @@
                 const length = item.db_length || '';
                 const width = item.db_width || '';
                 const depth = item.db_depth || '';
-                const commodityDescription = item.db_commodity || item.commodityCode || '';
+                // Get commodity code from database (Previous Commodity Code from Original List)
+                const commodityCode = item.db_commodity || item.commodityCode || '';
 
                 // Build row data
                 const rowData = [
@@ -2528,9 +2529,9 @@
                     length,                                 // vad_length
                     width,                                  // vad_width
                     depth,                                  // vad_depth
-                    commodityDescription,                   // vad_commodity_description
-                    '',                                     // vad_commodity_code (empty for now)
-                    '',                                     // vad_import_commodity_code (empty for now)
+                    '',                                     // vad_commodity_description (empty)
+                    commodityCode,                          // vad_commodity_code (from database)
+                    commodityCode,                          // vad_import_commodity_code (from database)
                     '',                                     // vad_harmonisation_code (empty for now)
                     ''                                      // vad_comments (empty for now)
                 ];
@@ -2613,7 +2614,8 @@
                 const length = item.db_length || '';
                 const width = item.db_width || '';
                 const depth = item.db_depth || '';
-                const commodityDescription = item.db_commodity || item.commodityCode || '';
+                // Get commodity code from database (Previous Commodity Code from Original List)
+                const commodityCode = item.db_commodity || item.commodityCode || '';
 
                 // Build row data
                 const rowData = [
@@ -2636,9 +2638,9 @@
                     length,                                 // vad_length
                     width,                                  // vad_width
                     depth,                                  // vad_depth
-                    commodityDescription,                   // vad_commodity_description
-                    '',                                     // vad_commodity_code (empty for now)
-                    '',                                     // vad_import_commodity_code (empty for now)
+                    '',                                     // vad_commodity_description (empty)
+                    commodityCode,                          // vad_commodity_code (from database)
+                    commodityCode,                          // vad_import_commodity_code (from database)
                     '',                                     // vad_harmonisation_code (empty for now)
                     ''                                      // vad_comments (empty for now)
                 ];
