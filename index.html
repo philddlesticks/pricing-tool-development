@@ -112,6 +112,22 @@
                 </div>
 
                 <div class="mapping-item" style="margin-top: 30px;">
+                    <h3 style="margin-bottom: 15px;">Upload Database Export File</h3>
+                    <div class="alert alert-info" style="margin-bottom: 15px; padding: 10px; background: #e7f3ff;">
+                        <small style="color: #004085;">
+                            📊 Upload the database export Excel file containing current product data.<br>
+                            This file should include: vad_variant_code, vad_ean_code, vad_description, md_name, vasd_standard_cost, etc.
+                        </small>
+                    </div>
+                    <div class="upload-area" id="databaseUploadArea">
+                        <h2>📊 Drop database export here or click to browse</h2>
+                        <p style="color: #666; margin-top: 10px;">Supports .xlsx and .xls formats</p>
+                        <input type="file" id="databaseExportFileInput2" accept=".xlsx,.xls">
+                    </div>
+                    <div id="databaseExportUploadMessages" style="margin: 15px 0;"></div>
+                </div>
+
+                <div class="mapping-item" style="margin-top: 30px;">
                     <h3 style="margin-bottom: 15px;">Upload Pricing File</h3>
                     <div class="upload-area disabled" id="uploadArea">
                         <h2>📁 Drop file here or click to browse</h2>
@@ -301,6 +317,7 @@
     <script>
         let currentData = [];
         let previousData = [];
+        let databaseExportData = []; // Store database export data for comparison
         let processedData = [];
         let columnMapping = {};
         let currentStep = 1;
@@ -316,6 +333,7 @@
         let scrollTimer = null; // Timer to detect end of scrolling
         let pendingRender = null; // Store pending render function to execute after scroll
         let previousDataMap = null; // Cached lookup map for previousData (performance optimization)
+        let databaseExportDataMap = null; // Cached lookup map for databaseExportData (performance optimization)
         let pendingUpdateCount = 0; // Track number of pending updates for adaptive debouncing
         let lastUpdateTime = 0; // Track last update time to detect rapid clicking
 
@@ -373,6 +391,24 @@
                     const code = (item.code || item.productcode || '').toLowerCase();
                     if (code) {
                         previousDataMap.set(code, item);
+                    }
+                });
+            }
+        }
+
+        // Build databaseExportData lookup map for O(1) access (performance optimization)
+        function buildDatabaseExportDataMap() {
+            databaseExportDataMap = new Map();
+            if (databaseExportData && databaseExportData.length > 0) {
+                databaseExportData.forEach(item => {
+                    const code = (item.vad_variant_code || '').toString().toLowerCase();
+                    if (code) {
+                        databaseExportDataMap.set(code, item);
+                    }
+                    // Also map by barcode for additional lookup
+                    const barcode = (item.vad_ean_code || '').toString().toLowerCase();
+                    if (barcode) {
+                        databaseExportDataMap.set(`barcode_${barcode}`, item);
                     }
                 });
             }
@@ -525,7 +561,13 @@
             const file = e.target.files[0];
             if (file) handlePreviousFile(file);
         });
-        
+
+        const databaseExportFileInput2 = document.getElementById('databaseExportFileInput2');
+        databaseExportFileInput2.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleDatabaseExportFile(file);
+        });
+
         function handleFile(file) {
             const reader = new FileReader();
             const isCSV = file.name.toLowerCase().endsWith('.csv');
@@ -659,6 +701,33 @@
             } else {
                 reader.readAsArrayBuffer(file);
             }
+        }
+
+        function handleDatabaseExportFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1, defval: ''});
+
+                // Assume first row is headers, convert to objects
+                const headers = jsonData[0];
+                databaseExportData = jsonData.slice(1).map(row => {
+                    let obj = {};
+                    headers.forEach((header, i) => {
+                        // Keep original header names for database export
+                        obj[header] = row[i];
+                    });
+                    return obj;
+                });
+                buildDatabaseExportDataMap(); // Build lookup map for performance
+                showUploadMessage(`✓ Database export loaded successfully! (${databaseExportData.length} records)`, 'success', 'databaseExportUploadMessages');
+
+                console.log('Database export loaded:', databaseExportData.length, 'records');
+            };
+
+            reader.readAsArrayBuffer(file);
         }
 
         function showUploadMessage(message, type = 'success', targetDiv = 'uploadMessages') {
@@ -1506,7 +1575,12 @@
             // Find duplicate variant codes
             const duplicateVariantCodes = findDuplicateVariantCodes();
 
-            // Ensure previousDataMap is built (for performance)
+            // Ensure database export map is built (for performance)
+            if (!databaseExportDataMap && databaseExportData && databaseExportData.length > 0) {
+                buildDatabaseExportDataMap();
+            }
+
+            // Build previousDataMap as fallback if database export is not available
             if (!previousDataMap && previousData && previousData.length > 0) {
                 buildPreviousDataMap();
             }
@@ -1579,8 +1653,15 @@
                 // Name would like to use: MANUFACTURER ( CODE ) DESCRIPTION
                 const nameWouldLike = `${manufacturer} ( ${code} ) ${description}`;
 
-                // Check if this item exists in previous data (O(1) lookup instead of O(m) search)
-                const oldItem = previousDataMap.get(code.toLowerCase());
+                // Check if this item exists in database export data first, then fall back to previous data
+                let oldItem = null;
+                if (databaseExportDataMap) {
+                    oldItem = databaseExportDataMap.get(code.toLowerCase());
+                }
+                // Fall back to previous data if not found in database export
+                if (!oldItem && previousDataMap) {
+                    oldItem = previousDataMap.get(code.toLowerCase());
+                }
 
                 let previousDescription = '';
                 let previousBarcode = '';
@@ -1589,11 +1670,21 @@
                 let descriptionToUse = '';
 
                 if (oldItem) {
-                    // Found in database
-                    previousDescription = oldItem.description || '-';
-                    previousBarcode = oldItem.barcode || '-';
-                    previousCommodityCode = oldItem.commoditycode || oldItem.commodityCode || '-';
-                    previousCountryCode = oldItem.countrycode || oldItem.countryCode || oldItem.countryoforigin || oldItem.countryOfOrigin || '-';
+                    // Found in database export or previous data
+                    // Check if this is from database export (has vad_variant_code field)
+                    if (oldItem.vad_variant_code) {
+                        // Database export data
+                        previousDescription = oldItem.vad_description || '-';
+                        previousBarcode = oldItem.vad_ean_code || '-';
+                        previousCommodityCode = oldItem.vad_commodity_description || '-';
+                        previousCountryCode = oldItem.vad_country_code_of_origin || '-';
+                    } else {
+                        // Previous price list data
+                        previousDescription = oldItem.description || '-';
+                        previousBarcode = oldItem.barcode || '-';
+                        previousCommodityCode = oldItem.commoditycode || oldItem.commodityCode || '-';
+                        previousCountryCode = oldItem.countrycode || oldItem.countryCode || oldItem.countryoforigin || oldItem.countryOfOrigin || '-';
+                    }
                     descriptionToUse = previousDescription; // Default to previous description
                 } else {
                     // New product
@@ -2070,29 +2161,42 @@
                     barcode: columnMapping.barcode !== undefined ? row[columnMapping.barcode] : ''
                 };
 
-                // Compare with previous data (O(1) lookup)
-                const oldItem = previousDataMap ? previousDataMap.get(item.code.toLowerCase()) : null;
-                
-                if (oldItem) {
-                    const oldCost = parseFloat(oldItem.costPrice || oldItem.costprice || 0);
-                    const oldList = parseFloat(oldItem.listPrice || oldItem.listprice || 0);
-                    
-                    item.costChange = oldCost > 0 ? ((item.costPrice - oldCost) / oldCost) * 100 : 0;
-                    item.listChange = oldList > 0 ? ((item.listPrice - oldList) / oldList) * 100 : 0;
-                    item.oldCostPrice = oldCost;
-                    item.oldListPrice = oldList;
+                // Get database export data for comparison (O(1) lookup)
+                const dbItem = databaseExportDataMap ? databaseExportDataMap.get(item.code.toLowerCase()) : null;
+                if (dbItem) {
+                    item.db_description = dbItem.vad_description || '';
+                    item.db_barcode = dbItem.vad_ean_code || '';
+                    item.db_manufacturer = dbItem.md_name || '';
+                    item.db_cost = parseFloat(dbItem.vasd_standard_cost) || 0;
+                    item.db_country = dbItem.vad_country_code_of_origin || '';
+                    item.db_commodity = dbItem.vad_commodity_description || '';
+                    item.db_discontinued = dbItem.vas_discontinued_product === 1 || dbItem.vas_discontinued_product === '1';
+                    item.db_weight = dbItem.vad_weight || '';
+                    item.db_length = dbItem.vad_length || '';
+                    item.db_width = dbItem.vad_width || '';
+                    item.db_depth = dbItem.vad_depth || '';
+                }
+
+                // Compare with database export data for cost change (use database as source of truth)
+                if (dbItem && item.db_cost > 0) {
+                    // Product exists in database - calculate cost change from database cost
+                    item.costChange = ((item.costPrice - item.db_cost) / item.db_cost) * 100;
+                    item.oldCostPrice = item.db_cost;
                     item.status = 'changed';
-                    
+
                     // Flag if significant change
                     item.flagged = (
                         (item.costChange >= 15 || item.costChange <= -10) && item.costPrice >= 100
-                    ) || (
-                        (item.listChange >= 15 || item.listChange <= -10) && item.listPrice >= 100
                     );
                 } else {
+                    // New product (not in database)
                     item.status = 'new';
                     item.flagged = false;
+                    item.costChange = 0;
                 }
+
+                // Note: Previous price list data is only used for Previous List tab (Step 5)
+                // All other comparisons use database export data
                 
                 return item;
             }).filter(item => item.code); // Remove empty rows
@@ -2166,9 +2270,24 @@
                     <tr>
                         <th>Code</th>
                         <th>Description</th>
+                        <th>DB Description</th>
+                        <th>Barcode</th>
+                        <th>DB Barcode</th>
+                        <th>Manufacturer</th>
+                        <th>DB Manufacturer</th>
                         <th>Cost Price</th>
+                        <th>DB Cost</th>
                         <th>List Price</th>
-                        <th>Cost Change</th>
+                        <th>Country</th>
+                        <th>DB Country</th>
+                        <th>Commodity</th>
+                        <th>DB Commodity</th>
+                        <th>DB Discontinued</th>
+                        <th>Weight</th>
+                        <th>Length</th>
+                        <th>Width</th>
+                        <th>Depth</th>
+                        <th>Cost Change vs DB</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -2198,12 +2317,35 @@
                 const isDuplicate = item.code && duplicateCodes.has(item.code.toString().toLowerCase());
                 const codeStyle = isDuplicate ? 'background: #ffcccc;' : '';
 
+                // Helper function to compare values and highlight differences
+                const compareStyle = (current, db) => {
+                    if (!db && db !== 0) return ''; // No DB data available
+                    const currentStr = (current || '').toString().toLowerCase().trim();
+                    const dbStr = (db || '').toString().toLowerCase().trim();
+                    return currentStr !== dbStr ? 'background: #fff3cd; font-weight: bold;' : '';
+                };
+
                 rowsHTML += `
                     <tr class="${rowClass}">
                         <td style="${codeStyle}">${item.code}</td>
-                        <td>${item.description}</td>
-                        <td>${costPriceDisplay}</td>
+                        <td style="${compareStyle(item.description, item.db_description)}">${item.description || '-'}</td>
+                        <td>${item.db_description || '-'}</td>
+                        <td style="${compareStyle(item.barcode, item.db_barcode)}">${item.barcode || '-'}</td>
+                        <td>${item.db_barcode || '-'}</td>
+                        <td style="${compareStyle(item.manufacturer, item.db_manufacturer)}">${item.manufacturer || '-'}</td>
+                        <td>${item.db_manufacturer || '-'}</td>
+                        <td style="${compareStyle(item.costPrice.toFixed(2), item.db_cost ? item.db_cost.toFixed(2) : '')}">${costPriceDisplay}</td>
+                        <td>${item.db_cost ? '£' + item.db_cost.toFixed(2) : '-'}</td>
                         <td>${listPriceDisplay}</td>
+                        <td style="${compareStyle(item.countryOfOrigin, item.db_country)}">${item.countryOfOrigin || '-'}</td>
+                        <td>${item.db_country || '-'}</td>
+                        <td style="${compareStyle(item.commodityCode, item.db_commodity)}">${item.commodityCode || '-'}</td>
+                        <td>${item.db_commodity || '-'}</td>
+                        <td style="${item.db_discontinued ? 'background: #f8d7da; font-weight: bold;' : ''}">${item.db_discontinued ? 'YES' : (item.db_description ? 'NO' : '-')}</td>
+                        <td>${item.db_weight || '-'}</td>
+                        <td>${item.db_length || '-'}</td>
+                        <td>${item.db_width || '-'}</td>
+                        <td>${item.db_depth || '-'}</td>
                         <td class="${costChangeClass}">
                             ${item.status === 'new' ? '-' :
                               `${item.costChange > 0 ? '+' : ''}${item.costChange.toFixed(1)}%<br>
@@ -2332,8 +2474,15 @@
                 // Get manufacturer - use item's manufacturer or fall back to settings
                 const manufacturer = item.manufacturer || settings.manufacturerName;
 
-                // Get country of origin
-                const countryOfOrigin = item.countryOfOrigin || '';
+                // Get country of origin - prefer database export data, then current data
+                const countryOfOrigin = item.db_country || item.countryOfOrigin || '';
+
+                // Get dimensions and other fields from database export data
+                const weight = item.db_weight || '';
+                const length = item.db_length || '';
+                const width = item.db_width || '';
+                const depth = item.db_depth || '';
+                const commodityDescription = item.db_commodity || item.commodityCode || '';
 
                 // Build row data
                 const rowData = [
@@ -2351,12 +2500,12 @@
                     manufacturer,                           // Manufacturer
                     'TRUE',                                 // Main Supplier (TRUE for now)
                     countryOfOrigin,                        // vad_country_code_of_origin
-                    '',                                     // vad_weight (empty for now)
+                    weight,                                 // vad_weight
                     '',                                     // vad_volume (empty for now)
-                    '',                                     // vad_length (empty for now)
-                    '',                                     // vad_width (empty for now)
-                    '',                                     // vad_depth (empty for now)
-                    '',                                     // vad_commodity_description (empty for now)
+                    length,                                 // vad_length
+                    width,                                  // vad_width
+                    depth,                                  // vad_depth
+                    commodityDescription,                   // vad_commodity_description
                     '',                                     // vad_commodity_code (empty for now)
                     '',                                     // vad_import_commodity_code (empty for now)
                     '',                                     // vad_harmonisation_code (empty for now)
@@ -2433,8 +2582,15 @@
                 // Get manufacturer - use item's manufacturer or fall back to settings
                 const manufacturer = item.manufacturer || settings.manufacturerName;
 
-                // Get country of origin
-                const countryOfOrigin = item.countryOfOrigin || '';
+                // Get country of origin - prefer database export data, then current data
+                const countryOfOrigin = item.db_country || item.countryOfOrigin || '';
+
+                // Get dimensions and other fields from database export data
+                const weight = item.db_weight || '';
+                const length = item.db_length || '';
+                const width = item.db_width || '';
+                const depth = item.db_depth || '';
+                const commodityDescription = item.db_commodity || item.commodityCode || '';
 
                 // Build row data
                 const rowData = [
@@ -2452,12 +2608,12 @@
                     manufacturer,                           // Manufacturer
                     'TRUE',                                 // Main Supplier (TRUE for now)
                     countryOfOrigin,                        // vad_country_code_of_origin
-                    '',                                     // vad_weight (empty for now)
+                    weight,                                 // vad_weight
                     '',                                     // vad_volume (empty for now)
-                    '',                                     // vad_length (empty for now)
-                    '',                                     // vad_width (empty for now)
-                    '',                                     // vad_depth (empty for now)
-                    '',                                     // vad_commodity_description (empty for now)
+                    length,                                 // vad_length
+                    width,                                  // vad_width
+                    depth,                                  // vad_depth
+                    commodityDescription,                   // vad_commodity_description
                     '',                                     // vad_commodity_code (empty for now)
                     '',                                     // vad_import_commodity_code (empty for now)
                     '',                                     // vad_harmonisation_code (empty for now)
